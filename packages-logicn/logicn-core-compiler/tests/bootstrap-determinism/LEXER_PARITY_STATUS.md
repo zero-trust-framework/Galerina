@@ -7,6 +7,19 @@
 
 ---
 
+## ⭐ Current state (2026-06-06 · P9 #143/#189 — supersedes the Phase-25 framing below)
+
+The "Remaining gaps (Gaps 2–5)" deferred below were **CLOSED** by the P9 tokenize byte-parity work:
+`tokenize` now produces a **byte-for-byte identical token stream in the Stage-A interpreter AND in real
+WASM** (through the #105 admission gate) over a **21-input corpus** exercising identifiers, keywords,
+symbols, operators, numbers, **string literals, char literals, line/block comments, and escape sequences**
+(`scanString` / `scanCharLit` / `scanComment` — #189). Proven by `tests/wat-p9-tokenize-parity.test.mjs`
+(hard `deepEqual` assertions). So `PARITY_ACHIEVED=true` reflects the **full token-class corpus**, not just
+the single `add` source the body below documents. Scope note: this is **`tokenize` only** — parser /
+type-checker / governance-verifier WASM parity remain (they execute in Stage-A).
+
+---
+
 ## Phase 25 Update (2026-06-01)
 
 No regression. Parity status unchanged from R7A final:
