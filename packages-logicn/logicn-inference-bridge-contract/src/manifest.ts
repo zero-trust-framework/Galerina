@@ -23,6 +23,20 @@ export type CertificationProfile = "dev" | "certified";
 export type BridgeDomain = "inference" | "quantum";
 
 /**
+ * A measured reproducibility/accuracy witness for a tolerance backend (#201 lane).
+ * Binds the DECLARED `tolerance` to an empirically-measured (N, ε, std) curve and the
+ * noise model it was measured under, so `tolerance` stops being an author-asserted
+ * constant. (idea-mining #3 / SPDNN shot-budget precedent — see
+ * docs/Knowledge-Bases/logicn-external-idea-mining-2026-06-15.md.)
+ */
+export interface ToleranceWitness {
+  readonly redundancyN:     number; // votes / shots / runs the measurement averaged over (>= 1)
+  readonly epsilonMeasured: number; // measured residual band achieved at redundancyN (> 0)
+  readonly stdDev:          number; // residual std-dev at redundancyN (>= 0)
+  readonly noiseModelId:    string; // identity of the noise model the witness was measured under
+}
+
+/**
  * A bridge's self-description. In certified mode the Tower refuses any bridge
  * whose manifest is missing, structurally invalid, or not on the active
  * contract's allow-list / hash-pin.
@@ -45,6 +59,14 @@ export interface BridgeManifest {
   readonly tolerance?:           number;           // REQUIRED iff determinismMode="tolerance"
   readonly pinnedEnvHash?:       string;           // sha256 of the pinned venv/env lock
   readonly backendArtifactHash?: string;           // sha256 of the out-of-process backend artifact (analog of nativeAddonHash)
+  // ── measured "calibration-as-attestation" extension (#201 lane) ──
+  // All optional; serialized into the canonical pre-image ONLY when present, so existing
+  // inference/quantum manifest hashes are byte-unaffected. Turns the tolerance/determinism
+  // model from "pinned environment hashes" into "pinned env hashes + a MEASURED witness".
+  readonly comparabilityHash?: string;          // sha256 of the matched comparability set (prompt/template/gen-settings/sample-count/judge)
+  readonly measuredFidelity?:  number;          // 0..1 closeness-to-reference oracle the bridge SUPPLIES (LogicN only thresholds it)
+  readonly minFidelity?:       number;          // 0..1 declared floor; admission requires measuredFidelity >= this (fail-closed)
+  readonly toleranceWitness?:  ToleranceWitness; // binds the declared `tolerance` to a measured (N, ε, std) curve
 }
 
 /** A manifest plus its detached signature (verified by the Tower's key authority). */
@@ -68,9 +90,25 @@ export function canonicalManifestString(m: BridgeManifest): string {
   // Extension fields are appended in a FIXED order ONLY when the manifest uses any of
   // them — so an existing inference-domain manifest (none set, precision present)
   // serializes byte-for-byte as before, and its attested hash is unchanged.
-  if (m.domain !== undefined || m.tolerance !== undefined ||
-      m.pinnedEnvHash !== undefined || m.backendArtifactHash !== undefined) {
+  const hasOldExt = m.domain !== undefined || m.tolerance !== undefined ||
+                    m.pinnedEnvHash !== undefined || m.backendArtifactHash !== undefined;
+  const hasMeasuredExt = m.comparabilityHash !== undefined || m.measuredFidelity !== undefined ||
+                         m.minFidelity !== undefined || m.toleranceWitness !== undefined;
+  if (hasOldExt || hasMeasuredExt) {
     fields.push(m.domain ?? "", m.tolerance ?? "", m.pinnedEnvHash ?? "", m.backendArtifactHash ?? "");
+  }
+  // The measured block is appended AFTER the original extension block and ONLY when a
+  // measured field is set — so manifests that don't opt in (including the existing ffsim
+  // tolerance manifest) keep their exact pinned pre-image.
+  if (hasMeasuredExt) {
+    fields.push(
+      m.comparabilityHash ?? "",
+      m.measuredFidelity ?? "",
+      m.minFidelity ?? "",
+      m.toleranceWitness
+        ? `${m.toleranceWitness.redundancyN}:${m.toleranceWitness.epsilonMeasured}:${m.toleranceWitness.stdDev}:${m.toleranceWitness.noiseModelId}`
+        : "",
+    );
   }
   return JSON.stringify(fields);
 }
@@ -110,6 +148,53 @@ export function validateManifestShape(m: BridgeManifest): { ok: boolean; reason?
     }
     if (m.backendArtifactHash === undefined) {
       return { ok: false, reason: "determinismMode=tolerance requires backendArtifactHash (backend not pinned)" };
+    }
+  }
+  // ── measured "calibration-as-attestation" checks (#201) — additive, fail-closed ──
+  // Only constrain manifests that OPT IN by setting a measured field; existing manifests
+  // (no measured fields) are unaffected.
+  if (m.comparabilityHash !== undefined && !SHA256_HEX.test(m.comparabilityHash)) {
+    return { ok: false, reason: "comparabilityHash is not a sha256 hex digest" };
+  }
+  if (m.measuredFidelity !== undefined &&
+      !(typeof m.measuredFidelity === "number" && m.measuredFidelity >= 0 && m.measuredFidelity <= 1)) {
+    return { ok: false, reason: "measuredFidelity must be a number in [0,1]" };
+  }
+  if (m.minFidelity !== undefined) {
+    if (!(typeof m.minFidelity === "number" && m.minFidelity >= 0 && m.minFidelity <= 1)) {
+      return { ok: false, reason: "minFidelity must be a number in [0,1]" };
+    }
+    // A declared fidelity FLOOR demands a measured value at or above it (fail-closed):
+    // you cannot claim a floor you did not measure.
+    if (m.measuredFidelity === undefined) {
+      return { ok: false, reason: "minFidelity declared but measuredFidelity is missing (floor unproven)" };
+    }
+    if (m.measuredFidelity < m.minFidelity) {
+      return { ok: false, reason: `measuredFidelity ${m.measuredFidelity} is below the declared minFidelity ${m.minFidelity}` };
+    }
+  }
+  if (m.toleranceWitness !== undefined) {
+    const w = m.toleranceWitness;
+    if (!Number.isFinite(w.redundancyN) || w.redundancyN < 1) {
+      return { ok: false, reason: "toleranceWitness.redundancyN must be a finite number >= 1" };
+    }
+    if (!Number.isFinite(w.epsilonMeasured) || w.epsilonMeasured <= 0) {
+      return { ok: false, reason: "toleranceWitness.epsilonMeasured must be a finite number > 0" };
+    }
+    if (!Number.isFinite(w.stdDev) || w.stdDev < 0) {
+      return { ok: false, reason: "toleranceWitness.stdDev must be a finite number >= 0" };
+    }
+    if (!w.noiseModelId) {
+      return { ok: false, reason: "toleranceWitness.noiseModelId is required" };
+    }
+    // CORE INVARIANT (idea-mining #3): a tolerance backend may NOT claim a tighter band
+    // than it measured — the declared `tolerance` must be >= the witnessed epsilon.
+    if (m.determinismMode === "tolerance" && typeof m.tolerance === "number" &&
+        m.tolerance < w.epsilonMeasured) {
+      return {
+        ok: false,
+        reason: `declared tolerance ${m.tolerance} is tighter than the measured witness epsilon ${w.epsilonMeasured}`,
+      };
     }
   }
   return { ok: true };
