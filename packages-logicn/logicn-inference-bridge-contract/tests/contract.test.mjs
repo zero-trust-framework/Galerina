@@ -122,3 +122,24 @@ test("#201 quantizationMethod: a bridge can honestly declare its storage method;
   assert.equal(m.length, 10 + 4 + 4 + 1, "base(10) + old-ext(4) + measured(4) + decl(1)");
   assert.equal(m[m.length - 1], "gguf");
 });
+
+test("#201 attestation injectivity: non-finite tolerance is rejected (any mode) + NaN/±Infinity do not collide in the pre-image", () => {
+  const base = { bridgeId: "b", packageName: "p", packageHash: H, sourceEngine: "e", precision: "ternary", layoutVersion: "v1", hardwareIdentity: "hw", determinismMode: "exact", certificationProfile: "dev" };
+  // Previously only validated under determinismMode='tolerance' — now rejected under EVERY mode.
+  assert.equal(validateManifestShape({ ...base, tolerance: NaN }).ok, false, "NaN tolerance rejected (exact mode)");
+  assert.equal(validateManifestShape({ ...base, tolerance: Infinity }).ok, false, "Infinity tolerance rejected (exact mode)");
+  assert.equal(validateManifestShape({ ...base, determinismMode: "sampled", tolerance: -Infinity }).ok, false, "-Infinity rejected (sampled mode)");
+  // Even if serialized, the three non-finite values map to DISTINCT pre-images (no hash collision).
+  const cNaN = canonicalManifestString({ ...base, tolerance: NaN });
+  const cInf = canonicalManifestString({ ...base, tolerance: Infinity });
+  const cNeg = canonicalManifestString({ ...base, tolerance: -Infinity });
+  assert.notEqual(cNaN, cInf, "NaN and Infinity must not collide");
+  assert.notEqual(cInf, cNeg, "Infinity and -Infinity must not collide");
+  assert.match(canonicalManifestString({ ...base, tolerance: 1e-8 }), /1e-8/, "finite tolerance serialization unchanged");
+});
+
+test("#201 minFidelity range guard ([0,1]) is enforced (the load-bearing negative case)", () => {
+  const base = { bridgeId: "b", packageName: "p", packageHash: H, sourceEngine: "e", precision: "ternary", layoutVersion: "v1", hardwareIdentity: "hw", determinismMode: "exact", certificationProfile: "dev" };
+  assert.equal(validateManifestShape({ ...base, minFidelity: 1.5, measuredFidelity: 0.99 }).ok, false, "floor > 1 rejected");
+  assert.equal(validateManifestShape({ ...base, minFidelity: -0.1, measuredFidelity: 0.5 }).ok, false, "negative floor rejected (it survives the floor<=measured compare, so the range guard is load-bearing)");
+});

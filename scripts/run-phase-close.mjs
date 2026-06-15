@@ -228,7 +228,8 @@ run("tests:r6-corpus", "node",
   ["--test", "tests/r6-corpus/r6-parity.test.mjs"],
   { silent: false });
 
-// ── 7b. Border-check fail-closed admission gate (P9-144 §83, #200 close-out) ──
+// ── 7b. Border-check regression check — surfaces fail-closed admission-gate failures (P9-144 §83).
+//        Non-blocking: the actual deny-by-default gate is the `logicn border-check` CLI (exits 1). ──
 run("tests:border-check", "node",
   ["--test", "tests/border-check/border-check.test.mjs"],
   { silent: false });

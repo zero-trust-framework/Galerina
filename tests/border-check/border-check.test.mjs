@@ -81,6 +81,20 @@ function verdict(key) {
   return m ? m[1] : null;
 }
 
+// Collect the indented "↳ <reason>" lines that follow a plugin's [DENIED] line.
+function reasonsFor(key) {
+  const name = PREFIX + key;
+  const lines = OUT.split("\n");
+  const idx = lines.findIndex((l) => new RegExp(`\\[DENIED\\]\\s+${name}\\b`).test(l));
+  if (idx < 0) return "";
+  const out = [];
+  for (let i = idx + 1; i < lines.length; i++) {
+    if (/\[(DENIED|ADMITTED)\]/.test(lines[i]) || lines[i].trim() === "") break;
+    out.push(lines[i]);
+  }
+  return out.join("\n");
+}
+
 test("a fully-valid plugin is ADMITTED (per-plugin, even when siblings are denied)", () => {
   assert.equal(verdict("valid"), "ADMITTED", OUT);
 });
@@ -96,4 +110,14 @@ for (const key of [
 
 test("the gate exits non-zero when any plugin is denied (deny-by-default)", () => {
   assert.equal(STATUS, 1, `expected exit 1 with denied fixtures present; output:\n${OUT}`);
+});
+
+test("denial REASONS distinguish the branch (pins missing-vs-malformed-schema + the manifest-parse guard)", () => {
+  // A verdict-only assertion cannot tell the missing-schema branch (existsSync) from the parse-catch
+  // branch, and a mutated manifest-parse guard survives. The reason text pins each branch independently.
+  assert.match(reasonsFor("missingSchema"), /missing schemas\/data_types\.json/);
+  assert.match(reasonsFor("malformedSchema"), /unparseable schemas\/data_types\.json/);
+  assert.match(reasonsFor("malformedManifest"), /unparseable manifest\.json/);
+  assert.match(reasonsFor("placeholderHash"), /placeholder sourceHash/);
+  assert.match(reasonsFor("unknownCap"), /unknown\/unpermitted capability/);
 });
