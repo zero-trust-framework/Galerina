@@ -76,7 +76,18 @@ test("all six sentinels compose into one governed, recoverable flight", () => {
   assert.ok(events.every((e) => typeof e.logicalTick === "number"), "every event carries an LST LogicalTick");
   const batches = readEgressLedger(egDir);
   assert.ok(batches.reduce((n, b) => n + b.count, 0) >= 3, "all audit records reached the governed egress ledger");
-  assert.equal(AuditEgress.verifyChain(batches), true, "egress HMAC chain verifies — tamper-evident");
+  assert.equal(AuditEgress.verifyChain(batches), true, "egress HMAC chain verifies (dev/zero key — chain integrity, not a secret-keyed MAC)");
+  // PROVE tamper-evidence: corrupting a batch's records must FAIL verifyChain (the recomputed
+  // batchHash no longer matches the stored one). NB: under a public/zero key a key-knowing attacker
+  // could re-forge — this proves CORRUPTION-DETECTION, not secrecy (a real deployment sets a secret hmacKey).
+  const tampered = JSON.parse(JSON.stringify(batches));
+  const victim = tampered.find((b) => Array.isArray(b.records) && b.records.length > 0) ?? tampered[0];
+  if (victim && Array.isArray(victim.records) && victim.records.length > 0) {
+    victim.records[0] = `${String(victim.records[0])}::FORGED`;
+  } else if (victim) {
+    victim.batchHash = "0".repeat(64);
+  }
+  assert.equal(AuditEgress.verifyChain(tampered), false, "a tampered batch FAILS verifyChain (corruption is detected)");
 });
 
 test("LSP down-tiers the kernel when the thermal envelope is breached", () => {
