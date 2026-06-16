@@ -976,6 +976,23 @@ class Parser {
     return params;
   }
 
+  /**
+   * Error recovery: after a malformed parameter, skip tokens up to the next ',' or ')'
+   * (the parameter boundary), tracking `<>` generic depth so commas inside a generic type
+   * don't end the skip early. Stops at a newline/EOF to avoid crossing the declaration.
+   */
+  private skipMalformedParam(): void {
+    let depth = 0;
+    while (!this.isEof()) {
+      const t = this.current();
+      if (t.kind === "symbol" && t.value === "<") depth++;
+      else if (t.kind === "symbol" && t.value === ">") { if (depth > 0) depth--; }
+      else if (depth === 0 && t.kind === "symbol" && (t.value === "," || t.value === ")")) break;
+      else if (t.kind === "newline") break;
+      this.advance();
+    }
+  }
+
   private parseParam(): AstNode | undefined {
     const loc = this.loc();
 
@@ -999,6 +1016,10 @@ class Parser {
       } else {
         this.emitUnexpected(`Expected parameter name, got "${nameTok.value}".`);
       }
+      // Recovery: consume the rest of this malformed parameter up to the next ',' or ')'
+      // so the parser resumes cleanly instead of re-parsing ':'/type as more params and
+      // cascading follow-on errors (dogfooding GAP-1 polish).
+      this.skipMalformedParam();
       return undefined;
     }
 

@@ -13,6 +13,9 @@ test("a reserved keyword as a parameter name EXPLAINS the reservation (not the b
   const msg = errs.map((d) => d.message).join("\n");
   assert.match(msg, /reserved LogicN keyword/, "message must say it is a reserved keyword");
   assert.match(msg, /governance/, "message must name the offending keyword");
+  // GAP-1 polish: the malformed parameter is skipped to the next boundary, so the single
+  // clear diagnostic does NOT cascade into follow-on "Expected parameter name" errors.
+  assert.equal(errs.length, 1, `expected exactly one diagnostic (no cascade), got ${errs.length}: ${msg}`);
 });
 
 test("a non-keyword unexpected parameter token keeps the original generic message (no regression)", () => {
