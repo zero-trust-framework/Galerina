@@ -136,12 +136,12 @@ describe("Phase 55: hybrid Ed25519 + ML-DSA-65 governance signature", () => {
     assert.equal(verifyGovernanceSignature(signed, edKp.publicKey), true);
   });
 
-  it("sync verifyGovernanceSignature validates the Ed25519 half of a v2 signature", async () => {
-    // Documents the sync-path contract: it checks ONLY the classical Ed25519 half of a
-    // v2 signature. Callers needing post-quantum assurance MUST use the async hybrid
-    // verifier — see the LLN-CRYPTO-PQ downgrade note in the spec.
+  it("sync verifyGovernanceSignature REJECTS a v2 signature (no silent PQ downgrade)", async () => {
+    // No-downgrade hardening: the sync path can only check the classical Ed25519 half of a
+    // v2 signature, which would silently drop the post-quantum guarantee. So it now REFUSES
+    // v2 outright — callers must use the async verifyGovernanceSignatureHybrid for hybrid sigs.
     const kp = await generateHybridGovernanceKeyPair("hk9");
     const signed = await signProofGraphHybrid(mkPg("flow"), kp);
-    assert.equal(verifyGovernanceSignature(signed, kp.publicKey), true);
+    assert.equal(verifyGovernanceSignature(signed, kp.publicKey), false);
   });
 });

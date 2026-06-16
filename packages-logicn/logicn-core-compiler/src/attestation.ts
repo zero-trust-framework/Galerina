@@ -29,9 +29,9 @@ export interface LogicNAttestation {
     readonly executionPlan?: string;    // sha256:hex of PassiveExecutionPlan (Phase 15)
   };
   readonly signature?: {
-    readonly algorithm: "Ed25519";
+    readonly algorithm: "Ed25519" | "Ed25519+ML-DSA-65";
     readonly keyId: string;
-    readonly value: string;             // base64-encoded signature
+    readonly value: string;             // base64 signature; hybrid = "<ed25519-b64>|<ml-dsa-65-b64>"
   };
 }
 
@@ -215,6 +215,110 @@ export function generateAttestationKey(keyId: string): AttestationKeyPair {
     privateKeyEncoding: { type: "pkcs8", format: "pem" },
   });
   return { keyId, privateKey, publicKey };
+}
+
+// ---------------------------------------------------------------------------
+// Stage 2 — hybrid Ed25519 + ML-DSA-65 attestation (#34)
+//
+// The audit attestation's PQ upgrade: sign the SAME canonical pre-image with BOTH
+// Ed25519 (node:crypto) and ML-DSA-65 (FIPS 204, @noble/post-quantum), encode both in
+// signature.value as "<ed25519-b64>|<ml-dsa-65-b64>", algorithm "Ed25519+ML-DSA-65".
+// Verification requires BOTH (logical AND) — secure if either primitive survives. The
+// ML-DSA signature is bound to a FIPS-204 domain-separation context so this key cannot be
+// cross-protocol-confused with the ProofGraph / bridge-manifest signing surfaces.
+// ---------------------------------------------------------------------------
+
+/** FIPS-204 domain-separation context for the audit attestation surface. */
+const AUDIT_MLDSA_CONTEXT = new TextEncoder().encode("logicn.audit.attestation.v1");
+
+export interface HybridAttestationKeyPair {
+  readonly keyId: string;
+  readonly privateKey: string;        // Ed25519 PEM (PKCS8)
+  readonly publicKey: string;         // Ed25519 PEM (SPKI)
+  readonly mlDsaPrivateKey: Uint8Array;
+  readonly mlDsaPublicKey: Uint8Array;
+}
+
+/** Generate a hybrid Ed25519 + ML-DSA-65 attestation key pair. */
+export async function generateHybridAttestationKey(keyId: string): Promise<HybridAttestationKeyPair> {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519", {
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+  const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+    ml_dsa65: { keygen(seed: Uint8Array): { publicKey: Uint8Array; secretKey: Uint8Array } };
+  };
+  const seed = new Uint8Array(32);
+  (globalThis.crypto as { getRandomValues(b: Uint8Array): Uint8Array }).getRandomValues(seed);
+  const ml = ml_dsa65.keygen(seed);
+  return { keyId, privateKey, publicKey, mlDsaPrivateKey: ml.secretKey, mlDsaPublicKey: ml.publicKey };
+}
+
+/**
+ * Sign an attestation with a hybrid Ed25519 + ML-DSA-65 key. The canonical JSON of the
+ * attestation WITHOUT the signature field is the pre-image for BOTH signatures.
+ */
+export async function signAttestationHybrid(
+  attestation: LogicNAttestation,
+  keyPair: HybridAttestationKeyPair,
+): Promise<LogicNAttestation> {
+  const { signature: _sig, ...withoutSig } = attestation;
+  void _sig;
+  const canonical = canonicalJson(withoutSig);
+  const msg = Buffer.from(canonical, "utf8");
+
+  const edSig = cryptoSign(null, msg as unknown as BufferSource, {
+    key: keyPair.privateKey,
+    dsaEncoding: "ieee-p1363",
+  });
+  const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+    ml_dsa65: { sign(m: Uint8Array, sk: Uint8Array, opts?: { context?: Uint8Array }): Uint8Array };
+  };
+  const mlSig = ml_dsa65.sign(msg, keyPair.mlDsaPrivateKey, { context: AUDIT_MLDSA_CONTEXT });
+
+  const value = `${Buffer.from(edSig).toString("base64")}|${Buffer.from(mlSig).toString("base64")}`;
+  return {
+    ...attestation,
+    signature: { algorithm: "Ed25519+ML-DSA-65", keyId: keyPair.keyId, value },
+  };
+}
+
+/**
+ * Verify a hybrid attestation. BOTH the Ed25519 and the ML-DSA-65 signatures must verify
+ * (logical AND) — no silent downgrade. Returns false on any missing/extra/invalid part.
+ */
+export async function verifyAttestationHybrid(
+  attestation: LogicNAttestation,
+  ed25519PublicKeyPem: string,
+  mlDsaPublicKey: Uint8Array,
+): Promise<boolean> {
+  const sig = attestation.signature;
+  if (sig === undefined || sig.algorithm !== "Ed25519+ML-DSA-65") return false;
+  const parts = sig.value.split("|");
+  if (parts.length !== 2) return false;
+  const [edB64, mlB64] = parts;
+  if (!edB64 || !mlB64) return false;
+
+  const { signature: _sig, ...withoutSig } = attestation;
+  void _sig;
+  const canonical = canonicalJson(withoutSig);
+  const msg = Buffer.from(canonical, "utf8");
+
+  try {
+    const edOk = cryptoVerify(
+      null,
+      msg as unknown as BufferSource,
+      { key: ed25519PublicKeyPem, dsaEncoding: "ieee-p1363" },
+      Buffer.from(edB64, "base64") as unknown as BufferSource,
+    );
+    if (!edOk) return false;
+    const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+      ml_dsa65: { verify(s: Uint8Array, m: Uint8Array, pk: Uint8Array, opts?: { context?: Uint8Array }): boolean };
+    };
+    return ml_dsa65.verify(Buffer.from(mlB64, "base64"), msg, mlDsaPublicKey, { context: AUDIT_MLDSA_CONTEXT });
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

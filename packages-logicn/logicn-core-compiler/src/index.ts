@@ -847,11 +847,15 @@ export {
   signAttestation,
   verifyAttestation,
   generateAttestationKey,
+  signAttestationHybrid,
+  verifyAttestationHybrid,
+  generateHybridAttestationKey,
   attestationToYaml,
   attestationFromJson,
   type LogicNAttestation,
   type AttestationInputs,
   type AttestationKeyPair,
+  type HybridAttestationKeyPair,
 } from "./attestation.js";
 
 // Phase 11C — Runtime Contract Enforcement

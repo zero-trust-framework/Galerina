@@ -132,3 +132,86 @@ export function attestBridge(bridge: InferenceBridge, privateKeyPem: string): In
     execute: (op: BridgeOp): BridgeResult => bridge.execute(op),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Hybrid Ed25519 + ML-DSA-65 attestation (#34) — the PQ upgrade for bridge manifests.
+//
+// Same construction as the audit / ProofGraph surfaces: sign the canonical manifest
+// pre-image with BOTH primitives; verification requires BOTH (no downgrade). The ML-DSA
+// half is bound to a per-surface FIPS-204 domain-separation context so a key cannot be
+// cross-protocol-confused with the audit / governance signing surfaces. The contract
+// package stays crypto-free; the bytes live here.
+// ---------------------------------------------------------------------------
+
+/** FIPS-204 domain-separation context for the bridge-manifest signing surface. */
+const BRIDGE_MLDSA_CONTEXT = new TextEncoder().encode("logicn.bridge.manifest.v1");
+
+/** Generate a hybrid Ed25519 (PEM) + ML-DSA-65 attestation keypair. */
+export async function generateHybridAttestationKeypair(): Promise<{
+  publicKeyPem: string; privateKeyPem: string; mlDsaPublicKey: Uint8Array; mlDsaPrivateKey: Uint8Array;
+}> {
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+  const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+    ml_dsa65: { keygen(seed: Uint8Array): { publicKey: Uint8Array; secretKey: Uint8Array } };
+  };
+  const seed = new Uint8Array(32);
+  (globalThis.crypto as { getRandomValues(b: Uint8Array): Uint8Array }).getRandomValues(seed);
+  const ml = ml_dsa65.keygen(seed);
+  return {
+    publicKeyPem: publicKey.export({ type: "spki", format: "pem" }).toString(),
+    privateKeyPem: privateKey.export({ type: "pkcs8", format: "pem" }).toString(),
+    mlDsaPublicKey: ml.publicKey,
+    mlDsaPrivateKey: ml.secretKey,
+  };
+}
+
+/** Sign a manifest with a hybrid Ed25519 + ML-DSA-65 key — both signatures over the
+ *  canonical manifest pre-image. Returns a BridgeAttestation carrying both halves. */
+export async function signManifestHybrid(
+  manifest: BridgeManifest,
+  privateKeyPem: string,
+  mlDsaPrivateKey: Uint8Array,
+): Promise<BridgeAttestation> {
+  const msg = Buffer.from(canonicalManifestString(manifest), "utf8");
+  const edSig = edSign(null, msg, createPrivateKey(privateKeyPem));
+  const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+    ml_dsa65: { sign(m: Uint8Array, sk: Uint8Array, opts?: { context?: Uint8Array }): Uint8Array };
+  };
+  const mlSig = ml_dsa65.sign(msg, mlDsaPrivateKey, { context: BRIDGE_MLDSA_CONTEXT });
+  return { manifest, signature: edSig.toString("base64"), mlDsaSignature: Buffer.from(mlSig).toString("base64") };
+}
+
+/**
+ * Verify a hybrid bridge attestation. Runs ALL the classical checks (shape, hash pin,
+ * certified profile, Ed25519 signature) via verifyAttestation, then ADDITIONALLY requires
+ * the ML-DSA-65 signature to verify (logical AND, no downgrade). Fails CLOSED throughout.
+ * `policy.requireSigned` + `policy.publicKeyPem` must be set so the Ed25519 half is checked.
+ */
+export async function verifyAttestationHybrid(
+  attestation: BridgeAttestation | undefined,
+  policy: AttestationPolicy,
+  mlDsaPublicKey: Uint8Array,
+): Promise<AttestationResult> {
+  // Force the Ed25519 half to be checked even if the caller forgot requireSigned.
+  const base = verifyAttestation(attestation, { ...policy, requireSigned: true });
+  if (!base.ok) return base;
+  const hashField = base.hash !== undefined ? { hash: base.hash } : {};
+  if (!attestation?.mlDsaSignature) {
+    return { ok: false, reason: "ML-DSA signature required but absent (hybrid)", ...hashField };
+  }
+  try {
+    const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
+      ml_dsa65: { verify(s: Uint8Array, m: Uint8Array, pk: Uint8Array, opts?: { context?: Uint8Array }): boolean };
+    };
+    const ok = ml_dsa65.verify(
+      Buffer.from(attestation.mlDsaSignature, "base64"),
+      Buffer.from(canonicalManifestString(attestation.manifest), "utf8"),
+      mlDsaPublicKey,
+      { context: BRIDGE_MLDSA_CONTEXT },
+    );
+    if (!ok) return { ok: false, reason: "ML-DSA signature verification failed", ...hashField };
+  } catch (e) {
+    return { ok: false, reason: `ML-DSA check error: ${(e as Error).message}`, ...hashField };
+  }
+  return base;
+}

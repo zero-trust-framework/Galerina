@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@logicn/inference-bridge-contract": "file:../logicn-inference-bridge-contract",
-    "@logicn/substrate-math": "file:../logicn-substrate-math"
+    "@logicn/substrate-math": "file:../logicn-substrate-math",
+    "@noble/post-quantum": "^0.6.1"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

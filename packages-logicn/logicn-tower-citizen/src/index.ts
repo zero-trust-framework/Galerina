@@ -64,6 +64,7 @@ export { assertDeterminism } from "./bridge/interface.js";
 // ── Bridge attestation (CF-3 / CF-7) — signed manifest verification ──
 export {
   attestationHash, signManifest, verifyAttestation, generateAttestationKeypair, attestBridge,
+  signManifestHybrid, verifyAttestationHybrid, generateHybridAttestationKeypair,
 } from "./bridge-attestation.js";
 export type { AttestationPolicy, AttestationResult } from "./bridge-attestation.js";
 

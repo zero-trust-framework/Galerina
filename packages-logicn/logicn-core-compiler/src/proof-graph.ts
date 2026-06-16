@@ -549,6 +549,13 @@ export function sharesGovernanceShape(a: ProofGraph, b: ProofGraph): boolean {
 
 export type GovernanceAlgorithm = "ed25519" | "ml-dsa-65" | "hybrid-ed25519-mldsa65";
 
+/**
+ * FIPS-204 domain-separation context for the ProofGraph governance signature. Distinct
+ * from the audit-attestation and bridge-manifest contexts so one ML-DSA key cannot be
+ * cross-protocol-confused between the three signing surfaces (per the .tmf custody spec).
+ */
+const PROOFGRAPH_MLDSA_CONTEXT = new TextEncoder().encode("logicn.proofgraph.governance.v1");
+
 export interface GovernanceKeyPair {
   readonly keyId: string;
   readonly privateKey: Uint8Array;
@@ -681,13 +688,14 @@ export async function signProofGraphHybrid(pg: ProofGraph, keyPair: GovernanceKe
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ed25519Sig = (nodeCryptoSign as any)(null, payload, privKeyObj) as Uint8Array;
 
-  // ML-DSA-65 signature
+  // ML-DSA-65 signature, bound to a FIPS-204 domain-separation context so this key
+  // cannot be cross-protocol-confused with the audit/bridge attestation surfaces.
   const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
     ml_dsa65: {
-      sign(msg: Uint8Array, sk: Uint8Array): Uint8Array;
+      sign(msg: Uint8Array, sk: Uint8Array, opts?: { context?: Uint8Array }): Uint8Array;
     };
   };
-  const mlDsaSig = ml_dsa65.sign(payload, keyPair.mlDsaPrivateKey);
+  const mlDsaSig = ml_dsa65.sign(payload, keyPair.mlDsaPrivateKey, { context: PROOFGRAPH_MLDSA_CONTEXT });
 
   // Encode both signatures pipe-separated
   const signature = `${toBase64url(ed25519Sig)}|${toBase64url(mlDsaSig)}`;
@@ -714,16 +722,13 @@ export async function signProofGraphHybrid(pg: ProofGraph, keyPair: GovernanceKe
 export function verifyGovernanceSignature(pg: ProofGraph, publicKey: Uint8Array): boolean {
   if (!pg.governanceSignature) return false;
   const alg = pg.governanceSignature.algorithm;
-  if (alg !== "lln.gov.sig.v1" && alg !== "lln.gov.sig.v2") return false;
+  // NO SILENT DOWNGRADE: a v2 (hybrid) signature MUST be verified with BOTH halves via
+  // verifyGovernanceSignatureHybrid. Validating only the classical Ed25519 half here would
+  // silently drop the post-quantum guarantee — so the sync path rejects v2 outright.
+  if (alg !== "lln.gov.sig.v1") return false;
   try {
     const payload = canonicalSigningPayload(pg);
-    const alg = pg.governanceSignature.algorithm;
-
-    // For hybrid (v2), only validate Ed25519 part in the sync path.
-    // The ML-DSA part requires async import — use verifyGovernanceSignatureHybrid for full v2 check.
-    const rawSig = pg.governanceSignature.signature;
-    const ed25519SigStr = alg === "lln.gov.sig.v2" ? (rawSig.split("|")[0] ?? "") : rawSig;
-    const sigBuf = fromBase64url(ed25519SigStr);
+    const sigBuf = fromBase64url(pg.governanceSignature.signature);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pubKeyObj = { key: publicKey, format: "der", type: "spki" } as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -762,11 +767,12 @@ export async function verifyGovernanceSignatureHybrid(
     // ML-DSA-65 check
     // @noble/post-quantum ml_dsa65.verify is positional (sig, msg, pubKey) — match
     // those names here so the call below is unambiguous and not "corrected" into a bug.
+    // The same domain-separation context used at signing time must be supplied here.
     const { ml_dsa65 } = await import("@noble/post-quantum/ml-dsa.js") as {
-      ml_dsa65: { verify(sig: Uint8Array, msg: Uint8Array, pubKey: Uint8Array): boolean };
+      ml_dsa65: { verify(sig: Uint8Array, msg: Uint8Array, pubKey: Uint8Array, opts?: { context?: Uint8Array }): boolean };
     };
     const mlDsaSig = fromBase64url(mlDsaSigStr);
-    return ml_dsa65.verify(mlDsaSig, payload, mlDsaPublicKey);
+    return ml_dsa65.verify(mlDsaSig, payload, mlDsaPublicKey, { context: PROOFGRAPH_MLDSA_CONTEXT });
   } catch {
     return false;
   }
