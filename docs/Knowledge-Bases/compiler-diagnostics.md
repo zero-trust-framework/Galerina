@@ -1009,3 +1009,9 @@ LLN-BUILD-001    Non-deterministic build: identical source produced different ou
 LLN-WAT-STUB     WAT emitter stub (a target path not yet fully emitted)
 ```
 
+### Runtime governance codes
+
+```text
+LLN-RUNTIME-EFFECT-GATE   Runtime denial: a dispatched flow declares effects disallowed in the active deployment profile (route-dispatcher)
+```
+

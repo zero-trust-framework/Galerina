@@ -2,8 +2,6 @@
 # Policy: SHRINK-ONLY. Register a code in compiler-diagnostics.md (with a description) and
 # remove it here. The conformance test (diagnostic-namespace.test.mjs) fails on any NEW
 # unregistered code, and on any entry here that is already registered.
-# Baseline 2026-06-16: 65 codes. Reconciled 64 into compiler-diagnostics.md; 1 remains:
 #
-# LLN-RUNTIME-EFFECT-GATE — a runtime effect-gate identifier (not a compiler diagnostic with a
-# message); needs a runtime-codes section before registration. Tracked, not fabricated.
-LLN-RUNTIME-EFFECT-GATE
+# 2026-06-16: baseline was 65; ALL reconciled into compiler-diagnostics.md. Allowlist now EMPTY.
+# Every emitted LLN-* code is documented. Keep it that way — register new codes, don't grow this list.
