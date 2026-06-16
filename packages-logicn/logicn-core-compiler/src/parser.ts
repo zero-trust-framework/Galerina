@@ -989,7 +989,16 @@ class Parser {
 
     const nameTok = this.current();
     if (nameTok.kind !== "identifier") {
-      this.emitUnexpected(`Expected parameter name, got "${nameTok.value}".`);
+      if (nameTok.kind === "keyword") {
+        // DX: a reserved LogicN keyword (e.g. `governance`, `policy`, `authority`) in parameter
+        // position would otherwise raise the generic "Expected parameter name" without saying WHY.
+        this.emitUnexpected(
+          `Expected a parameter name, but "${nameTok.value}" is a reserved LogicN keyword and ` +
+          `cannot be used as an identifier. Rename the parameter (e.g. "${nameTok.value}_").`,
+        );
+      } else {
+        this.emitUnexpected(`Expected parameter name, got "${nameTok.value}".`);
+      }
       return undefined;
     }
 
