@@ -58,7 +58,6 @@ Photonic compute is **Class 2** because it is:
 
 ```
 Matrix transforms   → Photonic (natural, energy-efficient)
-Encryption          → Photonic matrix operations
 Inference           → Photonic (matrix multiply = inference core operation)
 Masking             → Photonic (fast, parallel)
 Filtering           → Photonic (signal processing)
@@ -70,7 +69,16 @@ Filtering           → Photonic (signal processing)
 Capability decisions   → Always CPU
 Policy evaluation      → Always CPU
 Authority issuance     → Always CPU
+Encryption / hashing / integrity / signatures → Always CPU (deterministic core)
 ```
+
+> **Crypto-on-core (`LLN-SUBSTRATE-001`).** Cryptography and integrity (encryption, hashing,
+> signatures, the Merkle/TMX root) MUST run **bit-exact on the deterministic digital core** — analog
+> photonics is ~≤10-bit and error-tolerant, which breaks the zero-error avalanche that hashing/crypto
+> require. Photonics' honest crypto-adjacent roles (QRNG entropy, optical-PUF device root, optical-LSH
+> *non-trust* addressing) sit **outside** the hash and are re-verified. *Corrected 2026-06-16 — the prior
+> "Encryption → Photonic matrix operations" line contradicted this rule (tri-encryption R&D, verdict 2;
+> independently re-derived from the photonic-hashing AND lattice literature).*
 
 ### Contract Syntax
 
