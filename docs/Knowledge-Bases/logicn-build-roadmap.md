@@ -5,6 +5,31 @@
 
 ---
 
+## 🏁 Phase 1 Security Audit — COMPLETE (2026-06-16)
+
+**The perimeter is sealed.** All **8/8** Critical + High findings from the adversarial Gate-6 audit are
+patched and verified; the codebase is in a **fail-closed, deterministic** state. 48/48 packages · 4,481
+tests · 0 fail · tsc clean · graph reindexed. Local tag: `audit-phase1-2026-06-16` (unpushed — gated on #149).
+
+**Cleared (8):** VSC-001 (crit taint-escape) · VSC-002 (trap declassifier) · VSC-003 (memberExpr recognizer
+bypass) · GOV-001 (K3 `permitted_effects` + strict `conforms_to`) · GOV-003 (member/positional response leak)
+· CRYPTO-001 (certified PQ-key mandate) · CRYPTO-002 (Tier-3 hybrid) · CRYPTO-003 (tamper-evidence fields
+signed). Enforces K3 governance semantics, plugs taint escapes, strictly resolves `conforms_to` pointers,
+and binds the full tamper-evidence set under the signature.
+
+### Parked backlog (deliberate — nothing falls through the cracks)
+- **Safe subset** (REDUN-001, GAP-*, STYLE/INFO) — *Deferred.* Kept out of this milestone to preserve a
+  pristine, security-only commit history. Staged for the next routine maintenance cycle.
+- **GOV-003 residual + audit mediums/lows** (VSC-004/005, GOV-002/004, intermediate-binding dataflow) —
+  *Tracked for dedicated R&D.* Deliberate semantic choices (taint semantics, binding-level dataflow) that
+  need fresh architectural review to avoid breaking developer ergonomics.
+- **CRYPTO-004** (algo-label binding) — *Tracked.* Versioning-sensitive (crypto-format bump per the
+  design-stability charter).
+- **Owner-gated** (#149 git-history scrub + first clean push · #199 Phase 2 engine landing · enc-rnd bridge
+  pings · LLN-DP-* allocation) — *Blocked / Queued.* Awaiting owner-supervised execution.
+
+---
+
 ## 🔐 2026-06-16 cycle — security audit · PQ benchmark · R&D adjudication
 
 **Verified:** 48/48 packages · 4,481 tests · 0 fail · graph 3569 nodes / 4005 edges / 1875 files · zero `.td` (migration complete). **ALL original audit criticals + highs cleared (8):** VSC-001 (crit), VSC-002, VSC-003, CRYPTO-001, CRYPTO-002, CRYPTO-003, GOV-001, GOV-003. Residual: GOV-003 intermediate-binding-rename (dataflow follow-up); the audit's 10 medium / 10 low / 6 info remain as backlog.
