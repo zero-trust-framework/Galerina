@@ -459,11 +459,28 @@ File system capability paths are canonicalized at compile time. Relative path co
 | Network / egress (http/https/fetch/email) | LLN-SECRET-002 | `redact()` |
 | Serialize / JSON / audit record | LLN-SECRET-003 | `redact()` |
 
-Any value derived from `secret.get()`, `vault.read()`, `kms.decrypt()`, or `secrets.*` is automatically classified `SecureString`. Concatenation with a plain string produces `TaintedString`, which inherits all sink restrictions.
+Any value that **reads from OR is derived from** `secret.get()`, `vault.read()`, `kms.decrypt()`, or `secrets.*` is classified `SecureString` and inherits all sink restrictions. Derivation propagates: a secret carried through `slice` / concatenation / member access / record field / a non-redacting call STAYS `SecureString` (`derivesFromSecret`). **`redact()` is the sole declassifier.**
+
+> **Security fix 2026-06-16 (commit ea6163d).** This propagation was *previously documented but NOT enforced* — the guard keyed on the binding's direct type only, so a transformed secret (`let p = key.slice(0,5); http.post(url, p)`) reached the sink with **no diagnostic** (a verified credential-exfiltration fail-open). Now closed and regression-tested; the claim above is enforced, not aspirational.
 
 **Bool-typed variables are exempt from LLN-VALUESTATE-004.** A `Bool` result derived from a secret comparison (e.g., `secret == expected`) has no injection surface — a boolean cannot carry secret content. The value-state checker does not propagate taint through Boolean derivations.
 
 **`trap` statements clear the taint chain in the value-state checker.** A `trap COND : ERR` that fires before a tainted value reaches a sink acts as a hard abort — the checker treats the taint path as terminated at the trap point.
+
+---
+
+### P-002 · No cleartext semantic embedding across a trust boundary (LLN-PRIVACY-002)
+**Status:** ENFORCED (Stage A value-state checker, 2026-06-16 — commit aeb420d). KB: [[logicn-privacy-embedding-egress]].
+
+A semantic embedding vector is **invertible** — embedding-inversion (vec2text) reconstructs ~90%+ of the source text from a cleartext vector — so transmitting one to a network/egress sink leaks the source content. This is the confidentiality dual of `LLN-SECRET-002`.
+
+| Sink | Diagnostic | Override |
+|---|---|---|
+| Network / egress (http/https/fetch/email) | LLN-PRIVACY-002 | `seal()` / `encrypt()` |
+
+Any value typed `Embedding`/`EmbeddingResult`, produced by `EmbeddingModel.run`/`.infer`/`.embed` (or `embed`/`embedQuery`/`embedDocuments`), or **derived** from such a value, carries `embeddingDerived` and propagates through `slice`/concat/member/record (`derivesFromEmbedding`). **`seal()` / `encrypt()` is the sole declassifier** — unlike the generic taint chain, `validate`/`parse`/`decode` do NOT declassify an embedding (a decoded vector is still invertible). Crypto stays engine-side (govern-don't-absorb); the compiler recognizes the state transition. Composes with the pattern-10 verify-before-decrypt gate (cleartext may only be filtered at a trusted, post-decryption endpoint).
+
+`LLN-PRIVACY-001` (distinct) is reserved for the declarative `privacy {}` block `deny protected X to Y` clause (parsed, Phase 10C+, not yet enforced).
 
 ---
 
@@ -927,6 +944,8 @@ Under `@experimental_profile(drcm_core_v1)`, the compiler:
 | LLN-SECRET-001 | Security | Secret flows to log/audit sink | ENFORCED |
 | LLN-SECRET-002 | Security | Secret flows to network/egress | ENFORCED |
 | LLN-SECRET-003 | Security | Secret flows to serialize/record | ENFORCED |
+| LLN-PRIVACY-002 | Privacy | Cleartext semantic embedding flows to network/egress (vec2text-invertible) | ENFORCED |
+| LLN-PRIVACY-001 | Privacy | `privacy {}` block `deny protected X to Y` clause | PLANNED Phase 10C+ |
 | LLN-SECRET-BREACH | Security | Secret detected in output stream (runtime trap 3001) | PLANNED Phase 1 |
 | LLN-SECRET-FATAL | Security | Secret breach caused DSS permission drop | PLANNED Phase 1 |
 | LLN-CAP-001 | Capability | Wildcard `*` in NetworkTarget | PLANNED Phase 4 |
