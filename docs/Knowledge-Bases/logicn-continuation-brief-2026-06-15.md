@@ -6,7 +6,38 @@
 
 ---
 
-## ⭐ START HERE — next session (2026-06-16)
+## ⭐⭐ READ FIRST — 2026-06-16 session (supersedes the 2026-06-15 "START HERE" below)
+
+**State: 48/48 packages · 4,371 tests · 0 fail · graph 3,563/4,001/1,870. 23 commits on `Initial commit`,
+ALL LOCAL** (push blocked — no GitHub creds; then needs `--force` over the re-initialized history + **key
+rotation** — the leaked `.env.logicn-signing` must be rotated; scrub ≠ rotation).
+
+**Shipped this session** (detail: ledger §5/§6/§7):
+- **#200/P10 integrity close-out** — doc reconciliation; **#177 graph fix** (`.lln` packages now index);
+  full-repo 14-cluster audit (48 findings); idea-mining (8 repos → 12 ranked). Docs: `logicn-200-closeout-2026-06-15.md`, `logicn-external-idea-mining-2026-06-15.md`.
+- **#201 calibration-as-attestation (contract portion)** — measured `BridgeManifest` fields (`comparabilityHash`/
+  fidelity-floor/`toleranceWitness` + "can't claim tighter than measured") + `QuantizationMethod`; an adversarial
+  review CAUGHT + I FIXED a real attestation-injectivity fail-open (non-finite `tolerance` → `canonNum`).
+  Enforcement VERIFIED end-to-end (`hybrid-engine→verifyAttestation→validateManifestShape`). Doc: `logicn-precision-attestation.md`.
+- **#202 honesty pass** — README counts 44/44·4,129→48/48·4,371 + "0 audit findings" corrected; FFSM banner;
+  scaffold READMEs (data-query/registry/ai/ai-neural); manifest-generator/gate-cache/egress-tamper/LEXER_PARITY/app-kernel-TODO.
+- **Audit fixes** — border-check tests; sentinel `instanceof` fix; graph-dup (vendored `project-graph` NOT mergeable → hardened `canReach`).
+- **R&D ingestion (.tmf + tri-encryption)** — `logicn-rd-adoption-2026-06-16.md` (memory `[[logicn-tmf-tri-encryption-rd]]`).
+  **U1 LANDED** = `tests/patterns/pattern-10-verify-before-decrypt-gate.lln` (runs on WASM, fail-closed). U3/U4 done.
+  All **3 dogfooding findings FIXED** (#1 reserved-keyword diagnostic; #2 secure-flow-not-in-WASM-surface diagnostic; #3 CLI bool args were silently mis-marshalling → now loud).
+
+**Next — ALL need a decision (no clean autonomous items left):**
+1. **#201 #3/#4 substrate witness** — DESIGN: let an *attested* `toleranceWitness` refine the conservative anti-gaming `LANE_PROFILE` floor? (precision-attestation.md §"Next increments #3").
+2. **U2/#204** — "no cleartext semantic embedding across a trust boundary" — needs a LogicN model (type? egress governance? new `LLN-PRIVACY-*`).
+3. **B — storage/compute precision split** (`int4`/`int8` + Tower Records + manifest fields) — forward-looking, no current user; wants a nod.
+4. **User-gated:** cert-profile-in-signed-pre-image (HIGH) · #149 key rotation · fusion-B2 ABI · `policy{}` deferred (R&D).
+5. **Cleanup (flagged):** root `test-output.txt` 409KB · 5 scratch `test_*.mjs` · 24 `.pdb` ~32MB.
+
+**R&D recommendation (mine):** TASK 2 (ML-DSA-65 spec → unblocks #34) + golden-vector oracle first; hold the `.tmf` engine / confidentiality / MeshQL builds.
+
+---
+
+## ⭐ START HERE — next session (2026-06-16) [PRIOR — 2026-06-15 session's note; superseded above]
 
 **Last session (evening 2026-06-15) was docs-only — no code changed, suite still green at §1's
 4,245/0.** What landed:
