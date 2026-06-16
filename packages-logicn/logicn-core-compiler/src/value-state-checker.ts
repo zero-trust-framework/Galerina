@@ -974,7 +974,7 @@ class ValueStateChecker {
 
   /**
    * Update an existing binding in the nearest scope where it is defined.
-   * Used by trapDecl handling to clear taint after a validation guard.
+   * Used to re-derive a binding's value-state flags (e.g. on reassignment / derivation).
    */
   private updateBinding(name: string, patch: Partial<BindingInfo>): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
@@ -1028,9 +1028,9 @@ class ValueStateChecker {
         break;
 
       case "trapDecl":
-        // Phase 12: trap as validation guard — clear taint on referenced bindings.
-        // `trap x == "" : ERR_X` guarantees x is non-empty past this point.
-        this.handleTrapDecl(node);
+        // VSC-002 (owner decision A, 2026-06-16): `trap` does NOT declassify — it is a runtime
+        // guard/invariant with no value-state effect. Declassification requires an explicit
+        // validate.* / sanitize.* / redact() gate (the only fail-closed contract).
         break;
 
       case "callExpr":
@@ -1354,47 +1354,13 @@ class ValueStateChecker {
     return false;
   }
 
-  // ── Trap declaration — validation guard ──────────────────────────────────
-
-  /**
-   * Phase 12: trapDecl as a validation guard.
-   *
-   * A `trap` statement halts execution when its condition is TRUE, so any
-   * binding referenced in the condition is guaranteed to have been validated
-   * by the time execution continues past the trap. This clears the taint on
-   * those bindings so subsequent flow-call arguments are no longer flagged by
-   * LLN-VALUESTATE-004.
-   *
-   * Example: `trap rawFoo == "" : ERR_EMPTY_VALUE`
-   *   → rawFoo is safe to pass after this point.
-   */
-  private handleTrapDecl(node: AstNode): void {
-    // The condition expression is the first child of the trapDecl node
-    const condExpr = node.children?.[0];
-    if (condExpr === undefined) return;
-
-    // Collect all identifier names referenced anywhere in the condition
-    const referenced = new Set<string>();
-    function collectIdents(n: AstNode): void {
-      if (n.kind === "identifier" && n.value && n.value.trim().length > 0) {
-        referenced.add(n.value.trim());
-      }
-      for (const child of n.children ?? []) collectIdents(child);
-    }
-    collectIdents(condExpr);
-
-    // For each referenced name that is a tainted or unsafe binding, clear taint.
-    // The trap acts as a boundary guard: if execution continues, the value has
-    // passed the condition check.
-    for (const name of referenced) {
-      const binding = this.lookupBinding(name);
-      if (binding === undefined) continue;
-      if (binding.safetyPrefix === "unsafe" || binding.tainted === true) {
-        // Clear taint — the trap validates the value
-        this.updateBinding(name, { safetyPrefix: undefined, tainted: false });
-      }
-    }
-  }
+  // ── Trap declaration ──────────────────────────────────────────────────────
+  // VSC-002 (owner decision A, 2026-06-16): a `trap` is NOT a declassifier. The previous
+  // handler cleared taint on any binding merely *referenced* in a trap condition — but a bare
+  // mention (or a non-constraining guard like `trap x.length < 3 : ERR`) validates nothing for
+  // injection sinks, so it laundered unsafe/tainted values. Declassification now requires an
+  // explicit validate.* / sanitize.* / redact() gate. `trap` remains a runtime guard/invariant
+  // (parser + governance + WAT), but carries no value-state effect (trapDecl dispatch is a no-op).
 
   // ── Call expression rules ────────────────────────────────────────────────
 

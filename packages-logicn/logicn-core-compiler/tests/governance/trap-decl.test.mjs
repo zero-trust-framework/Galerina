@@ -9,8 +9,8 @@
 // Covers:
 //   - trapDecl AST node shape (kind, value = errorCode, children = [conditionExpr])
 //   - Governance verifier: LLN-TRAP-001 for invalid error code identifier
-//   - Value-state checker: trap clears taint on referenced bindings
-//     (no LLN-VALUESTATE-004 for unsafe bindings used after a trap guards them)
+//   - Value-state checker: trap does NOT declassify (VSC-002, owner decision A) — taint
+//     survives a trap; declassification requires an explicit validate.*/sanitize.*/redact() gate
 // =============================================================================
 
 import assert from "node:assert/strict";
@@ -188,52 +188,68 @@ contract {
 // trap clears taint — value-state checker
 // ---------------------------------------------------------------------------
 
-describe("trap clears taint on referenced bindings (value-state checker)", () => {
-  it("unsafe binding checked by trap — no LLN-VALUESTATE-004 after the trap", () => {
+describe("trap does NOT clear taint — declassification needs an explicit gate (VSC-002)", () => {
+  it("unsafe binding trap-guarded then sent to a sink STILL flags (trap is not a declassifier)", () => {
     const source = `
-secure flow process(rawInput: String) -> String
+secure flow process(rawInput: String) -> Result<String, Error>
 contract {
-  intent { "Process input after validation." }
+  intent { "Process input." }
   effects { database.write }
 }
 {
   unsafe let x: String = rawInput
   trap x == "" : ERR_EMPTY
-  return x
+  let saved = UsersDB.insert(x)?
+  return Ok("done")
 }
 `;
     const result = parseAndCheckValues(source);
-    // The trap on x == "" acts as a validation guard.
-    // After the trap, x should no longer be considered tainted/unsafe.
-    // We specifically look for VALUESTATE-004 (taint propagation at use sites).
-    const taintErrors = result.diagnostics.filter(
-      (d) => d.code === "LLN-VALUESTATE-004",
-    );
-    assert.equal(
-      taintErrors.length,
-      0,
-      `Expected no LLN-VALUESTATE-004 after trap validates x, got: ${taintErrors.map((d) => d.message).join("; ")}`,
+    assert.ok(
+      hasDiag(result, "LLN-VALUESTATE-003"),
+      `trap must NOT launder taint; expected LLN-VALUESTATE-003, got: ${result.diagnostics.map((d) => d.code).join(", ")}`,
     );
   });
 
-  it("unsafe binding without trap — LLN-VALUESTATE diagnostics may be present", () => {
-    // This just tests the baseline: without a trap, taint is NOT cleared.
-    // We don't assert exact counts since the value-state checker emits at use sites.
+  it("a non-constraining trap guard (length check) still does not declassify for an injection sink", () => {
     const source = `
-secure flow leaky(rawInput: String) -> String
+secure flow sneaky(rawInput: String) -> Result<String, Error>
 contract {
-  intent { "No trap — taint remains." }
+  intent { "A format guard is not sanitization." }
   effects { database.write }
 }
 {
-  unsafe let raw: String = rawInput
-  return raw
+  unsafe let x: String = rawInput
+  trap x.length < 3 : ERR_TOO_SHORT
+  let saved = UsersDB.insert(x)?
+  return Ok("done")
 }
 `;
     const result = parseAndCheckValues(source);
-    // The test just confirms the checker runs without crashing.
-    // Whether it emits warnings depends on use-site context.
-    assert.ok(Array.isArray(result.diagnostics), "Diagnostics must be an array");
+    assert.ok(
+      hasDiag(result, "LLN-VALUESTATE-003"),
+      `a length/format guard must not clear taint for an injection sink, got: ${result.diagnostics.map((d) => d.code).join(", ")}`,
+    );
+  });
+
+  it("an explicit validate.* gate DOES declassify (no LLN-VALUESTATE-003)", () => {
+    const source = `
+secure flow processValidated(rawInput: String) -> Result<String, Error>
+contract {
+  intent { "Validate then use." }
+  effects { database.write }
+}
+{
+  unsafe let x: String = rawInput
+  let safe = validate.nonEmpty(x)
+  let saved = UsersDB.insert(safe)?
+  return Ok("done")
+}
+`;
+    const result = parseAndCheckValues(source);
+    assert.ok(
+      !hasDiag(result, "LLN-VALUESTATE-003"),
+      `an explicit validate.* gate must clear taint, got: ${result.diagnostics.map((d) => d.code).join(", ")}`,
+    );
   });
 
   it("governance verifier accepts trap in flow body without errors for valid code", () => {
