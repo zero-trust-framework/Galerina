@@ -60,7 +60,7 @@ LogicN is built for organisations where software failure is not acceptable — f
 
 **Tests — 48/48 packages**
 ```
-████████████████████████████████  100%  (4,397 tests · 0 failures)
+████████████████████████████████  100%  (4,412 tests · 0 failures)
 ```
 
 **Stage B Self-Hosting (WAT Linear Memory)**
@@ -109,7 +109,7 @@ LogicN is built for organisations where software failure is not acceptable — f
 
 ---
 
-*Stage A (TypeScript Runtime) is the **production-hardened path** — 48/48 packages, 4,397 tests, 0 test failures (a 2026-06-15 deep audit logged 48 findings — mostly scaffold/wiring/honesty items, tracked in the ledger).
+*Stage A (TypeScript Runtime) is the **production-hardened path** — 48/48 packages, 4,412 tests, 0 test failures (a 2026-06-15 deep audit logged 48 findings — mostly scaffold/wiring/honesty items, tracked in the ledger).
 Stage B (Runtime in LogicN) is **in progress (P9 self-hosting bootstrap)**: the self-hosted lexer/parser/checker `.lln`
 sources reach Stage-A == Stage-B parity through the interpreter (R6 corpus, 100%), and the self-hosted `lexer.lln`
 `tokenize` now reaches **byte-for-byte Stage-A interpreter == Stage-B real-WASM parity** through the #105 admission
@@ -146,7 +146,7 @@ LogicN is three things building toward one platform:
 
 **1. A language** — strict typing, explicit errors, declared effects, no hidden nulls, no silent failures. Source files use `.lln`.
 
-**2. A compiler and checker pipeline** — lexer → parser → type checker → value-state/taint checker → effect checker → governance verifier → GIR emitter → tiered runtime. Every check has a diagnostic code. The value-state checker enforces **fail-closed egress guards**: credentials (`LLN-SECRET-002`) and cleartext semantic embeddings (`LLN-PRIVACY-002`, vec2text-invertible) cannot cross a trust boundary even after slicing/concatenation/transformation — only `redact()` / `seal()` discharge them. **4,397 tests, 0 failures**. Stage B self-hosting is **in progress (P9)** — Stage-A == Stage-B interpreter parity is locked (R6 corpus) and `tokenize` WASM byte-parity is **achieved** (#143); extending WASM parity to the parser/type-checker/governance-verifier flows is the remaining gate.
+**2. A compiler and checker pipeline** — lexer → parser → type checker → value-state/taint checker → effect checker → governance verifier → GIR emitter → tiered runtime. Every check has a diagnostic code. The value-state checker enforces **fail-closed egress guards**: credentials (`LLN-SECRET-002`) and cleartext semantic embeddings (`LLN-PRIVACY-002`, vec2text-invertible) cannot cross a trust boundary even after slicing/concatenation/transformation — only `redact()` / `seal()` discharge them. **4,412 tests, 0 failures**. Stage B self-hosting is **in progress (P9)** — Stage-A == Stage-B interpreter parity is locked (R6 corpus) and `tokenize` WASM byte-parity is **achieved** (#143); extending WASM parity to the parser/type-checker/governance-verifier flows is the remaining gate.
 
 **3. A governed runtime architecture** — capability-based authority, machine-readable ProofGraph, post-quantum governance signatures, PCI DSS 4.0.1 audit, Deterministic Runtime Containment Model (DRCM) with monotonic security overlays.
 
@@ -285,7 +285,7 @@ LogicN has nine canonical patterns. Patterns 1–6 compile today (`drcm_stable_v
 
 ```
 packages-logicn/
-├── logicn-core-compiler/     ← active: full pipeline, 3,389 tests
+├── logicn-core-compiler/     ← active: full pipeline, 3,404 tests
 ├── logicn-core-runtime/      execution contracts + WASI boundaries
 ├── logicn-core-economics/    CostGraph, ValueGraph, breach-risk matrix
 ├── logicn-core-security/     taint profiles, redaction, OWASP boundaries
@@ -330,7 +330,7 @@ Layer 5: ProofGraph + .lmanifest — cryptographic audit proof (Ed25519 today; M
 
 ```bash
 # Run tests (core suite)
-node scripts/run-all-tests.cjs --core        # SOT-four core suite, 0 failures (full: npm test → 48/48 · 4,397)
+node scripts/run-all-tests.cjs --core        # SOT-four core suite, 0 failures (full: npm test → 48/48 · 4,412)
 
 # Full benchmark suite (~5-10 min)
 cd packages-logicn/logicn-devtools-benchmarks
