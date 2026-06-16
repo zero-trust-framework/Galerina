@@ -1,9 +1,9 @@
 <!-- ABSORBED R&D SOURCE — verbatim mirror. LogicN is the main library; the R&D repo is upstream/authoring.
-     Source: LogicN-R-AND-D/QUANTUM-RESILIENCE-STANDARD-AND-ROADMAP.md  ·  Pinned: R&D fb68d06 (2026-06-16)
-     Integrated LogicN view: logicn-quantum-resistance-posture.md  ·  Catalog: logicn-rd-absorption-catalog.md
+     Source: LogicN-R-AND-D/QUANTUM-RESILIENCE-STANDARD-AND-ROADMAP.md  ·  Pinned: R&D 238f07a (2026-06-17)
+     Integrated LogicN view: logicn-quantum-resilience-roadmap.md  ·  Catalog: logicn-rd-absorption-catalog.md
      Rule: edit the upstream source then re-vendor; do not fork this copy (feedback-auto-import-rd-docs). -->
 
-> **Absorbed R&D source (verbatim).** This is the archived upstream document. Curated/integrated view: `logicn-quantum-resistance-posture.md`. See `logicn-rd-absorption-catalog.md` for the full ledger. Internal links below point at the upstream R&D tree.
+> **Absorbed R&D source (verbatim).** Curated/integrated view: `logicn-quantum-resilience-roadmap.md`. See `logicn-rd-absorption-catalog.md`. Internal links below point at the upstream R&D tree.
 
 ---
 # `.tmf` quantum resilience — what we have, the TRUE-resilience standard, and the roadmap

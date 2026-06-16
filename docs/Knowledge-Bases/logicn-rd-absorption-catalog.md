@@ -2,7 +2,7 @@
 
 **LogicN is the single "main library."** Every durable knowledge doc from the R&D repo
 (`C:\wwwprojects\LogicN-R-AND-D`) is accounted for here so nothing is silently missing. Built from a 49-doc
-classification sweep (2026-06-17), pinned to R&D commit **`fb68d06`**. The standing import rule is the memory
+classification sweep (2026-06-17), pinned to R&D commit **`238f07a`** (Lane E delta absorbed 2026-06-17; the earlier 29-doc sweep was captured at `fb68d06`). The standing import rule is the memory
 `feedback-auto-import-rd-docs`; re-run it whenever R&D changes.
 
 ## How absorption works (the four dispositions)
@@ -16,7 +16,7 @@ classification sweep (2026-06-17), pinned to R&D commit **`fb68d06`**. The stand
 ## 1. Specs — vendored into `logicn-ext-tmf/spec/`
 `tmx-256-construction-v0` · `tmf-container-v0` · `tmf-modalities-v0` · `tmf-encryption-v0` · `signature-custody-v0` · `threshold-custody-v0` · `inclusion-proof-v0` · `tmf-history-chain-v0` · `governed-trust-capsule-v0` · `nvfp4-codec-v0`. Curated view: `logicn-tmf-engine.md`. The golden generators `tmf/spec/_vectors/*.py` stay upstream as the authoring oracle (binding conformance = the in-package golden tests).
 
-## 2. Mirrored verbatim into `rd-absorbed/` (29 docs)
+## 2. Mirrored verbatim into `rd-absorbed/` (30 docs)
 | R&D source | `rd-absorbed/` mirror | Curated/native view |
 |---|---|---|
 | QUANTUM-RESILIENCE-STANDARD-AND-ROADMAP.md | `rd-absorbed/rd-quantum-resilience-standard-and-roadmap.md` | **logicn-quantum-resilience-roadmap.md** |
@@ -29,6 +29,7 @@ classification sweep (2026-06-17), pinned to R&D commit **`fb68d06`**. The stand
 | tmf/research/photonic-lane-B-quantum-digital-signatures.md | `rd-absorbed/rd-quantum-digital-signatures-lane-b.md` | logicn-quantum-resilience-roadmap.md |
 | tmf/research/photonic-lane-C-optical-puf.md | `rd-absorbed/rd-photonic-lane-c-optical-puf.md` | logicn-quantum-resilience-roadmap.md |
 | tmf/research/photonic-lane-D-qrng.md | `rd-absorbed/rd-qrng-entropy-source-for-hybrid-signing.md` | logicn-quantum-resilience-roadmap.md |
+| tmf/research/photonic-lane-E-qkd-confidentiality.md *(238f07a)* | `rd-absorbed/rd-photonic-lane-e-qkd-confidentiality.md` | logicn-quantum-resilience-roadmap.md |
 | tmf/research/photonic-ternary-in-tls.md | `rd-absorbed/rd-photonic-ternary-in-tls.md` | (bridge task 0002) |
 | tmf/research/real-vs-aspirational-ledger.md | `rd-absorbed/rd-tmf-real-vs-aspirational-ledger.md` | logicn-tmf-engine.md |
 | tmf/research/storage-and-query-v0.md | `rd-absorbed/rd-tmf-storage-and-query.md` | (gated — MeshQL/DB) |
