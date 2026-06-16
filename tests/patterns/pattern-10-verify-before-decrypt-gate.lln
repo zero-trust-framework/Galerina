@@ -1,0 +1,31 @@
+// EXPECT: ACCEPT
+// Pattern 10 — Verify-Before-Decrypt Key-Release Gate (drcm_stable_v0)
+// Reference: docs/Knowledge-Bases/logicn-rd-adoption-2026-06-16.md (U1 — adopted from the tri-encryption R&D)
+//
+// Use when: governing a confidentiality pipeline. LogicN decides WHETHER a key releases — integrity
+// AND authenticity must pass AND the governance verdict must collapse to Allow. The crypto math
+// (KEM-DEM / AEAD / hash / sign) stays in the deterministic ENGINE layer (LLN-SUBSTRATE-001:
+// crypto-on-core). This is the GOVERNANCE half only — no byte buffers, no crypto primitives in .lln.
+//
+// Trit encoding (LogicN internal three-valued governance, LLN-GOV-3VL-001):
+//   -1 = Deny   0 = Unknown/Indeterminate   +1 = Allow
+// Fail-closed: only Allow(+1) survives a collapse — Unknown and Deny both DENY (No-Coercion).
+
+/// collapse(v): only +1 (Allow) survives; Unknown(0) and Deny(-1) both DENY. Fail-closed.
+pure flow collapse(v: Int) -> Int {
+  if v == 1 { return 1 }
+  return -1
+}
+
+/// authorize: a verdict authorizes ONLY when it is exactly Allow(+1).
+pure flow authorize(v: Int) -> Bool {
+  return v == 1
+}
+
+/// Verify-before-decrypt key-release: release (Allow) ONLY if integrity AND authenticity pass
+/// AND the governance verdict collapses to Allow. Any failure -> Deny (fail-closed).
+pure flow keyRelease(integrityOk: Bool, authenticityOk: Bool, govVerdict: Int) -> Int {
+  unless integrityOk { return -1 }
+  unless authenticityOk { return -1 }
+  return collapse(govVerdict)
+}

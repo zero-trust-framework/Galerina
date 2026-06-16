@@ -316,7 +316,7 @@ R&D-only; the `.tmf` engine + confidentiality build are **gated on owner go**. C
 **Usable in LogicN NOW (govern-don't-absorb) — proposed:**
 | # | Task | From | Status |
 |---|---|---|---|
-| 203 | **Verify-before-decrypt key-release governance pattern/example** — adopt the K3 `keyRelease(integrity, authenticity, govVerdict)` fail-closed gate (built on the shipped `LLN-GOV-3VL-001`) as a canonical `.lln` pattern in `tests/patterns/`. LogicN governs confidentiality; crypto stays engine-side. | tri-enc U1 (runnable `.lln`) | 🔲 proposed (HIGH, no crypto) |
+| 203 | **Verify-before-decrypt key-release pattern** — `tests/patterns/pattern-10-verify-before-decrypt-gate.lln` (collapse/authorize/keyRelease, fail-closed). `logicn check` clean + runs on WASM (collapse(0)=-1; keyRelease(t,t,1)=1; keyRelease(f,t,1) & (t,t,0)=-1). LogicN governs confidentiality; crypto stays engine-side. | tri-enc U1 | ✅ **LANDED 2026-06-16** |
 | 204 | **"No cleartext semantic embedding across a trust boundary" rule** — candidate `LLN-PRIVACY-*` data-exposure diagnostic (unencrypted embedding/attribute vector crossing egress/wire = violation). | tri-enc U2 (verdict 5) | 🔲 proposed (MED) |
 | — | Strengthen `LLN-SUBSTRATE-001` substrate KB with the crypto-on-core evidence + extend wording to "encryption/hashing/signatures" (`future-substrates` contradiction already ✅ fixed). | U3 | 🔶 partial |
 | — | Ground `fp4_block` `PrecisionTechnique`/`TECHNIQUE_BITS` with the verified NVFP4 byte facts (9-byte block, lossy). | U4 | 🔲 minor |
