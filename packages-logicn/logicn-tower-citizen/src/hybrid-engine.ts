@@ -631,6 +631,15 @@ export function createHybridEngine(profile: {
     throw new Error("ERR_CERTIFIED_NO_ATTESTATION: certified profile requires an attestation policy with requireSigned + publicKeyPem (every bridge must present a valid signature)");
   }
 
+  // Fail closed at construction: certified mode mandates the POST-QUANTUM half too.
+  // Without mlDsaPublicKey, checkBridgeAttestation() dispatches to the classical Ed25519-only
+  // verifier and silently admits a bridge on its classical signature alone — dropping the PQ
+  // guarantee in the exact mode meant to make it a mandatory invariant (audit CRYPTO-001).
+  // Certified deployments must verify BOTH halves: no post-quantum downgrade.
+  if (certified && !profile.attestation?.mlDsaPublicKey) {
+    throw new Error("ERR_CERTIFIED_NO_PQ_KEY: certified profile requires attestation.mlDsaPublicKey — hybrid Ed25519+ML-DSA-65 verification is mandatory (no post-quantum downgrade)");
+  }
+
   const needTower = certified || profile.auditInMemory || (profile.auditBatchSize ?? 0) > 0 ||
     profile.auditEgress || profile.auditTickSource;
   const tower = needTower

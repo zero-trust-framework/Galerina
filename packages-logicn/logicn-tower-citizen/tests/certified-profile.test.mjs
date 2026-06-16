@@ -5,7 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createHybridEngine, AuditLogger, generateAttestationKeypair, attestBridge, StubTernaryBridge } from "../dist/index.js";
+import { createHybridEngine, AuditLogger, generateHybridAttestationKeypair, attestBridgeHybrid, StubTernaryBridge } from "../dist/index.js";
 import { AuditEgress } from "../../logicn-core-sentinel-egress/dist/index.js";
 
 let c = 0;
@@ -13,12 +13,13 @@ const dir = () => `build/cert-${process.pid}-${++c}`;
 const realKey = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
 const fullGov = { approvedModels: ["bitnet_b1_58_2b"], maxNewTokens: 256, maxTokenCost: "GBP0.05", denyHostNativeFallback: true };
 
-// Certified mode now mandates signed-bridge attestation. One keypair for the file;
-// a signed ternary registry + the matching policy satisfy the new construction gate.
-const { publicKeyPem, privateKeyPem } = generateAttestationKeypair();
-const attPolicy = { requireSigned: true, publicKeyPem };
-function signedTernaryRegistry() {
-  const b = attestBridge(new StubTernaryBridge(), privateKeyPem);
+// Certified mode now mandates signed-bridge attestation AND the post-quantum half
+// (hybrid Ed25519+ML-DSA-65 — no PQ downgrade, audit CRYPTO-001). One hybrid keypair for
+// the file; a hybrid-signed ternary registry + the matching policy satisfy the construction gate.
+const { publicKeyPem, privateKeyPem, mlDsaPublicKey, mlDsaPrivateKey } = await generateHybridAttestationKeypair();
+const attPolicy = { requireSigned: true, publicKeyPem, mlDsaPublicKey };
+async function signedTernaryRegistry() {
+  const b = await attestBridgeHybrid(new StubTernaryBridge(), privateKeyPem, mlDsaPrivateKey);
   return new Map([[b.technique, b]]);
 }
 
@@ -41,9 +42,18 @@ test("certified profile fails CLOSED at construction without a signed-bridge att
   assert.match(String(err2.message), /ERR_CERTIFIED_NO_ATTESTATION/);
 });
 
+test("certified profile fails CLOSED without the post-quantum (ML-DSA) public key — no PQ downgrade (CRYPTO-001)", () => {
+  const egress = new AuditEgress({ dir: dir(), batchSize: 8, hmacKey: realKey });
+  // requireSigned + Ed25519 publicKeyPem present, but NO mlDsaPublicKey: certified mode would
+  // otherwise dispatch to the classical Ed25519-only verifier and silently drop the PQ guarantee.
+  const err = caught(() => createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, attestation: { requireSigned: true, publicKeyPem } }));
+  assert.ok(err, "certified mode must refuse an Ed25519-only attestation policy");
+  assert.match(String(err.message), /ERR_CERTIFIED_NO_PQ_KEY/);
+});
+
 test("certified profile traps a call missing the model (allow-list mandatory)", async () => {
   const egress = new AuditEgress({ dir: dir(), batchSize: 8, hmacKey: realKey });
-  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: signedTernaryRegistry(), attestation: attPolicy });
+  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: await signedTernaryRegistry(), attestation: attPolicy });
   const r = await eng.infer({ prompt: "x", correlationId: "c1", maxNewTokens: 10 }); // no model
   assert.equal(r.trapFired, true);
   assert.equal(r.trapCode, "ERR_AI_MODEL_REQUIRED");
@@ -51,7 +61,7 @@ test("certified profile traps a call missing the model (allow-list mandatory)", 
 
 test("certified profile traps when max_tokens is absent from governance", async () => {
   const egress = new AuditEgress({ dir: dir(), batchSize: 8, hmacKey: realKey });
-  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: { approvedModels: ["m"], maxTokenCost: "GBP0.05", denyHostNativeFallback: true }, bridges: signedTernaryRegistry(), attestation: attPolicy });
+  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: { approvedModels: ["m"], maxTokenCost: "GBP0.05", denyHostNativeFallback: true }, bridges: await signedTernaryRegistry(), attestation: attPolicy });
   const r = await eng.infer({ prompt: "x", correlationId: "c2", model: "m" });
   assert.equal(r.trapFired, true);
   assert.equal(r.trapCode, "ERR_CERTIFIED_NO_TOKEN_BUDGET");
@@ -59,7 +69,7 @@ test("certified profile traps when max_tokens is absent from governance", async 
 
 test("certified profile: a fully-specified ternary-only call is permitted", async () => {
   const egress = new AuditEgress({ dir: dir(), batchSize: 8, hmacKey: realKey });
-  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: signedTernaryRegistry(), attestation: attPolicy });
+  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: await signedTernaryRegistry(), attestation: attPolicy });
   // Only ternary-routed ops (a bridge exists for them) — no host-native needed.
   const r = await eng.infer({ prompt: "x", correlationId: "c3", model: "bitnet_b1_58_2b", maxNewTokens: 128, opClasses: ["embedding", "feedforward"] });
   assert.equal(r.trapFired, false);
@@ -77,7 +87,7 @@ test("certified profile traps an UNATTESTED bridge in the registry (ERR_BRIDGE_U
 
 test("certified profile: the STANDARD plan correctly traps (fp8/fp16 ops have no bridge)", async () => {
   const egress = new AuditEgress({ dir: dir(), batchSize: 8, hmacKey: realKey });
-  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: signedTernaryRegistry(), attestation: attPolicy });
+  const eng = createHybridEngine({ certified: true, auditEgress: egress, governance: fullGov, bridges: await signedTernaryRegistry(), attestation: attPolicy });
   // Standard transformer plan routes normalization/output_head → fp16/fp8 (no bridge).
   const r = await eng.infer({ prompt: "x", correlationId: "c3b", model: "bitnet_b1_58_2b", maxNewTokens: 128 });
   assert.equal(r.trapFired, true);
