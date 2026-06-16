@@ -60,7 +60,7 @@ LogicN is built for organisations where software failure is not acceptable — f
 
 **Tests — 48/48 packages**
 ```
-████████████████████████████████  100%  (4,459 tests · 0 failures)
+████████████████████████████████  100%  (4,465 tests · 0 failures)
 ```
 
 **Stage B Self-Hosting (WAT Linear Memory)**
@@ -106,13 +106,13 @@ LogicN is built for organisations where software failure is not acceptable — f
 
 > **Full roadmap** → [docs/Knowledge-Bases/logicn-roadmap.md](docs/Knowledge-Bases/logicn-roadmap.md) — current forward view (160 tasks), P9 critical path, security remediation, Post-P9 sequencing
 >
-> **Recent cycle (2026-06-16)** → CRYPTO-001 certified-mode PQ-downgrade fix · `crypto-ops` benchmark now measures ML-DSA-65 + hybrid (PQ-tax visibility: hybrid verify ≈1.75 ms / ~17× Ed25519, kept at amortized admission boundaries) · #199 Phase 1.5 (ffsim attestation + audit lifecycle) · roadmap #125/#126 filed · photonic-ternary-hash (notes/35) adjudicated → rejected (crypto-on-core). 48/48 packages · 4,459 tests.
+> **Recent cycle (2026-06-16)** → CRYPTO-001 certified-mode PQ-downgrade fix · `crypto-ops` benchmark now measures ML-DSA-65 + hybrid (PQ-tax visibility: hybrid verify ≈1.75 ms / ~17× Ed25519, kept at amortized admission boundaries) · #199 Phase 1.5 (ffsim attestation + audit lifecycle) · roadmap #125/#126 filed · photonic-ternary-hash (notes/35) adjudicated → rejected (crypto-on-core). 48/48 packages · 4,465 tests.
 >
 > **Recent cycle (2026-06-15)** → #200 integrity close-out (doc reconciliation · #177 graph fix · 48-finding deep audit) + the **#201 calibration-as-attestation** lane opened (measured bridge-manifest attestation: fidelity floor + tolerance witness + quantization-method declaration — contract foundation, not yet Tower-wide-enforced) + sentinel/border-check hardening. Details: [task ledger §5–6](docs/Knowledge-Bases/logicn-task-ledger.md) · [external idea-mining](docs/Knowledge-Bases/logicn-external-idea-mining-2026-06-15.md).
 
 ---
 
-*Stage A (TypeScript Runtime) is the **production-hardened path** — 48/48 packages, 4,459 tests, 0 test failures (a 2026-06-15 deep audit logged 48 findings — mostly scaffold/wiring/honesty items, tracked in the ledger).
+*Stage A (TypeScript Runtime) is the **production-hardened path** — 48/48 packages, 4,465 tests, 0 test failures (a 2026-06-15 deep audit logged 48 findings — mostly scaffold/wiring/honesty items, tracked in the ledger).
 Stage B (Runtime in LogicN) is **in progress (P9 self-hosting bootstrap)**: the self-hosted lexer/parser/checker `.lln`
 sources reach Stage-A == Stage-B parity through the interpreter (R6 corpus, 100%), and the self-hosted `lexer.lln`
 `tokenize` now reaches **byte-for-byte Stage-A interpreter == Stage-B real-WASM parity** through the #105 admission
@@ -149,7 +149,7 @@ LogicN is three things building toward one platform:
 
 **1. A language** — strict typing, explicit errors, declared effects, no hidden nulls, no silent failures. Source files use `.lln`.
 
-**2. A compiler and checker pipeline** — lexer → parser → type checker → value-state/taint checker → effect checker → governance verifier → GIR emitter → tiered runtime. Every check has a diagnostic code. The value-state checker enforces **fail-closed egress guards**: credentials (`LLN-SECRET-002`) and cleartext semantic embeddings (`LLN-PRIVACY-002`, vec2text-invertible) cannot cross a trust boundary even after slicing/concatenation/transformation — only `redact()` / `seal()` discharge them. **4,459 tests, 0 failures**. Stage B self-hosting is **in progress (P9)** — Stage-A == Stage-B interpreter parity is locked (R6 corpus) and `tokenize` WASM byte-parity is **achieved** (#143); extending WASM parity to the parser/type-checker/governance-verifier flows is the remaining gate.
+**2. A compiler and checker pipeline** — lexer → parser → type checker → value-state/taint checker → effect checker → governance verifier → GIR emitter → tiered runtime. Every check has a diagnostic code. The value-state checker enforces **fail-closed egress guards**: credentials (`LLN-SECRET-002`) and cleartext semantic embeddings (`LLN-PRIVACY-002`, vec2text-invertible) cannot cross a trust boundary even after slicing/concatenation/transformation — only `redact()` / `seal()` discharge them. **4,465 tests, 0 failures**. Stage B self-hosting is **in progress (P9)** — Stage-A == Stage-B interpreter parity is locked (R6 corpus) and `tokenize` WASM byte-parity is **achieved** (#143); extending WASM parity to the parser/type-checker/governance-verifier flows is the remaining gate.
 
 **3. A governed runtime architecture** — capability-based authority, machine-readable ProofGraph, post-quantum governance signatures, PCI DSS 4.0.1 audit, Deterministic Runtime Containment Model (DRCM) with monotonic security overlays.
 

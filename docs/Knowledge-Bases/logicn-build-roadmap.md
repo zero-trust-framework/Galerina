@@ -7,12 +7,18 @@
 
 ## 🔐 2026-06-16 cycle — security audit · PQ benchmark · R&D adjudication
 
-**Verified:** 48/48 packages · 4,459 tests · 0 fail · graph 3569 nodes / 4005 edges / 1875 files · zero `.td` (migration complete).
+**Verified:** 48/48 packages · 4,465 tests · 0 fail · graph 3569 nodes / 4005 edges / 1875 files · zero `.td` (migration complete).
 
 **Security — adversarial Gate-6 audit (23 confirmed):**
 - ✅ **CRYPTO-001 (high) FIXED** (`16145bd`) — certified mode silently permitted a post-quantum downgrade: the construction guard required only the Ed25519 `publicKeyPem`, so `checkBridgeAttestation` admitted bridges on the classical half whenever `mlDsaPublicKey` was unprovisioned. Now throws **`ERR_CERTIFIED_NO_PQ_KEY`**; certified-profile tests migrated to hybrid attestation + a no-downgrade guard test (183/183 tower-citizen).
-- 🔲 **CRYPTO-002 (medium)** — `verifyFfsimAdmission` (and `checkBridgeAttestation`) pick hybrid-vs-classical purely on `mlDsaPublicKey !== undefined` (opt-in). The quantum bridge is Tier-3 "Toxic Border" → should DEFAULT to requiring hybrid. **Plan:** add `requireHybrid` to `AttestationPolicy`, honor it in both verifiers, default-on for Tier-3.
-- 🔲 **14 audit findings unverified** (`SUB-*`, `VSC-*`, `GOV-*`, `GAP-CRYPTO-EFFECT`) — verification dropped when credits hit the session limit. **Plan:** re-run the verify phase (raw findings in `tasks/wiua91x60.output`) and triage.
+- ✅ **CRYPTO-002 (medium) FIXED** (`a1d7cee`) — `verifyFfsimAdmission` now requires hybrid by default (Tier-3 toxic border; `ERR_QUANTUM_PQ_REQUIRED`); `requireHybrid` added to `AttestationPolicy` + honored in `checkBridgeAttestation`; `requireHybrid:false` opts down. quantum 21/21.
+- ✅ **VSC-001 (CRITICAL) FIXED** (`915b16d`) — taint escape: `isGovernedSink` had diverged from the authoritative `SINK_REQUIREMENTS`, so unsafe/tainted values reached `response.body` / `ai.remoteInference` / `network.outbound` / `log.write` / bare `database.write` / `http(s).get` with **no diagnostic**. `isGovernedSink` now ⊇ `getSinkRequirement()` (single source of truth) + 4 regression tests.
+- **Full audit RE-VERIFIED (2026-06-16): 37 raised · 32 confirmed** (raw: `tasks/w6lqlqgck.output`). Closed: VSC-001, CRYPTO-001, CRYPTO-002. **Open HIGH backlog — deliberate, individually-tested (do NOT batch on auto):**
+  - 🔲 **VSC-002** — `trap` is a universal taint declassifier (any identifier merely *mentioned* in a trap condition is cleared, even if it validates nothing). Restrict to real emptiness/format guards or require explicit `validate.*`/`sanitize.*`.
+  - 🔲 **VSC-003** — secret/network/log/serialization detection bails unless the receiver matches a narrow shape (instance/aliased receivers slip). Broaden the recognizers.
+  - 🔲 **GOV-001** — Domain-Guard differential proof (`conforms_to`) gap. · 🔲 **GOV-003** — LLN-GOV-003 (protected-data-in-response) enforced on only a partial path.
+  - 🔲 **CRYPTO-003** — the governance signature omits several security-relevant ProofGraph fields. **Versioning-sensitive** (crypto-format bump per the design-stability charter — handle deliberately).
+  - **+10 medium · 10 low · 6 info** (QB-001 admission-not-structurally-enforced, VSC-004/005, GOV-002/004, CRYPTO-004/005/006, dead-code/style) — full triage list in `tasks/w6lqlqgck.output`.
 
 **Benchmark — Gate 9 (`8273ad3`):** `crypto-ops` now measures **ML-DSA-65 + hybrid Ed25519+ML-DSA-65**. PQ-tax: hybrid verify ≈ 1.75 ms (~17× Ed25519), sign ≈ 6.7 ms (~84×); sigs/keys ~50× larger. governance-cost unchanged within noise. These rows are an **R4 regression gate** — PQ stays at amortized admission/build boundaries, never the per-decision hot path.
 
