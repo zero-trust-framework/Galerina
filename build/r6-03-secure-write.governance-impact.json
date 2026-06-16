@@ -2,7 +2,7 @@
   "schemaVersion": "lln.governance-impact.v1",
   "sourceFile": "tests/r6-corpus/r6-03-secure-write.lln",
   "sourceHash": "sha256:d1de62ce5e70b198205fab8b55cb9da044d29f8742bae00b1240cdde8edbb131",
-  "generatedAt": "2026-06-15T08:26:09.315Z",
+  "generatedAt": "2026-06-16T21:44:40.969Z",
   "flowCount": 1,
   "flows": [
     {

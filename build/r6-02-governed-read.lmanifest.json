@@ -7,7 +7,7 @@
     "allowedEffects": 0,
     "deniedEffects": 0,
     "conflictsResolved": 0,
-    "resolvedAt": "2026-06-15T08:26:09.089Z"
+    "resolvedAt": "2026-06-16T21:44:40.743Z"
   },
   "behavioralFingerprint": "sha256:422e4284d3ca30804284bec36f5343f03c373b2fbdc3692c9a6fb09aa374d456",
   "derivedConstraints": [
@@ -27,11 +27,11 @@
       "verified": "static"
     }
   ],
-  "generatedAt": "2026-06-15T08:26:09.089Z",
+  "generatedAt": "2026-06-16T21:44:40.743Z",
   "governanceSignature": {
     "algorithm": "Ed25519+ML-DSA-65",
-    "ed25519": "placeholder:sha256:df2ce15ad8f5c82418c283c2dc9367d251392597089060fb7d5bc248a7400581",
-    "mlDsa65": "placeholder:sha256:df2ce15ad8f5c82418c283c2dc9367d251392597089060fb7d5bc248a7400581",
+    "ed25519": "placeholder:sha256:13df3504f0b1e6bb15f6eeed1905b2cd3cc28df4672edc34c154cf13795a5d6c",
+    "mlDsa65": "placeholder:sha256:13df3504f0b1e6bb15f6eeed1905b2cd3cc28df4672edc34c154cf13795a5d6c",
     "signerNote": "Placeholder signatures — real ML-DSA-65 signing requires key custody spec (DRCM task #34). The canonical JSON body hash above is stable and verifiable today."
   }
 }

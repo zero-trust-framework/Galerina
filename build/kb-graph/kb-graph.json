@@ -36,19 +36,21 @@
       "title": "LogicN Core Knowledge Base — Master Navigation Guide & TCB Map",
       "version": "1.1",
       "layer": "Layer 0",
-      "wordCount": 1931,
+      "wordCount": 2662,
       "lnlCodes": [
         "LLN-ACCESS-001",
         "LLN-ASSIMILATE-001",
         "LLN-BORDER-001",
         "LLN-CAP-001",
         "LLN-GOV-004",
+        "LLN-GOV-3",
         "LLN-IMPORT-001",
         "LLN-OBS-001",
         "LLN-OBS-002",
-        "LLN-RES-001"
+        "LLN-RES-001",
+        "LLN-SUBSTRATE-001"
       ],
-      "lastModified": "2026-06-14T20:56:28.186Z"
+      "lastModified": "2026-06-16T09:59:03.636Z"
     },
     {
       "id": "ai-as-untrusted-reasoning-worker",
@@ -296,7 +298,7 @@
       "id": "compiler-diagnostics",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\compiler-diagnostics.md",
       "title": "Compiler Diagnostics",
-      "wordCount": 3881,
+      "wordCount": 5056,
       "lnlCodes": [
         "LLN-AST-001",
         "LLN-AST-002",
@@ -316,10 +318,16 @@
         "LLN-BINDING-002",
         "LLN-BINDING-003",
         "LLN-BINDING-004",
+        "LLN-BINDING-005",
+        "LLN-BINDING-006",
         "LLN-BLOCK-001",
         "LLN-BLOCK-002",
         "LLN-BLOCK-003",
         "LLN-BLOCK-004",
+        "LLN-BORDER-001",
+        "LLN-BORDER-002",
+        "LLN-BORDER-003",
+        "LLN-BORDER-004",
         "LLN-BOUNDS-001",
         "LLN-BOUNDS-002",
         "LLN-BOUNDS-003",
@@ -330,6 +338,7 @@
         "LLN-BUDGET-002",
         "LLN-BUDGET-003",
         "LLN-BUDGET-004",
+        "LLN-BUILD-001",
         "LLN-BYTE-001",
         "LLN-BYTE-002",
         "LLN-BYTE-003",
@@ -347,22 +356,41 @@
         "LLN-COMPTIME-006",
         "LLN-COMPTIME-007",
         "LLN-COMPTIME-008",
+        "LLN-COMPUTE-001",
         "LLN-CONSENT-001",
         "LLN-CONSTRAINT-001",
         "LLN-CONSTRAINT-002",
         "LLN-CONSTRAINT-003",
         "LLN-CONSTRAINT-004",
         "LLN-CONSTRAINT-005",
+        "LLN-CONTEXT-001",
+        "LLN-ECON-001",
+        "LLN-ECON-002",
+        "LLN-ECON-003",
         "LLN-EFFECT-001",
         "LLN-EFFECT-002",
         "LLN-EFFECT-003",
         "LLN-EFFECT-004",
+        "LLN-EFFECT-005",
+        "LLN-EVENT-001",
+        "LLN-EVENT-002",
+        "LLN-EVENT-003",
+        "LLN-EVENT-004",
+        "LLN-EVENT-005",
         "LLN-FUSE-001",
         "LLN-FUSE-002",
         "LLN-FUSE-003",
         "LLN-FUSE-004",
         "LLN-FUSE-005",
         "LLN-FUSE-006",
+        "LLN-GOV-006",
+        "LLN-GOV-007",
+        "LLN-GOV-009",
+        "LLN-GOV-011",
+        "LLN-GOV-012",
+        "LLN-GOV-013",
+        "LLN-GOV-014",
+        "LLN-GOV-3",
         "LLN-GRAPH-001",
         "LLN-GRAPH-002",
         "LLN-GRAPH-003",
@@ -384,6 +412,12 @@
         "LLN-INTENT-003",
         "LLN-INTENT-004",
         "LLN-INTENT-005",
+        "LLN-LEX-001",
+        "LLN-LEX-002",
+        "LLN-LEX-003",
+        "LLN-LEX-004",
+        "LLN-LEX-005",
+        "LLN-LEX-006",
         "LLN-MATCH-001",
         "LLN-MATCH-002",
         "LLN-MATCH-003",
@@ -411,6 +445,8 @@
         "LLN-NAME-003",
         "LLN-NAME-004",
         "LLN-NAME-005",
+        "LLN-NET-001",
+        "LLN-NET-002",
         "LLN-NPU-001",
         "LLN-NPU-002",
         "LLN-NPU-003",
@@ -461,6 +497,11 @@
         "LLN-PIPELINE-003",
         "LLN-PIPELINE-004",
         "LLN-PIPELINE-005",
+        "LLN-PKG-001",
+        "LLN-PKG-002",
+        "LLN-PKG-003",
+        "LLN-PKG-004",
+        "LLN-PKG-005",
         "LLN-PROFILE-001",
         "LLN-PROFILE-002",
         "LLN-PROFILE-003",
@@ -503,12 +544,20 @@
         "LLN-SAFETY-007",
         "LLN-SAFETY-008",
         "LLN-SEC-014",
+        "LLN-SEC-020",
+        "LLN-SEC-021",
+        "LLN-STDLIB-001",
+        "LLN-STDLIB-002",
         "LLN-STRING-001",
         "LLN-STRING-002",
         "LLN-STRING-003",
         "LLN-STRING-004",
         "LLN-STYLE-001",
         "LLN-STYLE-002",
+        "LLN-SUBSTRATE-001",
+        "LLN-SUBSTRATE-002",
+        "LLN-SUBSTRATE-003",
+        "LLN-SUBSTRATE-004",
         "LLN-SUPPLY-001",
         "LLN-SUPPLY-002",
         "LLN-SUPPLY-003",
@@ -550,14 +599,32 @@
         "LLN-TYPE-007",
         "LLN-TYPE-008",
         "LLN-TYPE-009",
+        "LLN-TYPE-010",
+        "LLN-TYPE-011",
+        "LLN-TYPE-012",
+        "LLN-TYPE-013",
+        "LLN-TYPE-014",
+        "LLN-TYPE-015",
+        "LLN-TYPE-016",
+        "LLN-TYPE-017",
+        "LLN-TYPE-018",
+        "LLN-TYPE-019",
         "LLN-TYPE-020",
         "LLN-TYPE-021",
         "LLN-TYPE-022",
         "LLN-TYPE-023",
+        "LLN-TYPE-030",
+        "LLN-TYPE-031",
+        "LLN-VAL-001",
+        "LLN-VAL-002",
+        "LLN-VAL-003",
+        "LLN-VALUESTATE-005",
+        "LLN-VALUESTATE-006",
+        "LLN-VALUESTATE-007",
         "LLN-VERIFY-001",
         "LLN-VERIFY-002"
       ],
-      "lastModified": "2026-06-14T21:55:12.334Z"
+      "lastModified": "2026-06-16T10:12:05.690Z"
     },
     {
       "id": "compute-balancer",
@@ -986,6 +1053,14 @@
       "lastModified": "2026-05-26T07:58:22.783Z"
     },
     {
+      "id": "logicn-200-closeout-2026-06-15",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-200-closeout-2026-06-15.md",
+      "title": "#200 / P10 — Post-P9 Integrity, Doc-Reconciliation & Graph-Indexing Close-Out (2026-06-15)",
+      "wordCount": 1482,
+      "lnlCodes": [],
+      "lastModified": "2026-06-15T18:04:16.038Z"
+    },
+    {
       "id": "logicn-adaptive-runtime-profiles",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-adaptive-runtime-profiles.md",
       "title": "LogicN Architecture: Adaptive Runtime Profiles",
@@ -1222,7 +1297,7 @@
       "title": "LogicN — Build Roadmap",
       "version": "7.0",
       "layer": "Layer 0",
-      "wordCount": 3460,
+      "wordCount": 4681,
       "lnlCodes": [
         "LLN-ACCESS-001",
         "LLN-ASSIMILATE-001",
@@ -1234,9 +1309,11 @@
         "LLN-MATCH-001",
         "LLN-MONO-001",
         "LLN-OBS-002",
+        "LLN-PARSE-001",
+        "LLN-SECRET-002",
         "LLN-TRAP-001"
       ],
-      "lastModified": "2026-06-14T22:20:37.093Z"
+      "lastModified": "2026-06-16T21:40:50.917Z"
     },
     {
       "id": "logicn-cache-aware-execution",
@@ -1260,11 +1337,11 @@
       "title": "LogicN — CBOR .lmanifest Specification",
       "version": "1.0",
       "status": "Specification — current implementation uses RFC 8785 canonical JSON as an intermediate. Full CBOR binary encoding is the target (DRCM Phase 3).",
-      "wordCount": 1514,
+      "wordCount": 1666,
       "lnlCodes": [
         "LLN-INV-000"
       ],
-      "lastModified": "2026-06-05T06:11:56.083Z"
+      "lastModified": "2026-06-15T07:14:56.725Z"
     },
     {
       "id": "logicn-check-config",
@@ -1519,6 +1596,20 @@
       "lastModified": "2026-06-02T07:44:50.155Z"
     },
     {
+      "id": "logicn-continuation-brief-2026-06-15",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-continuation-brief-2026-06-15.md",
+      "title": "LogicN — Continuation / Handoff Brief (2026-06-15)",
+      "wordCount": 2295,
+      "lnlCodes": [
+        "LLN-GOV-3",
+        "LLN-STDLIB-002",
+        "LLN-SUBSTRATE-001",
+        "LLN-TYPE-021",
+        "LLN-TYPE-023"
+      ],
+      "lastModified": "2026-06-16T01:05:58.951Z"
+    },
+    {
       "id": "logicn-contract-authoring-guide",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-contract-authoring-guide.md",
       "title": "LogicN — Contract Authoring Guide (the canonical reference for AI + humans)",
@@ -1625,12 +1716,13 @@
       "id": "logicn-contract-privacy-observability",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-contract-privacy-observability.md",
       "title": "LogicN Contract — privacy {} and observability {} Sections",
-      "wordCount": 1152,
+      "wordCount": 1227,
       "lnlCodes": [
         "LLN-OBSERVE-001",
-        "LLN-PRIVACY-001"
+        "LLN-PRIVACY-001",
+        "LLN-PRIVACY-002"
       ],
-      "lastModified": "2026-06-02T07:44:50.156Z"
+      "lastModified": "2026-06-16T01:57:08.716Z"
     },
     {
       "id": "logicn-contract-sets",
@@ -2265,6 +2357,19 @@
       "lastModified": "2026-06-03T10:39:12.291Z"
     },
     {
+      "id": "logicn-design-stability-and-forward-planning",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-design-stability-and-forward-planning.md",
+      "title": "LogicN — Design Stability & Forward-Planning Charter",
+      "status": "binding conventions (2026-06-16). **Purpose:** keep LogicN ahead of the well-known",
+      "wordCount": 659,
+      "lnlCodes": [
+        "LLN-PRIVACY-001",
+        "LLN-PRIVACY-002",
+        "LLN-SECRET-002"
+      ],
+      "lastModified": "2026-06-16T09:44:12.194Z"
+    },
+    {
       "id": "logicn-deterministic-runtime-containment",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-deterministic-runtime-containment.md",
       "title": "LogicN — Deterministic Runtime Containment Model (DRCM)",
@@ -2341,6 +2446,20 @@
       "lastModified": "2026-06-02T07:44:50.175Z"
     },
     {
+      "id": "logicn-diagnostic-namespace-ownership",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-diagnostic-namespace-ownership.md",
+      "title": "LogicN — Diagnostic Namespace Ownership (a checked invariant)",
+      "status": "convention + enforcement (2026-06-16). **Why:** with ~180 emitted `LLN-*` codes across ~20",
+      "wordCount": 391,
+      "lnlCodes": [
+        "LLN-PRIVACY-001",
+        "LLN-PRIVACY-002",
+        "LLN-TYPE-021",
+        "LLN-TYPE-023"
+      ],
+      "lastModified": "2026-06-16T09:55:36.731Z"
+    },
+    {
       "id": "logicn-diagnostic-numbering-strategy",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-diagnostic-numbering-strategy.md",
       "title": "LogicN — Diagnostic Numbering Strategy",
@@ -2388,13 +2507,13 @@
       "title": "LogicN — Domain Guard Policies (Static Manifest Clamping)",
       "version": "1.1",
       "status": "Design proposal — implement in Stage A governance verifier (task #56).",
-      "wordCount": 1462,
+      "wordCount": 1666,
       "lnlCodes": [
         "LLN-GOV-004",
         "LLN-GOV-019",
         "LLN-LIMIT-001"
       ],
-      "lastModified": "2026-06-04T11:26:03.883Z"
+      "lastModified": "2026-06-16T20:58:32.884Z"
     },
     {
       "id": "logicn-drcm-phase1-specs",
@@ -2468,6 +2587,34 @@
         "LLN-STDLIB-001"
       ],
       "lastModified": "2026-06-02T07:44:50.178Z"
+    },
+    {
+      "id": "logicn-ext-bridge-quantum-design",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-ext-bridge-quantum-design.md",
+      "title": "LogicN External Bridge — Governed Quantum Simulation (`ffsim`)",
+      "layer": "Layer 2A",
+      "status": "🟢 **PHASE 0 + PHASE 1 IMPLEMENTED (2026-06-15).** The package",
+      "wordCount": 5712,
+      "lnlCodes": [
+        "LLN-BORDER-001",
+        "LLN-BORDER-005",
+        "LLN-SUBSTRATE-001",
+        "LLN-SUBSTRATE-002",
+        "LLN-SUBSTRATE-004"
+      ],
+      "lastModified": "2026-06-16T10:30:28.666Z"
+    },
+    {
+      "id": "logicn-external-idea-mining-2026-06-15",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-external-idea-mining-2026-06-15.md",
+      "title": "External Idea Mining — Governance Ideas for tower-citizen / LogicN (2026-06-15)",
+      "wordCount": 2425,
+      "lnlCodes": [
+        "LLN-SUBSTRATE-001",
+        "LLN-SUBSTRATE-002",
+        "LLN-SUBSTRATE-004"
+      ],
+      "lastModified": "2026-06-15T17:54:36.269Z"
     },
     {
       "id": "logicn-floor3-proof-zone-graph",
@@ -2670,7 +2817,7 @@
       "title": "LogicN — Governance Rules Registry",
       "version": "1.1",
       "status": "Living document — rules are added as features land.",
-      "wordCount": 8126,
+      "wordCount": 8455,
       "lnlCodes": [
         "LLN-ACCESS-001",
         "LLN-ACCESS-002",
@@ -2721,6 +2868,8 @@
         "LLN-MONO-002",
         "LLN-MONO-003",
         "LLN-OBS-001",
+        "LLN-PRIVACY-001",
+        "LLN-PRIVACY-002",
         "LLN-RES-001",
         "LLN-RESOURCE-001",
         "LLN-SECRET-001",
@@ -2730,10 +2879,11 @@
         "LLN-STATIC-002",
         "LLN-STEP-001",
         "LLN-STEP-002",
+        "LLN-SUBSTRATE-001",
         "LLN-TERM-001",
         "LLN-VALUESTATE-004"
       ],
-      "lastModified": "2026-06-05T11:07:56.521Z"
+      "lastModified": "2026-06-16T08:55:39.401Z"
     },
     {
       "id": "logicn-governance-scope",
@@ -2973,9 +3123,11 @@
       "id": "logicn-hardware-future-substrates",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-hardware-future-substrates.md",
       "title": "LogicN — Future Substrates: Photonic, Neuromorphic, Quantum",
-      "wordCount": 1413,
-      "lnlCodes": [],
-      "lastModified": "2026-06-02T07:44:50.188Z"
+      "wordCount": 1506,
+      "lnlCodes": [
+        "LLN-SUBSTRATE-001"
+      ],
+      "lastModified": "2026-06-16T00:20:13.484Z"
     },
     {
       "id": "logicn-hardware-google",
@@ -3045,6 +3197,14 @@
         "LLN-PRIVACY-005"
       ],
       "lastModified": "2026-06-02T07:44:50.191Z"
+    },
+    {
+      "id": "logicn-integrity-audit-2026-06-15",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-integrity-audit-2026-06-15.md",
+      "title": "LogicN Integrity Audit — #1–#197 / P1–P9 (2026-06-15)",
+      "wordCount": 776,
+      "lnlCodes": [],
+      "lastModified": "2026-06-15T13:00:43.711Z"
     },
     {
       "id": "logicn-intent-graph",
@@ -3623,6 +3783,17 @@
       "lastModified": "2026-06-02T07:44:50.207Z"
     },
     {
+      "id": "logicn-photonic-tri-substrate-rd-agenda",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-photonic-tri-substrate-rd-agenda.md",
+      "title": "LogicN R&D Agenda — Governing Photonic / Ternary Substrates",
+      "status": "research agenda (KB-first). No code yet. This doc defines the problem space, the",
+      "wordCount": 1982,
+      "lnlCodes": [
+        "LLN-GOV-3"
+      ],
+      "lastModified": "2026-06-14T23:47:53.787Z"
+    },
+    {
       "id": "logicn-pii-handling",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-pii-handling.md",
       "title": "logicn-pii-handling",
@@ -3671,6 +3842,31 @@
       "lastModified": "2026-06-02T07:44:50.208Z"
     },
     {
+      "id": "logicn-precision-attestation",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-precision-attestation.md",
+      "title": "#201 — Calibration-as-Attestation: the measured half of the tolerance/determinism model",
+      "wordCount": 779,
+      "lnlCodes": [
+        "LLN-SUBSTRATE-004"
+      ],
+      "lastModified": "2026-06-16T00:48:21.532Z"
+    },
+    {
+      "id": "logicn-privacy-embedding-egress",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-privacy-embedding-egress.md",
+      "title": "LogicN — No Cleartext Semantic Embedding Across a Trust Boundary (U2/#204, LLN-PRIVACY-002)",
+      "status": "ENFORCED (Stage-A compile-time, `value-state-checker.ts`). Date: 2026-06-16.",
+      "wordCount": 984,
+      "lnlCodes": [
+        "LLN-PRIVACY-001",
+        "LLN-PRIVACY-002",
+        "LLN-SECRET-002",
+        "LLN-SUBSTRATE-001",
+        "LLN-VALUESTATE-005"
+      ],
+      "lastModified": "2026-06-16T08:59:10.392Z"
+    },
+    {
       "id": "logicn-proof-chain-spec",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-proof-chain-spec.md",
       "title": "LogicN Execution Proof Chain Specification",
@@ -3699,6 +3895,17 @@
       "lastModified": "2026-06-04T22:19:00.757Z"
     },
     {
+      "id": "logicn-quantum-resistance-posture",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-quantum-resistance-posture.md",
+      "title": "LogicN Quantum-Resistance Posture (Zero-Trust)",
+      "status": "governance posture + decision record. **Date:** 2026-06-15.",
+      "wordCount": 825,
+      "lnlCodes": [
+        "LLN-SUBSTRATE-001"
+      ],
+      "lastModified": "2026-06-16T08:56:20.550Z"
+    },
+    {
       "id": "logicn-quantum-target-bridge",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-quantum-target-bridge.md",
       "title": "LogicN Architecture: Quantum Computing Support Through Target Bridges",
@@ -3715,6 +3922,17 @@
         "LLN-TYPE-002"
       ],
       "lastModified": "2026-06-02T22:45:56.631Z"
+    },
+    {
+      "id": "logicn-rd-adoption-2026-06-16",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-rd-adoption-2026-06-16.md",
+      "title": "What LogicN Adopts from the `.tmf` / tri-encryption R&D (2026-06-16)",
+      "wordCount": 616,
+      "lnlCodes": [
+        "LLN-GOV-3",
+        "LLN-SUBSTRATE-001"
+      ],
+      "lastModified": "2026-06-16T00:55:14.458Z"
     },
     {
       "id": "logicn-readable-logic-forms",
@@ -3939,11 +4157,11 @@
       "id": "logicn-runtime-status-SOT",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-runtime-status-SOT.md",
       "title": "LogicN — Runtime Status: Single Source of Truth (SOT)",
-      "wordCount": 2206,
+      "wordCount": 2262,
       "lnlCodes": [
         "LLN-MATCH-001"
       ],
-      "lastModified": "2026-06-14T22:45:09.061Z"
+      "lastModified": "2026-06-15T14:56:40.275Z"
     },
     {
       "id": "logicn-runtime-value-model",
@@ -4138,6 +4356,39 @@
       "lastModified": "2026-06-02T07:44:50.219Z"
     },
     {
+      "id": "logicn-substrate-contracts",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-substrate-contracts.md",
+      "title": "LogicN Substrate / Tolerance Contracts — Direction B sub-spec (KB-first, fail-closed)",
+      "status": "spike sub-spec (Direction **B** of the photonic/ternary R&D agenda). **KB-first** — this",
+      "wordCount": 4700,
+      "lnlCodes": [
+        "LLN-INV-001",
+        "LLN-SUBSTRATE-001",
+        "LLN-SUBSTRATE-002",
+        "LLN-SUBSTRATE-003",
+        "LLN-SUBSTRATE-004",
+        "LLN-SYNTAX-009",
+        "LLN-TRAP-001"
+      ],
+      "lastModified": "2026-06-15T12:59:32.762Z"
+    },
+    {
+      "id": "logicn-substrate-failure-model",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-substrate-failure-model.md",
+      "title": "LogicN Substrate Failure-Mode Model — Direction C sub-spec (seeded, fail-closed)",
+      "status": "spike sub-spec + implementation (Direction **C** of the photonic/ternary R&D agenda).",
+      "wordCount": 2391,
+      "lnlCodes": [
+        "LLN-GOV-3",
+        "LLN-PHOTONIC-001",
+        "LLN-SUBSTRATE-001",
+        "LLN-SUBSTRATE-002",
+        "LLN-SUBSTRATE-003",
+        "LLN-SUBSTRATE-004"
+      ],
+      "lastModified": "2026-06-15T07:16:35.211Z"
+    },
+    {
       "id": "logicn-supply-chain-package-governance",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-supply-chain-package-governance.md",
       "title": "LogicN Supply Chain Attestation and Package Governance",
@@ -4207,13 +4458,14 @@
       "id": "logicn-task-ledger",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-task-ledger.md",
       "title": "LogicN — Task Ledger #1–#148 (graph-review checklist)",
-      "wordCount": 3243,
+      "wordCount": 4333,
       "lnlCodes": [
         "LLN-GOV-010",
         "LLN-INV-000",
-        "LLN-MATCH-001"
+        "LLN-MATCH-001",
+        "LLN-SUBSTRATE-001"
       ],
-      "lastModified": "2026-06-14T20:43:19.123Z"
+      "lastModified": "2026-06-16T01:00:54.092Z"
     },
     {
       "id": "logicn-techdebt-gaps-review",
@@ -4250,6 +4502,19 @@
         "LLN-TYPE-001"
       ],
       "lastModified": "2026-06-02T07:44:50.221Z"
+    },
+    {
+      "id": "logicn-three-valued-governance",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-three-valued-governance.md",
+      "title": "LogicN Three-Valued Governance — Direction A sub-spec (proved fail-closed)",
+      "status": "spike sub-spec + implementation (Direction **A** of the photonic/ternary R&D agenda).",
+      "wordCount": 2168,
+      "lnlCodes": [
+        "LLN-GOV-004",
+        "LLN-GOV-3",
+        "LLN-SAFETY-003"
+      ],
+      "lastModified": "2026-06-15T06:29:33.102Z"
     },
     {
       "id": "logicn-topological-graph-engine",
@@ -4296,6 +4561,15 @@
         "LLN-TRAP-002"
       ],
       "lastModified": "2026-06-05T11:04:37.060Z"
+    },
+    {
+      "id": "logicn-tpl-bitnet-fidelity-audit",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-tpl-bitnet-fidelity-audit.md",
+      "title": "LogicN TPL ↔ BitNet I2_S fidelity audit (verified in code, not asserted)",
+      "status": "verification record. Every claim below is a **direct quote from current source** (LogicN",
+      "wordCount": 2659,
+      "lnlCodes": [],
+      "lastModified": "2026-06-15T08:43:40.534Z"
     },
     {
       "id": "logicn-trust-sensitivity-type-rules",
@@ -4589,7 +4863,7 @@
       "id": "operator-precedence",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\operator-precedence.md",
       "title": "LogicN — Operator Precedence",
-      "wordCount": 1551,
+      "wordCount": 1591,
       "lnlCodes": [
         "LLN-EXPR-001",
         "LLN-EXPR-002",
@@ -4599,7 +4873,7 @@
         "LLN-EXPR-006",
         "LLN-EXPR-007"
       ],
-      "lastModified": "2026-06-02T07:44:50.230Z"
+      "lastModified": "2026-06-16T11:18:39.391Z"
     },
     {
       "id": "operator-type-rules",
@@ -5661,6 +5935,21 @@
     },
     {
       "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-quantum-resistance-posture",
+      "linkText": "logicn-quantum-resistance-posture.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-design-stability-and-forward-planning",
+      "linkText": "logicn-design-stability-and-forward-planning.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-diagnostic-namespace-ownership",
+      "linkText": "logicn-diagnostic-namespace-ownership.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
       "to": "logicn-engineering-goals",
       "linkText": "logicn-engineering-goals.md"
     },
@@ -5678,6 +5967,36 @@
       "from": "KNOWLEDGE-BASE-INDEX",
       "to": "logicn-platform-infographic-concept",
       "linkText": "logicn-platform-infographic-concept.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-photonic-tri-substrate-rd-agenda",
+      "linkText": "logicn-photonic-tri-substrate-rd-agenda.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-tpl-bitnet-fidelity-audit",
+      "linkText": "logicn-tpl-bitnet-fidelity-audit.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-substrate-failure-model",
+      "linkText": "logicn-substrate-failure-model.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-ext-bridge-quantum-design",
+      "linkText": "logicn-ext-bridge-quantum-design.md"
     },
     {
       "from": "KNOWLEDGE-BASE-INDEX",
@@ -5703,6 +6022,11 @@
       "from": "KNOWLEDGE-BASE-INDEX",
       "to": "logicn-build-roadmap",
       "linkText": "logicn-build-roadmap.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-continuation-brief-2026-06-15",
+      "linkText": "logicn-continuation-brief-2026-06-15.md"
     },
     {
       "from": "KNOWLEDGE-BASE-INDEX",
@@ -5905,6 +6229,11 @@
       "linkText": "formal-type-system-spec.md"
     },
     {
+      "from": "compiler-diagnostics",
+      "to": "logicn-diagnostic-namespace-ownership",
+      "linkText": "logicn-diagnostic-namespace-ownership.md"
+    },
+    {
       "from": "compute-balancer",
       "to": "governed-execution-director",
       "linkText": "Governed Execution Director"
@@ -6073,6 +6402,16 @@
       "from": "local-ai-review",
       "to": "local-low-bit-ai-review",
       "linkText": "Local Low-Bit AI Review"
+    },
+    {
+      "from": "logicn-200-closeout-2026-06-15",
+      "to": "logicn-runtime-status-SOT",
+      "linkText": "logicn-runtime-status-SOT.md"
+    },
+    {
+      "from": "logicn-200-closeout-2026-06-15",
+      "to": "logicn-external-idea-mining-2026-06-15",
+      "linkText": "logicn-external-idea-mining-2026-06-15.md"
     },
     {
       "from": "logicn-agile-governance-pattern",
@@ -6775,6 +7114,91 @@
       "linkText": "Polymorphism"
     },
     {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-runtime-status-SOT",
+      "linkText": "logicn-runtime-status-SOT.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-200-closeout-2026-06-15",
+      "linkText": "logicn-200-closeout-2026-06-15.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-external-idea-mining-2026-06-15",
+      "linkText": "logicn-external-idea-mining-2026-06-15.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-precision-attestation",
+      "linkText": "logicn-precision-attestation.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-rd-adoption-2026-06-16",
+      "linkText": "logicn-rd-adoption-2026-06-16.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-quantum-resistance-posture",
+      "linkText": "logicn-quantum-resistance-posture.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-ext-bridge-quantum-design",
+      "linkText": "logicn-ext-bridge-quantum-design.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-integrity-audit-2026-06-15",
+      "linkText": "logicn-integrity-audit-2026-06-15.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-substrate-failure-model",
+      "linkText": "logicn-substrate-failure-model.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-cbor-manifest-spec",
+      "linkText": "logicn-cbor-manifest-spec.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-framework-layer-design",
+      "linkText": "logicn-framework-layer-design.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "compiler-diagnostics",
+      "linkText": "compiler-diagnostics.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "formal-type-system-spec",
+      "linkText": "formal-type-system-spec.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-build-roadmap",
+      "linkText": "logicn-build-roadmap.md"
+    },
+    {
+      "from": "logicn-continuation-brief-2026-06-15",
+      "to": "logicn-task-ledger",
+      "linkText": "logicn-task-ledger.md"
+    },
+    {
       "from": "logicn-contract-authoring-guide",
       "to": "logicn-domain-guard-policies",
       "linkText": "logicn-domain-guard-policies.md"
@@ -7255,6 +7679,16 @@
       "linkText": "logicn-core-network-governance.md"
     },
     {
+      "from": "logicn-diagnostic-namespace-ownership",
+      "to": "logicn-governance-rules",
+      "linkText": "logicn-governance-rules.md"
+    },
+    {
+      "from": "logicn-diagnostic-namespace-ownership",
+      "to": "compiler-diagnostics",
+      "linkText": "compiler-diagnostics.md"
+    },
+    {
       "from": "logicn-diagnostic-numbering-strategy",
       "to": "formal-type-system-spec",
       "linkText": "formal-type-system-spec.md"
@@ -7353,6 +7787,31 @@
       "from": "logicn-execution-graph-kernel-architecture",
       "to": "logicn-passive-execution-plans",
       "linkText": "logicn-passive-execution-plans.md"
+    },
+    {
+      "from": "logicn-ext-bridge-quantum-design",
+      "to": "logicn-hardened-border",
+      "linkText": "logicn-hardened-border.md"
+    },
+    {
+      "from": "logicn-ext-bridge-quantum-design",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
+    },
+    {
+      "from": "logicn-ext-bridge-quantum-design",
+      "to": "logicn-quantum-resistance-posture",
+      "linkText": "logicn-quantum-resistance-posture.md"
+    },
+    {
+      "from": "logicn-external-idea-mining-2026-06-15",
+      "to": "logicn-precision-attestation",
+      "linkText": "logicn-precision-attestation.md"
+    },
+    {
+      "from": "logicn-external-idea-mining-2026-06-15",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
     },
     {
       "from": "logicn-floor3-proof-zone-graph",
@@ -8305,6 +8764,26 @@
       "linkText": "logicn-governance-architecture"
     },
     {
+      "from": "logicn-integrity-audit-2026-06-15",
+      "to": "logicn-task-ledger",
+      "linkText": "logicn-task-ledger.md"
+    },
+    {
+      "from": "logicn-integrity-audit-2026-06-15",
+      "to": "logicn-techdebt-gaps-review",
+      "linkText": "logicn-techdebt-gaps-review.md"
+    },
+    {
+      "from": "logicn-integrity-audit-2026-06-15",
+      "to": "logicn-runtime-status-SOT",
+      "linkText": "logicn-runtime-status-SOT.md"
+    },
+    {
+      "from": "logicn-integrity-audit-2026-06-15",
+      "to": "logicn-continuation-brief-2026-06-15",
+      "linkText": "logicn-continuation-brief-2026-06-15.md"
+    },
+    {
       "from": "logicn-intent-graph",
       "to": "logicn-concept-intent",
       "linkText": "logicn-concept-intent.md"
@@ -9005,6 +9484,16 @@
       "linkText": "logicn-governance-verifier-spec.md"
     },
     {
+      "from": "logicn-precision-attestation",
+      "to": "logicn-external-idea-mining-2026-06-15",
+      "linkText": "logicn-external-idea-mining-2026-06-15.md"
+    },
+    {
+      "from": "logicn-privacy-embedding-egress",
+      "to": "logicn-rd-adoption-2026-06-16",
+      "linkText": "logicn-rd-adoption-2026-06-16.md"
+    },
+    {
       "from": "logicn-proof-chain-spec",
       "to": "formal-proof-system",
       "linkText": "formal-proof-system.md"
@@ -9033,6 +9522,16 @@
       "from": "logicn-proof-tracing-design",
       "to": "logicn-domain-guard-policies",
       "linkText": "logicn-domain-guard-policies.md"
+    },
+    {
+      "from": "logicn-quantum-resistance-posture",
+      "to": "logicn-task-ledger",
+      "linkText": "logicn-task-ledger.md"
+    },
+    {
+      "from": "logicn-quantum-resistance-posture",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
     },
     {
       "from": "logicn-quantum-target-bridge",
@@ -9310,6 +9809,46 @@
       "linkText": "logicn-audit-writer-spec.md"
     },
     {
+      "from": "logicn-substrate-contracts",
+      "to": "logicn-substrate-failure-model",
+      "linkText": "logicn-substrate-failure-model.md"
+    },
+    {
+      "from": "logicn-substrate-contracts",
+      "to": "logicn-photonic-tri-substrate-rd-agenda",
+      "linkText": "logicn-photonic-tri-substrate-rd-agenda.md"
+    },
+    {
+      "from": "logicn-substrate-contracts",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
+      "from": "logicn-substrate-contracts",
+      "to": "logicn-domain-guard-policies",
+      "linkText": "logicn-domain-guard-policies.md"
+    },
+    {
+      "from": "logicn-substrate-contracts",
+      "to": "compiler-diagnostics",
+      "linkText": "compiler-diagnostics.md"
+    },
+    {
+      "from": "logicn-substrate-failure-model",
+      "to": "logicn-photonic-tri-substrate-rd-agenda",
+      "linkText": "logicn-photonic-tri-substrate-rd-agenda.md"
+    },
+    {
+      "from": "logicn-substrate-failure-model",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
+      "from": "logicn-substrate-failure-model",
+      "to": "compiler-diagnostics",
+      "linkText": "compiler-diagnostics.md"
+    },
+    {
       "from": "logicn-syntax-if-match-optional",
       "to": "logicn-syntax-loops-iteration",
       "linkText": "logicn-syntax-loops-iteration.md"
@@ -9340,6 +9879,26 @@
       "linkText": "logicn-roadmap-next10-phases.md"
     },
     {
+      "from": "logicn-task-ledger",
+      "to": "logicn-200-closeout-2026-06-15",
+      "linkText": "logicn-200-closeout-2026-06-15.md"
+    },
+    {
+      "from": "logicn-task-ledger",
+      "to": "logicn-external-idea-mining-2026-06-15",
+      "linkText": "logicn-external-idea-mining-2026-06-15.md"
+    },
+    {
+      "from": "logicn-task-ledger",
+      "to": "logicn-precision-attestation",
+      "linkText": "logicn-precision-attestation.md"
+    },
+    {
+      "from": "logicn-task-ledger",
+      "to": "logicn-rd-adoption-2026-06-16",
+      "linkText": "logicn-rd-adoption-2026-06-16.md"
+    },
+    {
       "from": "logicn-tensor-numeric-performance",
       "to": "logicn-ai-memory-efficiency",
       "linkText": "logicn-ai-memory-efficiency.md"
@@ -9363,6 +9922,16 @@
       "from": "logicn-tensor-numeric-performance",
       "to": "logicn-logical-planning-target-emission",
       "linkText": "logicn-logical-planning-target-emission.md"
+    },
+    {
+      "from": "logicn-three-valued-governance",
+      "to": "logicn-photonic-tri-substrate-rd-agenda",
+      "linkText": "logicn-photonic-tri-substrate-rd-agenda.md"
+    },
+    {
+      "from": "logicn-three-valued-governance",
+      "to": "compiler-diagnostics",
+      "linkText": "compiler-diagnostics.md"
     },
     {
       "from": "logicn-topological-graph-engine",
@@ -9413,6 +9982,16 @@
       "from": "logicn-tower-native-syntax",
       "to": "logicn-build-roadmap",
       "linkText": "logicn-build-roadmap.md"
+    },
+    {
+      "from": "logicn-tpl-bitnet-fidelity-audit",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
+      "from": "logicn-tpl-bitnet-fidelity-audit",
+      "to": "logicn-substrate-failure-model",
+      "linkText": "logicn-substrate-failure-model.md"
     },
     {
       "from": "logicn-unified-syntax-governance-and-target-bridge-plan",
@@ -9763,6 +10342,7 @@
     "logicn-phase58-cuda-gpu-backend",
     "logicn-phase59-60-rc-summary",
     "logicn-photonic-crossover-analysis",
+    "logicn-privacy-embedding-egress",
     "logicn-quantum-target-bridge",
     "logicn-readable-logic-forms",
     "logicn-residual-risks",
@@ -9817,18 +10397,30 @@
     "what-logicn-refuses-to-become"
   ],
   "staleLinks": [
+    "logicn-200-closeout-2026-06-15 → SESSION-HANDOFF (\"SESSION-HANDOFF.md\")",
     "logicn-benchmark-enforcement-cost-spec → BLOCKED (\"BLOCKED.md\")",
     "logicn-checkpoint-2026-06-06 → logicn-framework-fused-layer (\"logicn-framework-fused-layer.md\")",
     "logicn-checkpoint-2026-06-06 → reference-logicn-runtime-status-sot (\"reference-logicn-runtime-status-sot.md\")",
+    "logicn-continuation-brief-2026-06-15 → logicn-photonic-tri-rd (\"logicn-photonic-tri-rd.md\")",
+    "logicn-continuation-brief-2026-06-15 → reference-logicn-runtime-status-sot (\"reference-logicn-runtime-status-sot.md\")",
+    "logicn-design-stability-and-forward-planning → governance-rules (\"governance-rules.md\")",
+    "logicn-diagnostic-namespace-ownership → governance-rules (\"governance-rules.md\")",
+    "logicn-ext-bridge-quantum-design → ffsim-build-readiness (\"ffsim-build-readiness.md\")",
+    "logicn-ext-bridge-quantum-design → ffsim-op-catalog (\"ffsim-op-catalog.md\")",
+    "logicn-ext-bridge-quantum-design → _raw-miner-findings (\"_raw-miner-findings.md\")",
+    "logicn-external-idea-mining-2026-06-15 → logicn-precision-recipe-contract (\"logicn-precision-recipe-contract.md\")",
+    "logicn-external-idea-mining-2026-06-15 → logicn-routeprecision-axis (\"logicn-routeprecision-axis.md\")",
     "logicn-framework-layer-design → syntax (\"syntax.md\")",
     "logicn-framework-layer-design → README (\"README.md\")",
-    "logicn-residual-risks → README (\"README.md\")"
+    "logicn-residual-risks → README (\"README.md\")",
+    "logicn-task-ledger → SESSION-HANDOFF (\"SESSION-HANDOFF.md\")",
+    "logicn-three-valued-governance → tri-logic (\"tri-logic.md\")"
   ],
   "stats": {
-    "totalDocs": 432,
-    "totalEdges": 888,
-    "totalLlnCodes": 583,
-    "orphanCount": 134,
-    "staleLinkCount": 6
+    "totalDocs": 448,
+    "totalEdges": 949,
+    "totalLlnCodes": 597,
+    "orphanCount": 135,
+    "staleLinkCount": 18
   }
 }

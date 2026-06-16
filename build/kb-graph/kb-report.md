@@ -1,15 +1,15 @@
 # LogicN KB Graph Report
-Generated: 2026-06-14
+Generated: 2026-06-16
 
 ## Stats
-- Docs: 432 | Edges: 888 | Orphans: 134 | Stale links: 6 | LLN codes: 583
+- Docs: 448 | Edges: 949 | Orphans: 135 | Stale links: 18 | LLN codes: 597
 
 ## Document Registry (auto-generated)
 
 | Doc | Layer | Version | Status | LLN Codes |
 |---|---|---|---|---|
-| KNOWLEDGE-BASE-INDEX.md | Layer 0 | 1.1 | — | LLN-ACCESS-001, LLN-ASSIMILATE-001, LLN-BORDER-001, LLN-CAP-001, LLN-GOV-004 …+4 |
-| logicn-build-roadmap.md | Layer 0 | 7.0 | — | LLN-ACCESS-001, LLN-ASSIMILATE-001, LLN-CAP-001, LLN-GATE-001, LLN-IMPORT-001 …+6 |
+| KNOWLEDGE-BASE-INDEX.md | Layer 0 | 1.1 | — | LLN-ACCESS-001, LLN-ASSIMILATE-001, LLN-BORDER-001, LLN-CAP-001, LLN-GOV-004 …+6 |
+| logicn-build-roadmap.md | Layer 0 | 7.0 | — | LLN-ACCESS-001, LLN-ASSIMILATE-001, LLN-CAP-001, LLN-GATE-001, LLN-IMPORT-001 …+8 |
 | logicn-engineering-goals.md | Layer 0 | 1.0 | — | LLN-CAP-003, LLN-RESOURCE-001 |
 | logicn-governed-tower-specification.md | Layer 0 | 1.0 | Authoritative architecture specification — supersedes individual component documents | LLN-INV-000, LLN-INV-001, LLN-INV-004 |
 | layered-rate-limits.md | Layer 1 | — | — | — |
@@ -18,6 +18,7 @@ Generated: 2026-06-14
 | logicn-governance-hierarchy.md | Layer 1 | — | — | LLN-EFFECT-001, LLN-GOV-002, LLN-NET-001, LLN-PKG-005, LLN-SEC-020 …+2 |
 | logicn-logical-planning-target-emission.md | Layer 1 | — | Phase 13 — Core architecture principle | — |
 | logicn-security-model-layers.md | Layer 1 | — | — | LLN-BACKEND-001, LLN-BUILD-001, LLN-EFFECT-001, LLN-EFFECT-002, LLN-GOV-002 …+10 |
+| logicn-ext-bridge-quantum-design.md | Layer 2A | — | 🟢 **PHASE 0 + PHASE 1 IMPLEMENTED (2026-06-15).** The package | LLN-BORDER-001, LLN-BORDER-005, LLN-SUBSTRATE-001, LLN-SUBSTRATE-002, LLN-SUBSTRATE-004 |
 | logicn-contract-clause-reference.md | Layer 2B | 1.1 | Living document — updated as DRCM phases ship. | LLN-AU-001, LLN-BF-001, LLN-BF-002, LLN-CAP-001, LLN-CAP-002 …+32 |
 | 00-KB-INDEX.md | — | — | — | LLN-BACKEND-001, LLN-GATE-001, LLN-NET-001, LLN-STDLIB-001, LLN-SUPPLY-001 …+2 |
 | AI_INDEX.md | — | — | — | LLN-HW-101, LLN-PHOTONIC-001, LLN-SEC-014, LLN-SYNTAX-010, LLN-TYPE-031 |
@@ -51,7 +52,7 @@ Generated: 2026-06-14
 | cicd-integration-and-provenance.md | — | — | — | — |
 | compile-time-metadata-reflection.md | — | — | — | — |
 | compile-time-vs-runtime-authority.md | — | — | — | LLN-SYNTAX-002 |
-| compiler-diagnostics.md | — | — | — | LLN-AST-001, LLN-AST-002, LLN-AST-003, LLN-AST-004, LLN-AST-005 …+253 |
+| compiler-diagnostics.md | — | — | — | LLN-AST-001, LLN-AST-002, LLN-AST-003, LLN-AST-004, LLN-AST-005 …+318 |
 | compute-balancer.md | — | — | — | — |
 | context-tagged-verified-execution-cache.md | — | — | — | — |
 | controlled-mutation-model.md | — | — | — | — |
@@ -96,6 +97,7 @@ Generated: 2026-06-14
 | local-ai-review.md | — | — | — | — |
 | local-low-bit-ai-review.md | — | — | — | — |
 | logic-architecture-policy.md | — | — | — | — |
+| logicn-200-closeout-2026-06-15.md | — | — | — | — |
 | logicn-adaptive-runtime-profiles.md | — | — | — | — |
 | logicn-agile-governance-pattern.md | — | 1.0 | Foundation built. `.lmanifest` (binary CBOR) is live as of DRCM Phase 3 (#67). | — |
 | logicn-ai-ergonomics.md | — | — | — | LLN-LEX-001, LLN-PARSE-001, LLN-SYNTAX-010 |
@@ -136,12 +138,13 @@ Generated: 2026-06-14
 | logicn-concept-intent.md | — | — | — | LLN-INTENT-001, LLN-INTENT-002, LLN-INTENT-003, LLN-INTENT-004, LLN-INTENT-005 |
 | logicn-concept-map.md | — | — | — | — |
 | logicn-concurrency-synchronisation-compute.md | — | — | — | — |
+| logicn-continuation-brief-2026-06-15.md | — | — | — | LLN-GOV-3, LLN-STDLIB-002, LLN-SUBSTRATE-001, LLN-TYPE-021, LLN-TYPE-023 |
 | logicn-contract-authoring-guide.md | — | — | — | LLN-GOV-017, LLN-GOV-018, LLN-INV-001, LLN-INV-002 |
 | logicn-contract-economics.md | — | — | — | — |
 | logicn-contract-errors.md | — | — | — | — |
 | logicn-contract-full-model.md | — | — | — | LLN-CONTEXT-001, LLN-CONTRACT-001, LLN-GOV-003, LLN-SYNTAX-010 |
 | logicn-contract-operational-constraints.md | — | — | — | LLN-LIMIT-001, LLN-RETRY-001, LLN-TIMEOUT-001 |
-| logicn-contract-privacy-observability.md | — | — | — | LLN-OBSERVE-001, LLN-PRIVACY-001 |
+| logicn-contract-privacy-observability.md | — | — | — | LLN-OBSERVE-001, LLN-PRIVACY-001, LLN-PRIVACY-002 |
 | logicn-contract-sets.md | — | — | — | LLN-GOV-011, LLN-GOV-012 |
 | logicn-contracts-as-meaning-layer.md | — | — | — | — |
 | logicn-core-cli-deploy-explain-plan.md | — | — | — | LLN-EFFECT-002, LLN-MANIFEST-002 |
@@ -184,11 +187,13 @@ Generated: 2026-06-14
 | logicn-data-layout-memory-hints.md | — | — | — | — |
 | logicn-design-primitive-obsession.md | — | — | — | — |
 | logicn-design-secrets-epilogue-blocks.md | — | — | stub live (produces clearly-labelled PENDING receipt). Real prover = Task #29. | LLN-SECRET-001, LLN-SECRET-002, LLN-SECRET-003 |
+| logicn-design-stability-and-forward-planning.md | — | — | binding conventions (2026-06-16). **Purpose:** keep LogicN ahead of the well-known | LLN-PRIVACY-001, LLN-PRIVACY-002, LLN-SECRET-002 |
 | logicn-deterministic-runtime-containment.md | — | — | Design proposal — three tiers have different implementation readiness. | LLN-INV-001, LLN-INV-002, LLN-INV-003, LLN-MONO-001, LLN-SECRET-001 …+1 |
 | logicn-deterministic-selfhost-verification.md | — | — | ``` | LLN-BUILD-001 |
 | logicn-developer-tooling-advanced.md | — | — | — | LLN-CONSTRAINT-001, LLN-CONSTRAINT-002, LLN-CONSTRAINT-003, LLN-CONSTRAINT-004, LLN-CONSTRAINT-005 |
 | logicn-developer-tools.md | — | — | — | LLN-CAP-001, LLN-CRYPTO-001, LLN-EFFECT-001, LLN-ERROR-001, LLN-MATCH-001 …+13 |
 | logicn-developer-ux-phase-8.md | — | — | — | — |
+| logicn-diagnostic-namespace-ownership.md | — | — | convention + enforcement (2026-06-16). **Why:** with ~180 emitted `LLN-*` codes across ~20 | LLN-PRIVACY-001, LLN-PRIVACY-002, LLN-TYPE-021, LLN-TYPE-023 |
 | logicn-diagnostic-numbering-strategy.md | — | — | — | LLN-TYPE-001, LLN-TYPE-002, LLN-TYPE-003, LLN-TYPE-004, LLN-TYPE-009 |
 | logicn-diagnostics-spec.md | — | — | Proposed (2026-06-06) · **Post-P9, non-blocking.** (The draft-agent for this doc hit a 529 overload; authored directly.) | LLN-INV-000 |
 | logicn-doc-comment-standard.md | — | — | — | — |
@@ -199,6 +204,7 @@ Generated: 2026-06-14
 | logicn-effect-inference-tracking.md | — | — | — | LLN-EFFECT-001 |
 | logicn-execution-graph-kernel-architecture.md | — | — | — | LLN-EFFECT-005 |
 | logicn-explicitness-principles.md | — | — | — | LLN-PKG-003, LLN-STDLIB-001 |
+| logicn-external-idea-mining-2026-06-15.md | — | — | — | LLN-SUBSTRATE-001, LLN-SUBSTRATE-002, LLN-SUBSTRATE-004 |
 | logicn-floor3-proof-zone-graph.md | — | 1.0 | Visual specification for task #69 (floor-specific dev tools graphs). | LLN-CAP-001, LLN-EFFECT-001, LLN-INV-001, LLN-INV-003, LLN-INV-004 …+2 |
 | logicn-flow-contracts.md | — | — | Readable result types depend on Readable Logic Forms adoption (separate proposal). The canonical `Result<T,E>` form is always valid inside `contract.types`. | — |
 | logicn-flow-entry-points.md | — | — | Phase 11 — Specification (parser partially implemented) | LLN-ENTRY-001 |
@@ -213,7 +219,7 @@ Generated: 2026-06-14
 | logicn-governance-cicd-pipeline.md | — | 1.0 | Architecture document — partially implemented; remaining items in task list. | — |
 | logicn-governance-diff-ci.md | — | — | — | LLN-DIFF-001, LLN-DIFF-002, LLN-DIFF-003, LLN-DIFF-004, LLN-DIFF-005 …+4 |
 | logicn-governance-economics-platform.md | — | — | — | LLN-AI-003, LLN-ECON-001 |
-| logicn-governance-rules.md | — | 1.1 | Living document — rules are added as features land. | LLN-ACCESS-001, LLN-ACCESS-002, LLN-ASSIMILATE-001, LLN-ASSIMILATE-002, LLN-ASSIMILATE-003 …+55 |
+| logicn-governance-rules.md | — | 1.1 | Living document — rules are added as features land. | LLN-ACCESS-001, LLN-ACCESS-002, LLN-ASSIMILATE-001, LLN-ASSIMILATE-002, LLN-ASSIMILATE-003 …+58 |
 | logicn-governance-scope.md | — | — | — | LLN-VAL-001, LLN-VAL-002, LLN-VAL-003 |
 | logicn-governance-signature.md | — | — | — | — |
 | logicn-governance-verifier-architecture.md | — | — | — | LLN-CONTEXT-001, LLN-GOV-002, LLN-GOV-003, LLN-GOV-004, LLN-GOV-005 …+6 |
@@ -234,7 +240,7 @@ Generated: 2026-06-14
 | logicn-hardware-as-capabilities.md | — | — | Phase 13/14 — Future architecture | — |
 | logicn-hardware-compatibility-matrix.md | — | — | — | LLN-HW-001, LLN-HW-002, LLN-HW-003, LLN-HW-004 |
 | logicn-hardware-compute-fabric.md | — | — | — | — |
-| logicn-hardware-future-substrates.md | — | — | — | — |
+| logicn-hardware-future-substrates.md | — | — | — | LLN-SUBSTRATE-001 |
 | logicn-hardware-google.md | — | — | — | — |
 | logicn-hardware-npu-apu.md | — | — | — | — |
 | logicn-hardware-nvidia.md | — | — | — | LLN-HW-004 |
@@ -242,6 +248,7 @@ Generated: 2026-06-14
 | logicn-hybrid-wasm-architecture.md | — | — | — | LLN-GOV-014, LLN-NET-001, LLN-PKG-005 |
 | logicn-hybrid-wasm-native-architecture-v1.md | — | — | — | — |
 | logicn-ide-tooling.md | — | — | Phase 13/14 — Design specification | LLN-CAPABILITY-003, LLN-CONTEXT-001, LLN-EFFECT-002, LLN-PRIVACY-003, LLN-PRIVACY-005 |
+| logicn-integrity-audit-2026-06-15.md | — | — | — | — |
 | logicn-intent-graph.md | — | — | — | — |
 | logicn-intent-guided-optimisation.md | — | — | — | — |
 | logicn-javascript-escape-hatch.md | — | — | Phase 13 — Compiler backend rule | LLN-BACKEND-001 |
@@ -289,13 +296,18 @@ Generated: 2026-06-14
 | logicn-photonic-crossover-analysis.md | — | — | — | — |
 | logicn-photonic-distinct-compute-model.md | — | — | — | LLN-PHOTONIC-001, LLN-PHOTONIC-002, LLN-PHOTONIC-003, LLN-PHOTONIC-004, LLN-PHOTONIC-005 …+5 |
 | logicn-photonic-ternary-bridge-spec.md | — | — | — | LLN-PHOTONIC-001, LLN-PHOTONIC-002, LLN-PHOTONIC-003, LLN-PHOTONIC-004, LLN-TYPE-031 …+2 |
+| logicn-photonic-tri-substrate-rd-agenda.md | — | — | research agenda (KB-first). No code yet. This doc defines the problem space, the | LLN-GOV-3 |
 | logicn-pii-handling.md | — | — | — | LLN-GOV-002, LLN-GOV-003, LLN-VALUESTATE-003, LLN-VALUESTATE-005, LLN-VALUESTATE-006 |
 | logicn-platform-infographic-concept.md | — | 1.0 | CONCEPT — to be rendered as a poster/visual map when the platform is complete. | LLN-CAP-001, LLN-EFFECT-001, LLN-SECRET-001, LLN-TYPE-001 |
 | logicn-post-quantum-hardware-security.md | — | — | — | LLN-HW-101, LLN-HW-102, LLN-HW-103, LLN-HW-104, LLN-HW-201 …+5 |
+| logicn-precision-attestation.md | — | — | — | LLN-SUBSTRATE-004 |
+| logicn-privacy-embedding-egress.md | — | — | ENFORCED (Stage-A compile-time, `value-state-checker.ts`). Date: 2026-06-16. | LLN-PRIVACY-001, LLN-PRIVACY-002, LLN-SECRET-002, LLN-SUBSTRATE-001, LLN-VALUESTATE-005 |
 | logicn-proof-chain-spec.md | — | — | — | — |
 | logicn-proof-tracing-design.md | — | 1.0 | Design proposal — implementation tasks #73 and #74. | LLN-ASSUME-001, LLN-ASSUME-002, LLN-ASSUME-003, LLN-ASSUME-004, LLN-INV-000 …+4 |
+| logicn-quantum-resistance-posture.md | — | — | governance posture + decision record. **Date:** 2026-06-15. | LLN-SUBSTRATE-001 |
 | logicn-quantum-target-bridge.md | — | — | — | — |
 | logicn-r6-bootstrap-corpus.md | — | — | — | LLN-TYPE-002 |
+| logicn-rd-adoption-2026-06-16.md | — | — | — | LLN-GOV-3, LLN-SUBSTRATE-001 |
 | logicn-readable-logic-forms.md | — | — | — | LLN-READABLE-001, LLN-READABLE-002 |
 | logicn-residual-risks.md | — | — | — | — |
 | logicn-resilience-observability-design.md | — | 1.1 | Approved for implementation (task #58). Refinements incorporated from review. | LLN-OBS-001, LLN-RES-001 |
@@ -330,18 +342,22 @@ Generated: 2026-06-14
 | logicn-static-capability-proofs.md | — | — | — | LLN-EFFECT-001, LLN-EFFECT-002, LLN-STDLIB-001 |
 | logicn-stdlib-architecture.md | — | — | — | LLN-BACKEND-001, LLN-SEC-020, LLN-SEC-021, LLN-STDLIB-001, LLN-VALUESTATE-006 |
 | logicn-stdlib-reference.md | — | — | — | — |
+| logicn-substrate-contracts.md | — | — | spike sub-spec (Direction **B** of the photonic/ternary R&D agenda). **KB-first** — this | LLN-INV-001, LLN-SUBSTRATE-001, LLN-SUBSTRATE-002, LLN-SUBSTRATE-003, LLN-SUBSTRATE-004 …+2 |
+| logicn-substrate-failure-model.md | — | — | spike sub-spec + implementation (Direction **C** of the photonic/ternary R&D agenda). | LLN-GOV-3, LLN-PHOTONIC-001, LLN-SUBSTRATE-001, LLN-SUBSTRATE-002, LLN-SUBSTRATE-003 …+1 |
 | logicn-supply-chain-package-governance.md | — | — | — | LLN-CORE-0000, LLN-EFFECT-2000, LLN-PACKAGE-4000, LLN-PAYMENTS-1000, LLN-SECURITY-3000 …+3 |
 | logicn-symbol-resolver-spec.md | — | — | — | LLN-EFFECT-001, LLN-EFFECT-002, LLN-EFFECT-003, LLN-NAME-001, LLN-NAME-002 …+6 |
 | logicn-syntax-if-match-optional.md | — | — | — | — |
 | logicn-syntax-loops-iteration.md | — | — | — | — |
 | logicn-taint-catalogue.md | — | — | — | LLN-TAINT-001, LLN-TAINT-002, LLN-TAINT-003, LLN-TAINT-004 |
-| logicn-task-ledger.md | — | — | — | LLN-GOV-010, LLN-INV-000, LLN-MATCH-001 |
+| logicn-task-ledger.md | — | — | — | LLN-GOV-010, LLN-INV-000, LLN-MATCH-001, LLN-SUBSTRATE-001 |
 | logicn-techdebt-gaps-review.md | — | — | — | — |
 | logicn-tensor-arity-decision.md | — | — | — | LLN-TYPE-009 |
 | logicn-tensor-numeric-performance.md | — | — | — | — |
 | logicn-testing-model.md | — | — | — | LLN-TYPE-001 |
+| logicn-three-valued-governance.md | — | — | spike sub-spec + implementation (Direction **A** of the photonic/ternary R&D agenda). | LLN-GOV-004, LLN-GOV-3, LLN-SAFETY-003 |
 | logicn-topological-graph-engine.md | — | 1.1 | Can be implemented now (Task #79). Builds on existing domain guard infrastructure. | LLN-GATE-001, LLN-GATE-002, LLN-INV-000 |
 | logicn-tower-native-syntax.md | — | 1.2 | Implemented — Stage A compiler + governance verifier (§1–§10) | LLN-ACCESS-001, LLN-ACCESS-002, LLN-ASSIMILATE-001, LLN-ASSIMILATE-002, LLN-ASSIMILATE-003 …+16 |
+| logicn-tpl-bitnet-fidelity-audit.md | — | — | verification record. Every claim below is a **direct quote from current source** (LogicN | — |
 | logicn-trust-sensitivity-type-rules.md | — | — | — | LLN-TYPE-003 |
 | logicn-type-checker-architecture.md | — | — | — | LLN-TYPE-001, LLN-TYPE-003, LLN-TYPE-004, LLN-TYPE-008, LLN-TYPE-009 …+11 |
 | logicn-type-improvements-phase-8.md | — | — | — | LLN-MATCH-003, LLN-TYPE-003, LLN-TYPE-004 |
@@ -526,6 +542,7 @@ Docs with no inbound links from other KB docs:
 - `logicn-phase58-cuda-gpu-backend.md` — LogicN Phase 58 — CUDA GPU Backend
 - `logicn-phase59-60-rc-summary.md` — LogicN — Phase 59-60 RC Summary
 - `logicn-photonic-crossover-analysis.md` — LogicN Photonic Compute Crossover Analysis
+- `logicn-privacy-embedding-egress.md` — LogicN — No Cleartext Semantic Embedding Across a Trust Boundary (U2/#204, LLN-PRIVACY-002)
 - `logicn-quantum-target-bridge.md` — LogicN Architecture: Quantum Computing Support Through Target Bridges
 - `logicn-readable-logic-forms.md` — LogicN Language Proposal — Readable Logic Forms
 - `logicn-residual-risks.md` — LogicN — Non-P9 Residual Risks (verified catalogue)
@@ -582,9 +599,21 @@ Docs with no inbound links from other KB docs:
 ## Stale Links
 Links pointing to missing files:
 
+- logicn-200-closeout-2026-06-15 → SESSION-HANDOFF ("SESSION-HANDOFF.md")
 - logicn-benchmark-enforcement-cost-spec → BLOCKED ("BLOCKED.md")
 - logicn-checkpoint-2026-06-06 → logicn-framework-fused-layer ("logicn-framework-fused-layer.md")
 - logicn-checkpoint-2026-06-06 → reference-logicn-runtime-status-sot ("reference-logicn-runtime-status-sot.md")
+- logicn-continuation-brief-2026-06-15 → logicn-photonic-tri-rd ("logicn-photonic-tri-rd.md")
+- logicn-continuation-brief-2026-06-15 → reference-logicn-runtime-status-sot ("reference-logicn-runtime-status-sot.md")
+- logicn-design-stability-and-forward-planning → governance-rules ("governance-rules.md")
+- logicn-diagnostic-namespace-ownership → governance-rules ("governance-rules.md")
+- logicn-ext-bridge-quantum-design → ffsim-build-readiness ("ffsim-build-readiness.md")
+- logicn-ext-bridge-quantum-design → ffsim-op-catalog ("ffsim-op-catalog.md")
+- logicn-ext-bridge-quantum-design → _raw-miner-findings ("_raw-miner-findings.md")
+- logicn-external-idea-mining-2026-06-15 → logicn-precision-recipe-contract ("logicn-precision-recipe-contract.md")
+- logicn-external-idea-mining-2026-06-15 → logicn-routeprecision-axis ("logicn-routeprecision-axis.md")
 - logicn-framework-layer-design → syntax ("syntax.md")
 - logicn-framework-layer-design → README ("README.md")
 - logicn-residual-risks → README ("README.md")
+- logicn-task-ledger → SESSION-HANDOFF ("SESSION-HANDOFF.md")
+- logicn-three-valued-governance → tri-logic ("tri-logic.md")

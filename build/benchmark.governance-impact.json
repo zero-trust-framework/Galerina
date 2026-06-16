@@ -2,7 +2,7 @@
   "schemaVersion": "lln.governance-impact.v1",
   "sourceFile": "C:/wwwprojects/LogicN/packages-logicn/logicn-devtools-benchmarks/benchmarks/governance-cost/benchmark.lln",
   "sourceHash": "sha256:632723a852348a5d02c3f1709a5b8d4dcc0b30492f4b6497f4a2c7b1ca707d90",
-  "generatedAt": "2026-06-16T12:13:41.343Z",
+  "generatedAt": "2026-06-16T22:20:41.013Z",
   "flowCount": 3,
   "flows": [
     {
