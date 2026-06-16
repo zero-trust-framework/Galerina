@@ -231,7 +231,7 @@ These operators are NOT in the Phase 5 table. They are reserved for later phases
 | `->` | Flow return type arrow (declaration-level) |
 | `=>` | Match arm arrow (match expression-level) |
 | `..` | Range operator (future) |
-| `&` `\|` | Bitwise (future) |
+| `&` `\|` `^` `~` `<<` `>>` | **Bitwise — permanently excluded from `.lln` (NOT "future").** Bit-level math lives in the engine/extension layer (the crypto-on-core boundary); the lexer rejects `^`/`~` with a descriptive hint (`lexer.ts:790`). See `logicn-issues/0002` reframed as a design boundary, not a pending feature. |
 | `%` | Present in table but not in Phase 4 lexer ONE_CHAR_OPERATORS — add when needed |
 
 ---

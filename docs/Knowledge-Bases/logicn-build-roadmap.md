@@ -241,6 +241,7 @@ Tasks #1–67 + #71 + #73 + #74 + #79–89 + #92–#94 (see task list for full d
 | **#123** | `governance_tier` boot.lln mapping | Parser |
 | **#124** | `audit_depth full` AuditEvent AI inference fields | Verifier |
 | **#125** | `logicn run --governed <flow>` — execute effectful/secure flows via the **governed interpreter** (`console.log` / `audit.write` / capability host) **enforcing the manifest's allowed effects**. Today `run` is WASM-`--invoke`-only (only pure, primitive-returning flows are exported), so a `secure flow main { console.log }` can be *checked* but not *executed* from the CLI — the error at `logicn.mjs:1300` correctly says so but offers no run path. Governance-sensitive: must honour deny-by-default (no ambient `console`/capabilities), reuse `interpreter.ts`'s `ContractEnforcer` + `CapabilityHost`, not bypass them. Dogfooding finding (.tmf R&D #2). | CLI |
+| **#126** | Extend the descriptive operator hint beyond `^`/`~` (`lexer.ts:790`). `&` `\|` `<<` `>>` and `&&` `\|\|` currently emit a generic `LLN-PARSE-001`. Must be **parser-level, not lexer**: `\|` is overloaded for multi-variant match arms (`A\|B =>`, `parser.ts:1709`) and `<<`/`>>` are `<`/`>` pairs used in generics/comparison — none can be blanket-rejected in the lexer. In *expression* position, hint `&` `\|` `<<` `>>` → engine/extension (crypto-on-core) and `&&` `\|\|` → use the `and`/`or` keywords. From R&D conformance audit (DX only, low priority). | DX |
 
 ### Governed Inference Tower (Track A/B)
 | Task | What | Priority |
