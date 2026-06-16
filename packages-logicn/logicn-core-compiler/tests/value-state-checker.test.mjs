@@ -1038,6 +1038,35 @@ ${body}
     const r = parseAndCheck(mk('  let x = build(1)\n  let r = http.post("u", x)'));
     assert.ok(!hasDiag(r, "LLN-SECRET-002"));
   });
+
+  // ── Derived-secret egress (regression: the credential laundering fail-open) ──
+  // A secret transformed via slice/concat/record/etc. must STILL be blocked — these
+  // are exactly the exfiltration vectors (the same evasion class as vec2text on a
+  // semantic vector). Before the derivesFromSecret fix, all of these leaked clean.
+  it("a SLICED secret sent to http.post → LLN-SECRET-002", () => {
+    const r = parseAndCheck(mk('  let key = secret.get("K")\n  let part = key.slice(0,5)\n  let r = http.post("u", part)'));
+    assert.ok(hasDiag(r, "LLN-SECRET-002"), `expected SECRET-002 for sliced secret, got: ${r.diagnostics.map((d) => d.code).join(", ")}`);
+  });
+  it("a CONCATENATED secret sent to http.post → LLN-SECRET-002", () => {
+    const r = parseAndCheck(mk('  let key = secret.get("K")\n  let p = key + "Z"\n  let r = http.post("u", p)'));
+    assert.ok(hasDiag(r, "LLN-SECRET-002"), `expected SECRET-002 for concatenated secret, got: ${r.diagnostics.map((d) => d.code).join(", ")}`);
+  });
+  it("a secret wrapped in a RECORD field sent to http.post → LLN-SECRET-002", () => {
+    const r = parseAndCheck(mk('  let key = secret.get("K")\n  let rec = { tok: key }\n  let r = http.post("u", rec)'));
+    assert.ok(hasDiag(r, "LLN-SECRET-002"), `expected SECRET-002 for record-wrapped secret, got: ${r.diagnostics.map((d) => d.code).join(", ")}`);
+  });
+  it("a DOUBLY-derived secret (slice then concat) sent to http.post → LLN-SECRET-002", () => {
+    const r = parseAndCheck(mk('  let key = secret.get("K")\n  let a = key.slice(0,8)\n  let b = a + "!"\n  let r = http.post("u", b)'));
+    assert.ok(hasDiag(r, "LLN-SECRET-002"), `expected SECRET-002 for doubly-derived secret, got: ${r.diagnostics.map((d) => d.code).join(", ")}`);
+  });
+  it("redact() of a secret via an intermediate binding → clean (redact is the sole declassifier)", () => {
+    const r = parseAndCheck(mk('  let key = secret.get("K")\n  let safe = redact(key)\n  let r = http.post("u", safe)'));
+    assert.ok(!hasDiag(r, "LLN-SECRET-002"), `redact-via-binding must clear the secret, got: ${r.diagnostics.map((d) => d.code).join(", ")}`);
+  });
+  it("a derived NON-secret value → clean (no false positive)", () => {
+    const r = parseAndCheck(mk('  let x = build(1)\n  let p = x.slice(0,2)\n  let r = http.post("u", p)'));
+    assert.ok(!hasDiag(r, "LLN-SECRET-002"));
+  });
 });
 
 // ── Phase 4.1: List/array taint propagation ───────────────────────────────────

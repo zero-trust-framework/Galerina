@@ -356,6 +356,59 @@ function isRedactCall(node: AstNode): boolean {
   return node.kind === "callExpr" && (node.value === "redact");
 }
 
+/**
+ * Returns true when `node` reads from — OR is DERIVED from — a `secrets {}` credential.
+ * This is the propagating form of isSecretSourceExpression: a secret carried through a
+ * transform (slice, concat, member access, record field, a non-redacting call/helper)
+ * is STILL secret. The ONLY declassifier is redact() (irreversible) — a parsed, decoded,
+ * validated, or otherwise transformed secret remains a secret for sink purposes.
+ *
+ * Closes the LLN-SECRET-002 derived-secret fail-open: previously only a binding whose
+ * init was a DIRECT secret accessor got tagged SecureString, so `let p = key.slice(0,5)`
+ * (or `key + x`, or `{ tok: key }`) laundered the credential past the egress guard.
+ * Tagging derived bindings here also hardens LLN-SECRET-001 (logging) and LLN-SECRET-003
+ * (serialization), which key on the same SecureString tag.
+ */
+function derivesFromSecret(
+  node: AstNode,
+  lookupBinding: (name: string) => BindingInfo | undefined,
+): boolean {
+  // redact(...) is the sole declassifier — it breaks the chain.
+  if (isRedactCall(node)) return false;
+  // A direct secret accessor (secret.get / vault.read / kms.decrypt / secrets.get), incl. `?`.
+  if (isSecretSourceExpression(node)) return true;
+
+  switch (node.kind) {
+    case "identifier": {
+      const binding = lookupBinding(node.value ?? "");
+      return binding?.typeName === "SecureString";
+    }
+    case "memberExpr": {
+      const receiver = node.children?.[0];
+      return receiver !== undefined && derivesFromSecret(receiver, lookupBinding);
+    }
+    case "callExpr": {
+      // Record literals parse as callExpr "#record" whose children are field nodes,
+      // each holding the field VALUE as its first child (mirrors isTaintedExpression).
+      if (node.value === "#record") {
+        return (node.children ?? []).some((field) => {
+          const value = field.children?.[0];
+          return value !== undefined && derivesFromSecret(value, lookupBinding);
+        });
+      }
+      // Any non-redacting call carrying a secret through receiver or args stays secret
+      // (NOTE: unlike the taint chain, validate/parse/decode do NOT declassify a secret).
+      return (node.children ?? []).some((child) => derivesFromSecret(child, lookupBinding));
+    }
+    case "binaryExpr":
+    case "listLiteral":
+    case "errorPropagation":
+      return (node.children ?? []).some((child) => derivesFromSecret(child, lookupBinding));
+    default:
+      return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Gate function recognition
 //
@@ -1035,7 +1088,9 @@ class ValueStateChecker {
     // (secret.get / vault.read / kms.decrypt …) is a secret. Tag it as SecureString so the
     // existing LLN-SECRET-001/003 sink guards block it from logs/serialization/audit output.
     const secretField =
-      init !== undefined && isSecretSourceExpression(init) && info.typeName !== "SecureString"
+      init !== undefined &&
+      info.typeName !== "SecureString" &&
+      derivesFromSecret(init, (name) => this.lookupBinding(name))
         ? { typeName: "SecureString" }
         : {};
     this.registerBinding({ ...info, ...locField, ...taintField, ...secretField });
@@ -1075,7 +1130,15 @@ class ValueStateChecker {
     }
     // When safetyPrefix is "safe" and a gate is used, taint is intentionally cleared
     // (the gate call gates are already excluded by isTaintedExpression).
-    this.registerBinding({ ...info, ...mutLocField, ...mutTaintField });
+    // Secret-origin propagates through a mut reassignment too (a derived secret stays
+    // SecureString unless re-bound to a non-secret), closing the mut laundering path.
+    const mutSecretField =
+      init !== undefined &&
+      info.typeName !== "SecureString" &&
+      derivesFromSecret(init, (name) => this.lookupBinding(name))
+        ? { typeName: "SecureString" }
+        : {};
+    this.registerBinding({ ...info, ...mutLocField, ...mutTaintField, ...mutSecretField });
 
     if (init !== undefined) this.walkNode(init);
   }
