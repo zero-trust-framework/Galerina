@@ -36,7 +36,7 @@
       "title": "LogicN Core Knowledge Base — Master Navigation Guide & TCB Map",
       "version": "1.1",
       "layer": "Layer 0",
-      "wordCount": 2961,
+      "wordCount": 3077,
       "lnlCodes": [
         "LLN-ACCESS-001",
         "LLN-ASSIMILATE-001",
@@ -51,7 +51,7 @@
         "LLN-RES-001",
         "LLN-SUBSTRATE-001"
       ],
-      "lastModified": "2026-06-16T23:44:16.124Z"
+      "lastModified": "2026-06-17T00:07:23.832Z"
     },
     {
       "id": "ai-as-untrusted-reasoning-worker",
@@ -3952,11 +3952,12 @@
       "id": "logicn-rd-absorption-catalog",
       "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-rd-absorption-catalog.md",
       "title": "R&D Absorption Catalog — the complete ledger",
-      "wordCount": 1080,
+      "wordCount": 1259,
       "lnlCodes": [
-        "LLN-AMD-024"
+        "LLN-AMD-024",
+        "LLN-SUBSTRATE-001"
       ],
-      "lastModified": "2026-06-16T23:36:31.111Z"
+      "lastModified": "2026-06-17T00:12:50.217Z"
     },
     {
       "id": "logicn-rd-adoption-2026-06-16",
@@ -3968,6 +3969,16 @@
         "LLN-SUBSTRATE-001"
       ],
       "lastModified": "2026-06-16T22:37:29.144Z"
+    },
+    {
+      "id": "logicn-rd-performance-and-boundary-opportunities",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-rd-performance-and-boundary-opportunities.md",
+      "title": "Can the absorbed R&D improve LogicN performance, boundary, or memory?",
+      "wordCount": 1056,
+      "lnlCodes": [
+        "LLN-ENTROPY-001"
+      ],
+      "lastModified": "2026-06-17T00:06:33.390Z"
     },
     {
       "id": "logicn-readable-logic-forms",
@@ -4616,6 +4627,18 @@
       "wordCount": 2659,
       "lnlCodes": [],
       "lastModified": "2026-06-15T08:43:40.534Z"
+    },
+    {
+      "id": "logicn-tritmesh-boundary-and-seam",
+      "path": "C:\\wwwprojects\\LogicN\\docs\\Knowledge-Bases\\logicn-tritmesh-boundary-and-seam.md",
+      "title": "LogicN ↔ TritMesh — boundary, governance seam, conformance",
+      "wordCount": 662,
+      "lnlCodes": [
+        "LLN-GOV-002",
+        "LLN-GOV-3",
+        "LLN-SUBSTRATE-001"
+      ],
+      "lastModified": "2026-06-17T00:05:32.966Z"
     },
     {
       "id": "logicn-trust-sensitivity-type-rules",
@@ -6068,6 +6091,16 @@
       "from": "KNOWLEDGE-BASE-INDEX",
       "to": "logicn-qrng-entropy-capability-design",
       "linkText": "logicn-qrng-entropy-capability-design.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-tritmesh-boundary-and-seam",
+      "linkText": "logicn-tritmesh-boundary-and-seam.md"
+    },
+    {
+      "from": "KNOWLEDGE-BASE-INDEX",
+      "to": "logicn-rd-performance-and-boundary-opportunities",
+      "linkText": "logicn-rd-performance-and-boundary-opportunities.md"
     },
     {
       "from": "KNOWLEDGE-BASE-INDEX",
@@ -9686,6 +9719,11 @@
     },
     {
       "from": "logicn-rd-absorption-catalog",
+      "to": "logicn-tritmesh-boundary-and-seam",
+      "linkText": "logicn-tritmesh-boundary-and-seam.md"
+    },
+    {
+      "from": "logicn-rd-absorption-catalog",
       "to": "logicn-rd-adoption-2026-06-16",
       "linkText": "logicn-rd-adoption-2026-06-16.md"
     },
@@ -9693,6 +9731,51 @@
       "from": "logicn-rd-adoption-2026-06-16",
       "to": "logicn-tmf-engine",
       "linkText": "`logicn-tmf-engine.md`"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-privacy-embedding-egress",
+      "linkText": "logicn-privacy-embedding-egress.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-tritmesh-boundary-and-seam",
+      "linkText": "logicn-tritmesh-boundary-and-seam.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-tmf-engine",
+      "linkText": "logicn-tmf-engine.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-quantum-resilience-roadmap",
+      "linkText": "logicn-quantum-resilience-roadmap.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-qrng-entropy-capability-design",
+      "linkText": "logicn-qrng-entropy-capability-design.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-rd-absorption-catalog",
+      "linkText": "logicn-rd-absorption-catalog.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-performance-roadmap",
+      "linkText": "logicn-performance-roadmap.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
+    },
+    {
+      "from": "logicn-rd-performance-and-boundary-opportunities",
+      "to": "logicn-tpl-bitnet-fidelity-audit",
+      "linkText": "logicn-tpl-bitnet-fidelity-audit.md"
     },
     {
       "from": "logicn-resilience-observability-design",
@@ -10185,6 +10268,41 @@
       "linkText": "logicn-substrate-failure-model.md"
     },
     {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-rd-absorption-catalog",
+      "linkText": "logicn-rd-absorption-catalog.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-substrate-failure-model",
+      "linkText": "logicn-substrate-failure-model.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-substrate-contracts",
+      "linkText": "logicn-substrate-contracts.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-quantum-resilience-roadmap",
+      "linkText": "logicn-quantum-resilience-roadmap.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-rd-adoption-2026-06-16",
+      "linkText": "logicn-rd-adoption-2026-06-16.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-tmf-engine",
+      "linkText": "logicn-tmf-engine.md"
+    },
+    {
+      "from": "logicn-tritmesh-boundary-and-seam",
+      "to": "logicn-three-valued-governance",
+      "linkText": "logicn-three-valued-governance.md"
+    },
+    {
       "from": "logicn-unified-syntax-governance-and-target-bridge-plan",
       "to": "logicn-contract-full-model",
       "linkText": "logicn-contract-full-model.md"
@@ -10607,8 +10725,8 @@
     "logicn-three-valued-governance → tri-logic (\"tri-logic.md\")"
   ],
   "stats": {
-    "totalDocs": 452,
-    "totalEdges": 978,
+    "totalDocs": 454,
+    "totalEdges": 997,
     "totalLlnCodes": 600,
     "orphanCount": 134,
     "staleLinkCount": 18

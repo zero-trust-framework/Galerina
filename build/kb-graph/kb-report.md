@@ -1,8 +1,8 @@
 # LogicN KB Graph Report
-Generated: 2026-06-16
+Generated: 2026-06-17
 
 ## Stats
-- Docs: 452 | Edges: 978 | Orphans: 134 | Stale links: 18 | LLN codes: 600
+- Docs: 454 | Edges: 997 | Orphans: 134 | Stale links: 18 | LLN codes: 600
 
 ## Document Registry (auto-generated)
 
@@ -309,8 +309,9 @@ Generated: 2026-06-16
 | logicn-quantum-resistance-posture.md | — | — | governance posture + decision record. **Date:** 2026-06-15. | LLN-SUBSTRATE-001 |
 | logicn-quantum-target-bridge.md | — | — | — | — |
 | logicn-r6-bootstrap-corpus.md | — | — | — | LLN-TYPE-002 |
-| logicn-rd-absorption-catalog.md | — | — | — | LLN-AMD-024 |
+| logicn-rd-absorption-catalog.md | — | — | — | LLN-AMD-024, LLN-SUBSTRATE-001 |
 | logicn-rd-adoption-2026-06-16.md | — | — | — | LLN-GOV-3, LLN-SUBSTRATE-001 |
+| logicn-rd-performance-and-boundary-opportunities.md | — | — | — | LLN-ENTROPY-001 |
 | logicn-readable-logic-forms.md | — | — | — | LLN-READABLE-001, LLN-READABLE-002 |
 | logicn-residual-risks.md | — | — | — | — |
 | logicn-resilience-observability-design.md | — | 1.1 | Approved for implementation (task #58). Refinements incorporated from review. | LLN-OBS-001, LLN-RES-001 |
@@ -362,6 +363,7 @@ Generated: 2026-06-16
 | logicn-topological-graph-engine.md | — | 1.1 | Can be implemented now (Task #79). Builds on existing domain guard infrastructure. | LLN-GATE-001, LLN-GATE-002, LLN-INV-000 |
 | logicn-tower-native-syntax.md | — | 1.2 | Implemented — Stage A compiler + governance verifier (§1–§10) | LLN-ACCESS-001, LLN-ACCESS-002, LLN-ASSIMILATE-001, LLN-ASSIMILATE-002, LLN-ASSIMILATE-003 …+16 |
 | logicn-tpl-bitnet-fidelity-audit.md | — | — | verification record. Every claim below is a **direct quote from current source** (LogicN | — |
+| logicn-tritmesh-boundary-and-seam.md | — | — | — | LLN-GOV-002, LLN-GOV-3, LLN-SUBSTRATE-001 |
 | logicn-trust-sensitivity-type-rules.md | — | — | — | LLN-TYPE-003 |
 | logicn-type-checker-architecture.md | — | — | — | LLN-TYPE-001, LLN-TYPE-003, LLN-TYPE-004, LLN-TYPE-008, LLN-TYPE-009 …+11 |
 | logicn-type-improvements-phase-8.md | — | — | — | LLN-MATCH-003, LLN-TYPE-003, LLN-TYPE-004 |

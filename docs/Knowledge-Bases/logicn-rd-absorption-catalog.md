@@ -68,6 +68,21 @@ classification sweep (2026-06-17), pinned to R&D commit **`238f07a`** (Lane E de
 
 Process/scratch deliberately **not** cataloged: `_session-bridge/*`, `*/notes/*` duplicates (`tri-encription/notes/1-3` == `tmf/notes/1-3`), probe `*.lln`, `spec/_vectors/*`, vendored `node_modules`.
 
+## 4. TritMesh repo (`LogicN-TritMesh/TritMesh` @ `5db2e17`) — separate product, referenced not absorbed
+TritMesh is a downstream **product** that *consumes* LogicN; its own design-notes mandate "separate repos, no
+merge, no shared crypto substrate." So LogicN **references** the seam + conformance (captured in
+`logicn-tritmesh-boundary-and-seam.md`) and does **not** mirror the product. All 16 docs accounted for:
+
+| TritMesh doc(s) | Disposition |
+|---|---|
+| `docs/design-notes/02-governance-seam-lln.md` | **captured** → `logicn-tritmesh-boundary-and-seam.md` (the PEP/PDP WASM seam) |
+| `logicn-issues/CONFORMANCE-FINDINGS.md` | **captured** → boundary doc (what LogicN hosts today) |
+| `logicn-issues/0001–0005` + issue `README` | **reconciled** → boundary doc table (shipped / by-design / roadmap #126/#128); see bridge task 0001 |
+| `docs/design-notes/00-provenance-and-corrections.md` | **covered** — crypto-on-core derivation = `LLN-SUBSTRATE-001` (already in KB) |
+| `research/encryption-on-photonic-substrates.md` | **covered/superseded** — 2026-06-15 predecessor; current form is the `rd-absorbed/` lane docs + `logicn-quantum-resilience-roadmap.md` (TritMesh *inherits* the invariant from LogicN) |
+| `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `governance/README.md` | **TritMesh-owned product** (MeshQL, ANN/HNSW, balanced-ternary entity model, `.tmf` product layout) — pointer only, not LogicN knowledge |
+| repo `CLAUDE` / `README` / `docs/LICENSE-NOTE` | repo meta / legal — skip |
+
 ## Appendix A — durable facts captured from non-mirrored docs
 Facts genuinely absent elsewhere in the KB, preserved here so the library is complete.
 

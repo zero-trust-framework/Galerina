@@ -1,0 +1,55 @@
+<svg width="100%" viewBox="0 0 680 500" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
+<title>LogicN mechanics — governance-first compute pipeline</title>
+<desc>Author .lln source, compile through the Stage-A governance verifier, sign artifacts, run under a fail-closed K3 gate, with governed ext packages, all under the crypto-on-core invariant.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="40" y="26" font-size="16" font-weight="700" fill="#1c2128">LogicN mechanics — governance-first compute</text>
+<text x="40" y="46" font-size="11" fill="#5a6470">blue = compile-time · teal = runtime · amber = governed ext · purple = cross-cutting invariant</text>
+
+<rect x="140" y="62" width="400" height="48" rx="8" fill="#e8effb" stroke="#3b6fd4" stroke-width="1.5"/>
+<text x="340" y="83" text-anchor="middle" font-size="13" font-weight="600" fill="#1f3a6b">① .lln source — flow + contract</text>
+<text x="340" y="100" text-anchor="middle" font-size="11" fill="#3a5285">intent · effects · policy · substrate · economics</text>
+<path d="M340 110 L340 127" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<text x="40" y="125" font-size="11" fill="#5a6470">② Stage-A compiler — compile-time governance</text>
+<rect x="40" y="131" width="142" height="50" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="111" y="156" text-anchor="middle" font-size="12" font-weight="600" fill="#1f3a6b">Lexer · Parser</text>
+<text x="111" y="172" text-anchor="middle" font-size="10" fill="#3a5285">→ AST</text>
+<rect x="192" y="131" width="142" height="50" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="263" y="156" text-anchor="middle" font-size="12" font-weight="600" fill="#1f3a6b">Effect checker</text>
+<text x="263" y="172" text-anchor="middle" font-size="10" fill="#3a5285">deny-by-default</text>
+<rect x="344" y="131" width="142" height="50" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="415" y="156" text-anchor="middle" font-size="12" font-weight="600" fill="#1f3a6b">Governance verifier</text>
+<text x="415" y="172" text-anchor="middle" font-size="10" fill="#3a5285">K3 · LLN codes</text>
+<rect x="496" y="131" width="142" height="50" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="567" y="156" text-anchor="middle" font-size="12" font-weight="600" fill="#1f3a6b">GIR</text>
+<text x="567" y="172" text-anchor="middle" font-size="10" fill="#3a5285">→ Stage-B</text>
+<path d="M340 181 L340 199" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<rect x="40" y="201" width="290" height="48" rx="8" fill="#efeaf7" stroke="#7a5bb0" stroke-width="1.5"/>
+<text x="185" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#43306b">③ Signed .lmanifest</text>
+<text x="185" y="239" text-anchor="middle" font-size="11" fill="#5a4584">verified before load</text>
+<rect x="350" y="201" width="290" height="48" rx="8" fill="#efeaf7" stroke="#7a5bb0" stroke-width="1.5"/>
+<text x="495" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#43306b">ProofGraph signature</text>
+<text x="495" y="239" text-anchor="middle" font-size="11" fill="#5a4584">hybrid Ed25519 + ML-DSA-65</text>
+<path d="M340 249 L340 267" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<rect x="120" y="269" width="440" height="58" rx="8" fill="#e3f5f2" stroke="#2b8a7e" stroke-width="1.5"/>
+<text x="340" y="293" text-anchor="middle" font-size="13" font-weight="600" fill="#14534b">④ Runtime — K3 gate on every governed effect</text>
+<text x="340" y="312" text-anchor="middle" font-size="11" fill="#1f6b60">allow +1 · deny −1 · unknown 0 → deny · audit</text>
+<path d="M340 327 L340 345" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<text x="40" y="343" font-size="11" fill="#5a6470">⑤ Governed ext packages (not core)</text>
+<rect x="40" y="349" width="190" height="52" rx="8" fill="#fcf0d9" stroke="#c08a2e" stroke-width="1.5"/>
+<text x="135" y="374" text-anchor="middle" font-size="12.5" font-weight="600" fill="#6b4e15">.tmf engine</text>
+<text x="135" y="391" text-anchor="middle" font-size="10" fill="#7d5e1d">TMX-256 · container · KEM-DEM</text>
+<rect x="245" y="349" width="190" height="52" rx="8" fill="#fcf0d9" stroke="#c08a2e" stroke-width="1.5"/>
+<text x="340" y="374" text-anchor="middle" font-size="12.5" font-weight="600" fill="#6b4e15">Quantum bridge</text>
+<text x="340" y="391" text-anchor="middle" font-size="10" fill="#7d5e1d">Tier-3 · attested</text>
+<rect x="450" y="349" width="190" height="52" rx="8" fill="#fcf0d9" stroke="#c08a2e" stroke-width="1.5"/>
+<text x="545" y="374" text-anchor="middle" font-size="12.5" font-weight="600" fill="#6b4e15">Secrets vault</text>
+<text x="545" y="391" text-anchor="middle" font-size="10" fill="#7d5e1d">sealed credentials</text>
+
+<rect x="40" y="421" width="600" height="48" rx="8" fill="#f3eefa" stroke="#7a5bb0" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="340" y="443" text-anchor="middle" font-size="12.5" font-weight="600" fill="#43306b">Cross-cutting invariant — crypto-on-core (LLN-SUBSTRATE-001)</text>
+<text x="340" y="460" text-anchor="middle" font-size="10.5" fill="#5a4584">digital bit-exact crypto · photonics = bulk math only · substrate tolerance (NMR/TMR)</text>
+</svg>
