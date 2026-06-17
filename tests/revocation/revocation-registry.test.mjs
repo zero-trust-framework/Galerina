@@ -69,3 +69,53 @@ test("a different key cannot validate the signature", () => {
 test("an unsigned registry reports signed:false (graceful, not a hard fail)", () => {
   assert.equal(verifyRegistryObject({ schemaVersion: 1, revoked: [] }, "").signed, false);
 });
+
+// ── v2 trust-anchor pinning (rogue-signer defense, revocation-registry-v0 §5) ──
+import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { assertRegistryTrustworthy, signRegistryObject as signReg } from "../../governance/revocation-registry.mjs";
+
+function pinnedRoot(rootKeyId) {
+  const d = mkdtempSync(join(tmpdir(), "lln-anchor-"));
+  mkdirSync(join(d, "governance"), { recursive: true });
+  writeFileSync(join(d, "governance", "trust-anchor.json"),
+    JSON.stringify({ schemaVersion: 1, registrySigningRootKeyId: rootKeyId }));
+  return d;
+}
+function writeSignedRegistry(d, signerKeyId, privatePem, publicPem) {
+  writeFileSync(join(d, "governance", `signing-key-${signerKeyId}.pub.pem`), publicPem);
+  const signed = signReg({ schemaVersion: 1, revoked: [{ keyId: "8eecf4187ebc9341" }] }, privatePem, signerKeyId);
+  writeFileSync(join(d, "governance", "revocations.json"), JSON.stringify(signed, null, 2) + "\n");
+}
+
+test("v2: registry signed by the PINNED root → trusted", () => {
+  const { publicKey, privateKey } = ephemeralKey();
+  const d = pinnedRoot("rootkey");
+  writeSignedRegistry(d, "rootkey", privateKey, publicKey);
+  const t = assertRegistryTrustworthy(d);
+  assert.equal(t.valid, true);
+  assert.equal(t.pinned, true);
+});
+
+test("v2: ROGUE signer (valid sig, wrong key) is REJECTED when a root is pinned", () => {
+  const rogue = ephemeralKey();
+  const d = pinnedRoot("rootkey");               // pin = "rootkey"
+  writeSignedRegistry(d, "roguekey", rogue.privateKey, rogue.publicKey); // signed by "roguekey"
+  assert.throws(() => assertRegistryTrustworthy(d), /rogue-signer rejected|pinned trust anchor/);
+});
+
+test("v2: pinned root + UNSIGNED registry → fail closed", () => {
+  const d = pinnedRoot("rootkey");
+  writeFileSync(join(d, "governance", "revocations.json"),
+    JSON.stringify({ schemaVersion: 1, revoked: [] }, null, 2));
+  assert.throws(() => assertRegistryTrustworthy(d), /UNSIGNED.*pinned|pinned.*requires a signed/i);
+});
+
+test("v2: malformed trust-anchor.json → fail closed (does not silently drop pinning)", () => {
+  const d = mkdtempSync(join(tmpdir(), "lln-anchor-bad-"));
+  mkdirSync(join(d, "governance"), { recursive: true });
+  writeFileSync(join(d, "governance", "trust-anchor.json"), "{ not json");
+  writeFileSync(join(d, "governance", "revocations.json"),
+    JSON.stringify({ schemaVersion: 1, revoked: [] }, null, 2));
+  assert.throws(() => assertRegistryTrustworthy(d));
+});

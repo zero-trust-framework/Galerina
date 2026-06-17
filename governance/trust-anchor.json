@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "registrySigningRootKeyId": "ab46f4c7e2797b9b",
+  "note": "PINNED trust anchor (revocation-registry-v0 §5). governance/revocations.json MUST be signed by this key id — the verifier rejects a registry signed by any other key, even a fresh non-revoked one (defeats the rogue-signer attack). This pin is resolved out of band and is NEVER read from the registry itself. Rotating the root is a deliberate ceremony: re-sign the registry with the new root, then update this pin. Do NOT auto-rotate the root. v3 (engine Slice-5, logicn-ext-tmf) adds the full revocation-registry-v0 binary format: freshness (next_update), anti-rollback (sequence), hybrid Ed25519+ML-DSA-65, and a dedicated root distinct from the operational signing key."
+}

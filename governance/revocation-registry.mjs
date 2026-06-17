@@ -110,10 +110,33 @@ function loadPubKey(rootDir, keyId) {
  *   - signed & valid     → { signed:true, valid:true }
  *   - signed & INVALID / signer-key-not-found / signer-key-revoked → THROWS (fail closed)
  */
+/**
+ * The PINNED registry-signing root (v2 trust-anchor pinning, per revocation-registry-v0 §5).
+ * Resolved out of band from governance/trust-anchor.json — NEVER from the registry itself
+ * (a registry must not be able to name its own authorizing key). Absent → null (no pin,
+ * legacy v1 "any present non-revoked signer"); malformed → throws (fail closed).
+ */
+function loadTrustAnchor(rootDir) {
+  const p = join(rootDir, "governance", "trust-anchor.json");
+  if (!existsSync(p)) return null;
+  const d = JSON.parse(readFileSync(p, "utf-8")); // malformed → throws → caller fails closed
+  if (typeof d.registrySigningRootKeyId !== "string" || d.registrySigningRootKeyId.length === 0) {
+    throw new Error("trust-anchor.json: missing/invalid registrySigningRootKeyId");
+  }
+  return d.registrySigningRootKeyId;
+}
+
 export function assertRegistryTrustworthy(rootDir = ".") {
   const data = loadRegistry(rootDir);
   if (data === null) return { present: false, signed: false, valid: false };
-  if (!data.signature) return { present: true, signed: false, valid: false };
+
+  const pin = loadTrustAnchor(rootDir); // throws if the anchor file is malformed
+
+  if (!data.signature) {
+    // A pinned deployment REQUIRES a signed registry — an unsigned one is untrustworthy.
+    if (pin) throw new Error(`revocation registry is UNSIGNED, but trust anchor ${pin} is pinned — a pinned deployment requires a signed registry`);
+    return { present: true, signed: false, valid: false }; // no pin → legacy graceful-unsigned
+  }
 
   const keyId = data.signature.keyId;
   // A revoked key cannot authorize the revocation registry itself.
@@ -123,6 +146,11 @@ export function assertRegistryTrustworthy(rootDir = ".") {
   if (typeof keyId === "string" && revoked.has(keyId)) {
     throw new Error(`revocation registry is signed by a REVOKED key (${keyId})`);
   }
+  // v2 TRUST-ANCHOR PINNING: the signer MUST be the pinned root. Defeats the rogue-signer
+  // attack (forge the registry, sign with a fresh not-yet-revoked key) — that key is not the pin.
+  if (pin && keyId !== pin) {
+    throw new Error(`revocation registry signed by ${keyId}, but the pinned trust anchor is ${pin} (rogue-signer rejected)`);
+  }
   const pubPem = loadPubKey(rootDir, keyId);
   if (pubPem === null) {
     throw new Error(`revocation registry signer public key not found: signing-key-${keyId}.pub.pem`);
@@ -131,5 +159,5 @@ export function assertRegistryTrustworthy(rootDir = ".") {
   if (!res.valid) {
     throw new Error(`revocation registry signature INVALID (tampered, or wrong key) — keyId ${keyId}`);
   }
-  return { present: true, signed: true, valid: true, keyId };
+  return { present: true, signed: true, valid: true, keyId, pinned: pin !== null && keyId === pin };
 }
