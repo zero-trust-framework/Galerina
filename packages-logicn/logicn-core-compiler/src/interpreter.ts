@@ -346,16 +346,14 @@ class SyncInterpreter {
   }
 
   private execBlock(block: AstNode): LogicNValue {
-    // Save scope snapshot for variable scoping
-    const saved = new Map(this.scope);
+    // Block-declared variables persist into the enclosing scope (there is no block-local
+    // restore by design — the top-level function block mutates the shared scope).
+    // Phase-0 perf: the previous `const saved = new Map(this.scope)` snapshot was dead —
+    // it copied the whole scope on every block for a restore that never ran (empty finally),
+    // an O(scope) allocation per block with no behavioural effect. Removed.
     let last: LogicNValue = LLN_VOID;
-    try {
-      for (const stmt of block.children ?? []) {
-        last = this.execStmt(stmt);
-      }
-    } finally {
-      // Restore scope (only for blocks that might have introduced new variables)
-      // Note: we DON'T restore for the top-level function block — mutations persist
+    for (const stmt of block.children ?? []) {
+      last = this.execStmt(stmt);
     }
     return last;
   }
