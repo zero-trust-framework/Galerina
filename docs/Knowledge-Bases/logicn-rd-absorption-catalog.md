@@ -29,7 +29,9 @@ classification sweep (2026-06-17), pinned to R&D commit **`238f07a`** (Lane E de
 | tmf/research/photonic-lane-B-quantum-digital-signatures.md | `rd-absorbed/rd-quantum-digital-signatures-lane-b.md` | logicn-quantum-resilience-roadmap.md |
 | tmf/research/photonic-lane-C-optical-puf.md | `rd-absorbed/rd-photonic-lane-c-optical-puf.md` | logicn-quantum-resilience-roadmap.md |
 | tmf/research/photonic-lane-D-qrng.md | `rd-absorbed/rd-qrng-entropy-source-for-hybrid-signing.md` | logicn-quantum-resilience-roadmap.md |
-| tmf/research/photonic-lane-E-qkd-confidentiality.md *(238f07a)* | `rd-absorbed/rd-photonic-lane-e-qkd-confidentiality.md` | logicn-quantum-resilience-roadmap.md |
+| tmf/research/photonic-lane-E-qkd-confidentiality.md *(CORRECTED task-0004, 2026-06-17 — 10 edits)* | `rd-absorbed/rd-photonic-lane-e-qkd-confidentiality.md` | logicn-quantum-resilience-roadmap.md |
+| tmf/spec/revocation-registry-v0.md *(roadmap #2, 2026-06-17; bench 28/28)* | `rd-absorbed/rd-revocation-registry-v0.md` | logicn-key-custody-and-rotation.md + logicn-tmf-engine.md (engine Slice-5 conformance) |
+| tmf/spec/qrng-conditioning-pipeline-v0.md *(roadmap #3, 2026-06-17; bench 17/17)* | `rd-absorbed/rd-qrng-conditioning-pipeline-v0.md` | logicn-quantum-resilience-roadmap.md (entropy.qrng interface) |
 | tmf/research/photonic-ternary-in-tls.md | `rd-absorbed/rd-photonic-ternary-in-tls.md` | (bridge task 0002) |
 | tmf/research/real-vs-aspirational-ledger.md | `rd-absorbed/rd-tmf-real-vs-aspirational-ledger.md` | logicn-tmf-engine.md |
 | tmf/research/storage-and-query-v0.md | `rd-absorbed/rd-tmf-storage-and-query.md` | (gated — MeshQL/DB) |
