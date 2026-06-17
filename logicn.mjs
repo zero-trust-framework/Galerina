@@ -266,6 +266,7 @@ Baseline comparison (governance-cost):
       `# Key ID: ${keyId}`,
       `# Algorithm: Ed25519 (Stage A) → ML-DSA-65 NIST FIPS 204 (Stage B)`,
       `LOGICN_SIGNING_KEY_ID=${keyId}`,
+      `LOGICN_SIGNING_KEY_CREATED=${new Date().toISOString()}`,
       `LOGICN_SIGNING_PRIVATE_KEY_B64=${Buffer.from(privateKey).toString("base64")}`,
       ``,
     ].join("\n");
@@ -1132,11 +1133,46 @@ Baseline comparison (governance-cost):
       writeFileSync(manifestJsonPath, manifestJson);
       console.log(`   ${outDir}/${name}.lmanifest.json (human-readable)`);
 
-      // ── Real manifest signing (#108) ─────────────────────────────────────────
-      // Stage A: Ed25519-SHA256 (Node.js native crypto)
-      // Stage B: ML-DSA-65 (NIST FIPS 204) — upgrade once Node.js adds FIPS 204 support
-      const signingKeyId = process.env.LOGICN_SIGNING_KEY_ID;
-      const signingKeyB64 = process.env.LOGICN_SIGNING_PRIVATE_KEY_B64;
+      // ── Real manifest signing (#108) — ZERO-TOUCH key lifecycle ──────────────
+      // Stage A: Ed25519 (Node.js native crypto). Stage B: ML-DSA-65 (FIPS 204).
+      // A developer never handles keys: the dev signing key is auto-provisioned, healthy
+      // keys sign silently, and a coded LLN-KEY-* diagnostic appears ONLY when action is
+      // needed (stale → warn; revoked/tampered/prod-missing → fail-closed).
+      let signingKeyId = process.env.LOGICN_SIGNING_KEY_ID;
+      let signingKeyB64 = process.env.LOGICN_SIGNING_PRIVATE_KEY_B64;
+      try {
+        const kl = await import("./governance/key-lifecycle.mjs");
+        const profile = process.env.LOGICN_PROFILE === "production" ? "production" : "dev";
+        const assessment = kl.assessSigningKey({ rootDir: ".", profile });
+        if (assessment.diagnostics.length > 0) console.log(kl.formatDiagnostics(assessment.diagnostics));
+        if (assessment.fatal) {
+          console.error(`❌ Refusing to sign (fail-closed) — resolve the LLN-KEY-* issue above and re-run.`);
+          process.exit(1);
+        }
+        if (assessment.action === "auto-provision") {
+          const newId = kl.provisionDevKey(".");
+          console.log(`   🔑 Auto-provisioned a development signing key (${newId.slice(0, 8)}…) — zero-touch, no action needed.`);
+        }
+        // Auto-load from .env.logicn-signing so the developer never has to `source` it.
+        if ((!signingKeyId || !signingKeyB64) && existsSync(".env.logicn-signing")) {
+          for (const line of readFileSync(".env.logicn-signing", "utf-8").split(/\r?\n/)) {
+            const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
+            if (!m) continue;
+            if (m[1] === "LOGICN_SIGNING_KEY_ID") signingKeyId = signingKeyId || m[2].trim();
+            if (m[1] === "LOGICN_SIGNING_PRIVATE_KEY_B64") signingKeyB64 = signingKeyB64 || m[2].trim();
+          }
+        }
+        // Final fail-safe: never sign with a revoked key, whatever its source (env or file).
+        if (signingKeyId) {
+          const { isKeyRevoked } = await import("./governance/revocation-registry.mjs");
+          if (isKeyRevoked(signingKeyId)) {
+            console.error(`❌ LLN-KEY-004 (error): signing key ${signingKeyId} is REVOKED — refusing to sign. Mint a fresh key.`);
+            process.exit(1);
+          }
+        }
+      } catch (klErr) {
+        console.warn(`   ⚠️  key-lifecycle check skipped (${klErr.message}) — proceeding with existing env key if present.`);
+      }
 
       if (signingKeyId && signingKeyB64) {
         try {
