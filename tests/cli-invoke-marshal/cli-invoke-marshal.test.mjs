@@ -56,11 +56,46 @@ test("a secure/effectful flow gives a CLEAR 'not in the WASM surface' diagnostic
     const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
     assert.equal(r.status, 1, out);
     assert.match(out, /NOT in the WASM --invoke surface/, "must explain main is not WASM-exportable");
-    assert.match(out, /Invokable here: collapse/, "must list the invokable pure flows");
+    assert.match(out, /Invokable here.*collapse/, "must list the invokable pure flows");
+    assert.match(out, /--governed/, "must point the user to the governed runtime (#125)");
     const r2 = spawnSync(process.execPath, ["logicn.mjs", "run", f2, "--invoke", "nope"],
       { cwd: ROOT, encoding: "utf-8", timeout: 60000 });
     assert.match(`${r2.stdout ?? ""}${r2.stderr ?? ""}`, /No flow named 'nope'/, "absent flow gets the other branch");
   } finally {
     try { rmSync(f2, { force: true }); } catch { /* ignore */ }
+  }
+});
+
+// #125 secure-flow-run: `--governed` runs a flow through the FULL governed runtime (contract
+// enforcer + fail-closed capability host granting only declared effects + audit), instead of the
+// raw WASM --invoke surface. It is the path for secure/effectful flows the WASM surface rejects.
+test("--governed runs a flow through the governed runtime and prints its value (exit 0)", () => {
+  const f = join(ROOT, "build", "__g_clean.lln");
+  writeFileSync(f, `pure flow answer() -> Int { return 42 }\n`);
+  try {
+    const r = spawnSync(process.execPath, ["logicn.mjs", "run", f, "--invoke", "answer", "--governed"],
+      { cwd: ROOT, encoding: "utf-8", timeout: 60000 });
+    const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+    assert.equal(r.status, 0, out);
+    assert.match(out, /\b42\b/, "must print the flow's value");
+    assert.match(out, /governed/, "must announce the governed runtime");
+  } finally {
+    try { rmSync(f, { force: true }); } catch { /* ignore */ }
+  }
+});
+
+test("--governed is FAIL-CLOSED: a governance violation refuses to run (exit 1 + LLN diagnostic)", () => {
+  const f = join(ROOT, "build", "__g_violation.lln");
+  // console.log without an import → LLN-NAME-001; the governed run must refuse, not execute.
+  writeFileSync(f, `flow leaky() -> Int {\n  console.log("hi")\n  return 1\n}\n`);
+  try {
+    const r = spawnSync(process.execPath, ["logicn.mjs", "run", f, "--invoke", "leaky", "--governed"],
+      { cwd: ROOT, encoding: "utf-8", timeout: 60000 });
+    const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+    assert.equal(r.status, 1, out);
+    assert.match(out, /LLN-[A-Z]+-\d+/, "must surface the governance diagnostic");
+    assert.match(out, /fail-closed/i, "must announce it refused fail-closed");
+  } finally {
+    try { rmSync(f, { force: true }); } catch { /* ignore */ }
   }
 });

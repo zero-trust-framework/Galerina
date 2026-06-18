@@ -93,6 +93,9 @@ Commands:
                                                       (--invoke targets pure flows returning a primitive Int/Bool;
                                                        args are ints or true/false. Secure/effectful flows run in
                                                        the governed runtime, not the raw WASM --invoke surface.)
+  logicn run <file.lln> --invoke <flow> --governed    run ANY flow through the GOVERNED runtime (#125): contract
+                                                       enforcer + fail-closed capability host (only declared effects)
+                                                       + audit. Required for secure/effectful flows; fail-closed.
   logicn build <file.lln>                             compile → build/<name>.wasm + .wat + .lmanifest
   logicn build --package <dir>                        compile a package's /src → governed .wasm in <dir>/dist/ (fusable, emits .fuse.json)
   logicn check <file.lln>                             type-check + governance verify
@@ -1060,6 +1063,69 @@ Baseline comparison (governance-cost):
         }
       } catch { /* non-fatal if manifest is unreadable */ }
     }
+
+    // ── #125 secure-flow-run — run secure/effectful flows through the GOVERNED runtime ──
+    // The raw WASM `--invoke` surface (below) only exports PURE flows returning a primitive.
+    // Secure/effectful flows (effects, secrets, Result/Void returns) — and any flow the WASM
+    // emitter can't yet lower — must run through the full governed pipeline: m.run() builds a
+    // ContractEnforcer from the contract + a FAIL-CLOSED CapabilityHost granting ONLY the flow's
+    // declared effects, then executes with audit + proof chain. `--governed` routes here and
+    // returns BEFORE WASM assembly (which a secure flow may not compile through at all).
+    if (rest.includes("--governed")) {
+      const gflag = (n, d) => { const i = rest.indexOf(n); return i >= 0 ? rest[i + 1] : d; };
+      const gflow = gflag("--invoke", parsed.flows[0]?.name);
+      const gmeta = (parsed.flows ?? []).find(f => f.name === gflow);
+      if (!gmeta) {
+        console.error(`No flow named '${gflow}'. Declared: ${(parsed.flows ?? []).map(f => f.name).join(", ") || "(none)"}`);
+        process.exit(1);
+      }
+      // Marshal positional args to the flow's NAMED params (param text is "readonly x: T" / "n: Int"
+      // / "n" — take the identifier before ':', last token strips qualifiers). Fail loud on junk.
+      const gparamNames = (gmeta.params ?? []).map(p => {
+        const toks = String(p).split(":")[0].trim().split(/\s+/);
+        return toks[toks.length - 1];
+      });
+      const invokeAt = rest.indexOf("--invoke");
+      const gposArgs = (invokeAt >= 0 ? rest.slice(invokeAt + 2) : []).filter(a => a !== "--governed");
+      const gargs = new Map();
+      gposArgs.forEach((a, i) => {
+        const name = gparamNames[i];
+        if (name === undefined) return; // extra positional arg with no param — ignore (flow decides)
+        let v;
+        if (a === "true") v = { __tag: "bool", value: true };
+        else if (a === "false") v = { __tag: "bool", value: false };
+        else if (a.trim() !== "" && Number.isFinite(Number(a))) v = { __tag: "int", value: Number(a) };
+        else v = { __tag: "string", value: a };
+        gargs.set(name, v);
+      });
+
+      const gres = await m.run(source, llnFile, gflow, gargs, { mode: "dev" });
+
+      for (const d of gres.diagnostics ?? []) if (d.severity === "error") console.error(`  ✗ ${d.code}: ${d.message}`);
+      for (const g of gres.governanceDiagnostics ?? []) if (g.severity === "error") console.error(`  ⛔ ${g.code}: ${g.message}`);
+
+      if (!gres.ok) {
+        console.error(`\n❌ Governed run of '${gflow}' FAILED (fail-closed) — see the LLN-* diagnostics above.`);
+        process.exit(1);
+      }
+
+      const render = (val) => {
+        if (!val) return "(void)";
+        switch (val.__tag) {
+          case "int": case "byte": case "float": return String(val.value);
+          case "bool": return val.value ? "true" : "false";
+          case "string": return JSON.stringify(val.value);
+          case "void": return "(void)";
+          case "runtimeError": case "error": return `<error: ${val.message ?? "runtime error"}>`;
+          default: return JSON.stringify(val.value ?? val.__tag);
+        }
+      };
+      const gexec = gres.execution;
+      const geffects = gexec?.audit?.effectsObserved ?? gexec?.effectsObserved ?? [];
+      console.log(render(gres.value));
+      console.log(`\n🛡  governed · flow=${gflow} · tier=${gexec?.executionTier ?? "tree"} · effects=[${geffects.join(", ")}]`);
+      return;
+    }
   }
 
   // Compile to WASM
@@ -1354,7 +1420,8 @@ Baseline comparison (governance-cost):
         // Result/Void) run in the governed runtime, not the raw WASM --invoke surface (dogfooding #2).
         console.error(`Flow '${flowName}' exists but is NOT in the WASM --invoke surface — only pure flows returning a primitive (Int/Bool) are exported.`);
         console.error(`('${flowName}' is likely a secure/effectful flow; those run in the governed runtime, not raw WASM --invoke.)`);
-        console.error(`Invokable here: ${exported.join(", ") || "(none)"}`);
+        console.error(`→ Run it under governance:  logicn run ${llnFile} --invoke ${flowName} --governed`);
+        console.error(`Invokable here (raw WASM, pure only): ${exported.join(", ") || "(none)"}`);
       } else {
         console.error(`No flow named '${flowName}'. Invokable here: ${exported.join(", ") || "(none)"}`);
       }
