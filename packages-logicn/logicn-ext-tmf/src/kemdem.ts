@@ -15,7 +15,7 @@
 //
 // Follow-on (not in slice 3): aead_suite 0x03/0x04 (ChaCha/XChaCha) round-trip seal+open and kem_profile
 // 0x03/0x04 (L5) — their deterministic goldens (streamNonce24, ctxCommitTag, registries) are already covered here.
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { ml_kem768 } from "../../logicn-core-compiler/node_modules/@noble/post-quantum/ml-kem.js";
 import * as hybrid from "../../logicn-core-compiler/node_modules/@noble/post-quantum/hybrid.js";
 import { gcm } from "../../logicn-core-compiler/node_modules/@noble/ciphers/aes.js";
@@ -59,11 +59,11 @@ function concat(parts: readonly Uint8Array[]): Uint8Array {
 function u32le(v: number): Uint8Array { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v >>> 0, true); return b; }
 /** LP(x) = u32le(len) ‖ x — the TMX house length-prefix (spec §3). */
 function lp(b: Uint8Array): Uint8Array { return concat([u32le(b.length), b]); }
+/** Constant-time byte compare via the VETTED node:crypto primitive (spec §:298; 0033 fix — was a hand-rolled
+ *  "constant-time-ish" XOR loop). timingSafeEqual throws on unequal lengths, so the length check (non-secret:
+ *  tag sizes are protocol-fixed) guards it and short-circuits. */
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a[i]! ^ b[i]!;
-  return d === 0;
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 const enc = new TextEncoder();
 const DOM_KDF = enc.encode("tmf-dem-kdf-v0");
@@ -172,14 +172,19 @@ export function seal(profile: number, recipientPub: Uint8Array, payload: Uint8Ar
   const { cipherText, sharedSecret } = kemFor(profile).encapsulate(recipientPub);
   const kaead = deriveKaead(sharedSecret, aeadContext);
   const caad = committedAad(aeadContext, kaead);
-  const nonce = new Uint8Array(randomBytes(12));
-  const ctTag = Uint8Array.from(gcm(kaead, nonce, caad).encrypt(payload)); // C‖T (T = last 16 B)
-  let body: Uint8Array = ctTag;
-  if (mode === COMMIT_MODE.CTX) {
-    const T = ctTag.subarray(ctTag.length - 16);
-    body = concat([ctTag, ctxCommitTag(kaead, nonce, caad, T)]);
+  try {
+    const nonce = new Uint8Array(randomBytes(12));
+    const ctTag = Uint8Array.from(gcm(kaead, nonce, caad).encrypt(payload)); // C‖T (T = last 16 B)
+    let body: Uint8Array = ctTag;
+    if (mode === COMMIT_MODE.CTX) {
+      const T = ctTag.subarray(ctTag.length - 16);
+      body = concat([ctTag, ctxCommitTag(kaead, nonce, caad, T)]);
+    }
+    return { kemProfile: profile, ctKem: cipherText, nonce, body };
+  } finally {
+    // spec §:249 zeroize derived secrets after use (0033 fix; best-effort on a GC VM — shrinks the remanence window).
+    kaead.fill(0); sharedSecret.fill(0); caad.fill(0);
   }
-  return { kemProfile: profile, ctKem: cipherText, nonce, body };
 }
 /** Decrypt a single-shot section (fail-closed). Throws TmfCryptoError on any auth failure. */
 export function open(profile: number, recipientSec: Uint8Array, ctKem: Uint8Array, nonce: Uint8Array, body: Uint8Array, aeadContext: Uint8Array): Uint8Array {
@@ -191,17 +196,21 @@ export function open(profile: number, recipientSec: Uint8Array, ctKem: Uint8Arra
   catch (e) { throw new TmfCryptoError("CryptoError", `KEM decapsulation failed: ${(e as Error).message}`); }
   const kaead = deriveKaead(sharedSecret, aeadContext);
   const caad = committedAad(aeadContext, kaead);
-  let ctTag = body;
-  if (mode === COMMIT_MODE.CTX) {
-    if (body.length < 16 + COMMIT_SIZE) throw new TmfCryptoError("MalformedCrypto", "CTX body shorter than tag+commit_tag");
-    ctTag = body.subarray(0, body.length - COMMIT_SIZE);
-    const received = body.subarray(body.length - COMMIT_SIZE);
-    const T = ctTag.subarray(ctTag.length - 16);
-    // recompute + constant-time compare BEFORE running the AEAD (§8.5 reader)
-    if (!bytesEqual(ctxCommitTag(kaead, nonce, caad, T), received)) throw new TmfCryptoError("CryptoError", "CTX commit_tag mismatch");
+  try {
+    let ctTag = body;
+    if (mode === COMMIT_MODE.CTX) {
+      if (body.length < 16 + COMMIT_SIZE) throw new TmfCryptoError("MalformedCrypto", "CTX body shorter than tag+commit_tag");
+      ctTag = body.subarray(0, body.length - COMMIT_SIZE);
+      const received = body.subarray(body.length - COMMIT_SIZE);
+      const T = ctTag.subarray(ctTag.length - 16);
+      // recompute + constant-time compare BEFORE running the AEAD (§8.5 reader)
+      if (!bytesEqual(ctxCommitTag(kaead, nonce, caad, T), received)) throw new TmfCryptoError("CryptoError", "CTX commit_tag mismatch");
+    }
+    try { return Uint8Array.from(gcm(kaead, nonce, caad).decrypt(ctTag)); }
+    catch (e) { throw new TmfCryptoError("CryptoError", `AEAD open failed: ${(e as Error).message}`); }
+  } finally {
+    kaead.fill(0); sharedSecret.fill(0); caad.fill(0); // 0033 zeroize (best-effort, GC VM)
   }
-  try { return Uint8Array.from(gcm(kaead, nonce, caad).decrypt(ctTag)); }
-  catch (e) { throw new TmfCryptoError("CryptoError", `AEAD open failed: ${(e as Error).message}`); }
 }
 
 // ── §6: segmented STREAM seal / open (AES-256-GCM, 12-byte nonce) ────────────
@@ -218,13 +227,17 @@ export function streamSeal(profile: number, recipientPub: Uint8Array, segments: 
   const { cipherText, sharedSecret } = kemFor(profile).encapsulate(recipientPub);
   const kaead = deriveKaead(sharedSecret, aeadContext);
   const caad = committedAad(aeadContext, kaead);
-  const prefix8 = new Uint8Array(randomBytes(8));
-  const frames: Uint8Array[] = [];
-  for (let i = 0; i < segments.length; i++) {
-    const nonce = streamNonce12(prefix8, i, i === segments.length - 1);
-    frames.push(Uint8Array.from(gcm(kaead, nonce, caad).encrypt(segments[i]!)));
+  try {
+    const prefix8 = new Uint8Array(randomBytes(8));
+    const frames: Uint8Array[] = [];
+    for (let i = 0; i < segments.length; i++) {
+      const nonce = streamNonce12(prefix8, i, i === segments.length - 1);
+      frames.push(Uint8Array.from(gcm(kaead, nonce, caad).encrypt(segments[i]!)));
+    }
+    return { kemProfile: profile, ctKem: cipherText, prefix8, frames };
+  } finally {
+    kaead.fill(0); sharedSecret.fill(0); caad.fill(0); // 0033 zeroize (best-effort, GC VM)
   }
-  return { kemProfile: profile, ctKem: cipherText, prefix8, frames };
 }
 /**
  * Open a STREAM (fail-closed). The reader recomputes each nonce from position; because the final frame is
@@ -239,11 +252,15 @@ export function streamOpen(profile: number, recipientSec: Uint8Array, ctKem: Uin
   catch (e) { throw new TmfCryptoError("CryptoError", `KEM decapsulation failed: ${(e as Error).message}`); }
   const kaead = deriveKaead(sharedSecret, aeadContext);
   const caad = committedAad(aeadContext, kaead);
-  const out: Uint8Array[] = [];
-  for (let i = 0; i < frames.length; i++) {
-    const nonce = streamNonce12(prefix8, i, i === frames.length - 1);
-    try { out.push(Uint8Array.from(gcm(kaead, nonce, caad).decrypt(frames[i]!))); }
-    catch (e) { throw new TmfCryptoError("CryptoError", `STREAM frame ${i} open failed (drop/reorder/tamper/terminator): ${(e as Error).message}`); }
+  try {
+    const out: Uint8Array[] = [];
+    for (let i = 0; i < frames.length; i++) {
+      const nonce = streamNonce12(prefix8, i, i === frames.length - 1);
+      try { out.push(Uint8Array.from(gcm(kaead, nonce, caad).decrypt(frames[i]!))); }
+      catch (e) { throw new TmfCryptoError("CryptoError", `STREAM frame ${i} open failed (drop/reorder/tamper/terminator): ${(e as Error).message}`); }
+    }
+    return concat(out);
+  } finally {
+    kaead.fill(0); sharedSecret.fill(0); caad.fill(0); // 0033 zeroize (best-effort, GC VM)
   }
-  return concat(out);
 }
