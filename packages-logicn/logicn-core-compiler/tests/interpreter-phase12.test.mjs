@@ -114,7 +114,7 @@ guarded flow test() -> Int {
     assert.equal(result.value.value, 15);
   });
 
-  it("while loop with max iteration guard emits LLN-RUNTIME-005", async () => {
+  it("while loop FAIL-CLOSED: a non-terminating loop TRAPS (does not truncate-and-succeed)", async () => {
     const result = await parseAndRun(`
 guarded flow test() -> Int {
   mut i = 0
@@ -124,10 +124,15 @@ guarded flow test() -> Int {
   return i
 }
 `, "test");
-    const hasGuardDiag = result.diagnostics.some(
-      (d) => d.code === "LLN-RUNTIME-005",
+    // FAIL-CLOSED (2026-06-18, hazard fix): previously this hit the 100k cap, pushed LLN-RUNTIME-005,
+    // BROKE, and returned SUCCESS with partial state (a fail-open bug). It now TRAPS at the cap and the
+    // flow returns a runtimeError — a non-terminating loop must never be reported as a successful run.
+    assert.equal(result.value.__tag, "runtimeError", "infinite loop must fail closed (runtimeError), not succeed");
+    assert.ok(
+      /Loop exceeded/.test(result.value.message ?? "") ||
+        result.diagnostics.some((d) => d.code === "LLN-RUNTIME-003"),
+      "fail-closed loop trap should surface 'Loop exceeded' / LLN-RUNTIME-003",
     );
-    assert.ok(hasGuardDiag, "Expected LLN-RUNTIME-005 diagnostic for infinite loop guard");
   });
 });
 

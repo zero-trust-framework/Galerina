@@ -570,11 +570,15 @@ guarded flow infiniteTrue() -> Int {
   return i
 }
 `, "infiniteTrue");
-    const has005 = result.diagnostics.some((d) => d.code === "LLN-RUNTIME-005");
-    assert.ok(has005, "Expected LLN-RUNTIME-005 for infinite while true loop");
+    // FAIL-CLOSED (2026-06-18, hazard fix): an infinite loop now TRAPS — it does not truncate-and-succeed.
+    assert.equal(result.value.__tag, "runtimeError", "infinite while true must fail closed (runtimeError)");
+    assert.ok(
+      /Loop exceeded/.test(result.value.message ?? "") || result.diagnostics.some((d) => d.code === "LLN-RUNTIME-003"),
+      "fail-closed loop trap should surface 'Loop exceeded' / LLN-RUNTIME-003",
+    );
   });
 
-  it("while true guard stops at 100k iterations", async () => {
+  it("while true TRAPS fail-closed at the iteration cap", async () => {
     const result = await parseAndRun(`
 guarded flow infiniteCount() -> Int {
   mut i = 0
@@ -584,11 +588,12 @@ guarded flow infiniteCount() -> Int {
   return i
 }
 `, "infiniteCount");
-    assert.ok(result.value.__tag === "int", "Should return int after guard triggers");
-    assert.ok(result.value.value >= 100_000, "Should have iterated up to the guard limit");
+    // FAIL-CLOSED (2026-06-18, hazard fix): was "truncate at 100k + return a partial int (success)".
+    assert.equal(result.value.__tag, "runtimeError", "infinite loop must fail closed, not return a partial int");
+    assert.ok(/Loop exceeded/.test(result.value.message ?? ""), "fail-closed loop trap message");
   });
 
-  it("LLN-RUNTIME-005 is raised via run() pipeline as well", async () => {
+  it("infinite loop FAILS CLOSED via the run() pipeline as well", async () => {
     const result = await runFull(`
 guarded flow infiniteLoop() -> Int {
   mut x = 0
@@ -598,8 +603,12 @@ guarded flow infiniteLoop() -> Int {
   return x
 }
 `, "infiniteLoop");
-    const has005 = result.diagnostics.some((d) => d.code === "LLN-RUNTIME-005");
-    assert.ok(has005, "run() pipeline should also surface LLN-RUNTIME-005");
+    // FAIL-CLOSED (2026-06-18, hazard fix): the run() pipeline also TRAPS, not emits-005-and-succeeds.
+    assert.equal(result.value.__tag, "runtimeError", "run() pipeline infinite loop must fail closed");
+    assert.ok(
+      /Loop exceeded/.test(result.value.message ?? "") || result.diagnostics.some((d) => d.code === "LLN-RUNTIME-003"),
+      "fail-closed loop trap via run()",
+    );
   });
 
   it("non-infinite loop with 99999 iterations does NOT emit LLN-RUNTIME-005", async () => {

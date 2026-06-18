@@ -279,6 +279,12 @@ export interface InterpreterRuntimeOptions {
    * tracking. Activated automatically when the flow is provably pure.
    */
   readonly pureFastPath?: boolean;
+  /** Fail-closed recursion-depth cap (logical flow/fn-call nesting). Default 2000 — well below the
+   *  async-frame heap-OOM threshold (~5000) so deep recursion TRAPS catchably instead of crashing the host. */
+  readonly maxCallDepth?: number;
+  /** Fail-closed loop-iteration cap (while/forEach). Default 100_000. Exceeding it TRAPS (fail-closed) —
+   *  it does NOT silently truncate-and-succeed. */
+  readonly maxIterations?: number;
 }
 
 // =============================================================================
@@ -720,6 +726,9 @@ class Interpreter {
   private currentFlowName: string | undefined;
   /** R4C: maps binding name → the flow that declared it as a governed value. */
   private readonly governedBindingSource = new Map<string, string>();
+  /** Fail-closed recursion-depth counter (logical flow/fn-call nesting). runNestedFlow sets it on the
+   *  nested Interpreter to parent+1; runLocalFn increments it; both trap against maxCallDepth. */
+  callDepth = 0;
 
   constructor(
     private readonly ast: AstNode,
@@ -1184,15 +1193,14 @@ class Interpreter {
         if (conditionNode === undefined || bodyNode === undefined) return undefined;
 
         let iterations = 0;
-        const MAX_ITERATIONS = 100_000;
+        const MAX_ITERATIONS = this.runtimeOptions.maxIterations ?? 100_000;
 
         while (true) {
           if (iterations++ > MAX_ITERATIONS) {
-            this.diagnostics.push({
-              code: "LLN-RUNTIME-005",
-              message: "Loop exceeded maximum iteration count (100,000)",
-            });
-            break;
+            // FAIL-CLOSED (2026-06-18): previously this break+continued, so a non-terminating loop
+            // silently truncated and the flow returned SUCCESS with partial state (a fail-open bug).
+            // Now it TRAPS — runFlow's catch turns this into a runtimeError (audit.result='error').
+            throw new Error(`Loop exceeded maximum iteration count (${MAX_ITERATIONS}) — fail-closed`);
           }
           const cond = await this.evalExpr(conditionNode);
           // Same truthy check as ifStmt: bool, non-zero int, some, ok
@@ -1218,7 +1226,13 @@ class Interpreter {
         const collection = await this.evalExpr(collectionNode);
         const items = collection.__tag === "list" ? collection.items : [];
 
+        const MAX_ITERATIONS = this.runtimeOptions.maxIterations ?? 100_000;
+        let iterations = 0;
         for (const item of items) {
+          if (iterations++ > MAX_ITERATIONS) {
+            // FAIL-CLOSED: bound forEach like while — no silent partial success on an oversized list.
+            throw new Error(`forEach exceeded maximum iteration count (${MAX_ITERATIONS}) — fail-closed`);
+          }
           this.pushScope();
           this.declare(varName, item);
           const bodyResult = await this.executeBlock(bodyNode);
@@ -1744,17 +1758,30 @@ class Interpreter {
       // Regular flow-to-flow call: evaluate args in current scope, then call on THIS interpreter.
       // Do NOT create a new Interpreter — that breaks recursive flows and wastes memory.
       // Only step:* DWI calls create a new Interpreter (for shared-nothing isolation).
-      const callArgs = new Map<string, LogicNValue>();
-      const flowNode = this.flowIndex.get(methodName);
-      const params = (flowNode?.children ?? []).filter((c) => c.kind === "paramDecl");
-      for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
-        if (arg === undefined) continue;
-        const paramName = extractParamName(params[i]?.value ?? `arg${i}`);
-        callArgs.set(paramName, await this.evalExpr(arg));
+      //
+      // FAIL-CLOSED recursion-depth guard (2026-06-18, hazard fix): because a recursive flow re-enters
+      // runFlow on THIS interpreter, unbounded recursion grows the async-frame heap until V8 OOM-kills
+      // the host (~5000 deep) UNCATCHABLY — violating Goal C "no system crash". Trap catchably well below.
+      const maxCallDepth = this.runtimeOptions.maxCallDepth ?? 2000;
+      this.callDepth += 1;
+      try {
+        if (this.callDepth > maxCallDepth) {
+          throw new Error(`Recursion depth exceeded (${maxCallDepth}) calling flow '${methodName}' — fail-closed (prevents host stack/heap exhaustion)`);
+        }
+        const callArgs = new Map<string, LogicNValue>();
+        const flowNode = this.flowIndex.get(methodName);
+        const params = (flowNode?.children ?? []).filter((c) => c.kind === "paramDecl");
+        for (let i = 0; i < args.length; i++) {
+          const arg = args[i];
+          if (arg === undefined) continue;
+          const paramName = extractParamName(params[i]?.value ?? `arg${i}`);
+          callArgs.set(paramName, await this.evalExpr(arg));
+        }
+        const nestedResult = await this.runFlow(methodName, callArgs);
+        return nestedResult.value;
+      } finally {
+        this.callDepth -= 1;
       }
-      const nestedResult = await this.runFlow(methodName, callArgs);
-      return nestedResult.value;
     }
 
     if (receiver !== undefined) {
@@ -1942,29 +1969,48 @@ class Interpreter {
     const fn = this.fnIndex.get(name);
     if (fn === undefined) return { __tag: "runtimeError", message: `Unresolved fn: '${name}'` };
 
-    this.pushScope();
+    // FAIL-CLOSED recursion-depth guard (2026-06-18): local-fn recursion grows the async-frame heap on
+    // this Interpreter; trap catchably well below the host OOM threshold (~5000).
+    const maxCallDepth = this.runtimeOptions.maxCallDepth ?? 2000;
+    this.callDepth += 1;
     try {
-      const params = (fn.children ?? []).filter((child) => child.kind === "paramDecl");
-      for (let index = 0; index < params.length; index += 1) {
-        const param = params[index];
-        if (param === undefined) continue;
-        const paramName = extractParamName(param.value ?? "");
-        if (paramName !== "") {
-          const argNode = argNodes[index];
-          this.declare(paramName, argNode === undefined ? LLN_VOID : await this.evalExpr(argNode));
-        }
+      if (this.callDepth > maxCallDepth) {
+        throw new Error(`Recursion depth exceeded (${maxCallDepth}) calling fn '${name}' — fail-closed (prevents host stack/heap exhaustion)`);
       }
+      this.pushScope();
+      try {
+        const params = (fn.children ?? []).filter((child) => child.kind === "paramDecl");
+        for (let index = 0; index < params.length; index += 1) {
+          const param = params[index];
+          if (param === undefined) continue;
+          const paramName = extractParamName(param.value ?? "");
+          if (paramName !== "") {
+            const argNode = argNodes[index];
+            this.declare(paramName, argNode === undefined ? LLN_VOID : await this.evalExpr(argNode));
+          }
+        }
 
-      const body = [...(fn.children ?? [])].reverse().find((child) => child.kind === "block");
-      return body === undefined ? LLN_VOID : await this.executeBlock(body) ?? LLN_VOID;
+        const body = [...(fn.children ?? [])].reverse().find((child) => child.kind === "block");
+        return body === undefined ? LLN_VOID : await this.executeBlock(body) ?? LLN_VOID;
+      } finally {
+        this.popScope();
+      }
     } finally {
-      this.popScope();
+      this.callDepth -= 1;
     }
   }
 
   private async runNestedFlow(name: string, argNodes: readonly AstNode[]): Promise<LogicNValue> {
     const flowNode = this.flowIndex.get(name);
     if (flowNode === undefined) return { __tag: "runtimeError", message: `Flow '${name}' not found` };
+
+    // FAIL-CLOSED recursion-depth guard (2026-06-18): cross-flow recursion spins a fresh Interpreter per
+    // level, so the async-frame heap grows until V8 OOM-kills the host (~5000 deep) UNCATCHABLY, violating
+    // the "no system crash" goal. Trap catchably well below that; runFlow's catch makes it a flow error.
+    const maxCallDepth = this.runtimeOptions.maxCallDepth ?? 2000;
+    if (this.callDepth + 1 > maxCallDepth) {
+      throw new Error(`Recursion depth exceeded (${maxCallDepth}) calling flow '${name}' — fail-closed (prevents host stack/heap exhaustion)`);
+    }
 
     const callArgs = new Map<string, LogicNValue>();
     const params = (flowNode.children ?? []).filter((child) => child.kind === "paramDecl");
@@ -1976,6 +2022,7 @@ class Interpreter {
     }
 
     const nested = new Interpreter(this.ast, this.knownFlows, undefined, undefined, this.runtimeOptions, this.executionPlans);
+    nested.callDepth = this.callDepth + 1;
     const result = await nested.runFlow(name, callArgs);
     for (const effect of result.effectsObserved) this.effectsObserved.add(effect);
     this.auditEntries.push(...result.auditEntries);

@@ -192,3 +192,29 @@ test("0014 slice-3: floor-bearing flows are refused lowering — governance reso
     );
   }
 });
+
+// ── Slice 4: liveness FAIL-CLOSED — runaway loop + deep recursion TRAP (0032 hazard fix, owner Go 2026-06-18) ──
+// The two confirmed stability hazards are now fail-closed, locked here: (1) a non-terminating loop TRAPS at the
+// iteration cap (was fail-OPEN — truncate at 100k + return SUCCESS with partial state); (2) unbounded recursion
+// TRAPS at the depth cap (was an UNCATCHABLE host heap-OOM ~5000 deep, violating Goal C "no system crash").
+// Verified with LOW caps via runtimeOptions so the test is fast — the caps default to 100_000 / 2000 in production.
+test("0014 slice-4: liveness fail-closed — runaway loop + deep recursion TRAP (not truncate-succeed, not crash)", async () => {
+  // (1) infinite while → runtimeError at maxIterations, NOT a successful partial result.
+  {
+    const prog = parseProgram("guarded flow loopForever() -> Int contract { effects {} } { mut i = 0 while true { i = i + 1 } return i }", "fid-live.lln");
+    const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+    assert.equal(errs.length, 0, `parse error: ${errs.map((d) => d.message).join("; ")}`);
+    const res = await executeFlow("loopForever", new Map(), prog.ast, prog.flows, undefined, undefined, { maxIterations: 5 });
+    assert.equal(res.value.__tag, "runtimeError", "runaway while must fail closed (runtimeError), not succeed with partial state");
+    assert.ok(/Loop exceeded/.test(res.value.message ?? ""), `expected a 'Loop exceeded' trap — got ${res.value.message ?? res.value.__tag}`);
+  }
+  // (2) unbounded self-recursion → runtimeError at maxCallDepth, NOT an uncatchable host crash.
+  {
+    const prog = parseProgram("guarded flow recur(n: Int) -> Int contract { effects {} } { return recur(n + 1) }", "fid-rec.lln");
+    const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+    assert.equal(errs.length, 0, `parse error: ${errs.map((d) => d.message).join("; ")}`);
+    const res = await executeFlow("recur", new Map([["n", { __tag: "int", value: 0 }]]), prog.ast, prog.flows, undefined, undefined, { maxCallDepth: 50 });
+    assert.equal(res.value.__tag, "runtimeError", "unbounded recursion must fail closed (runtimeError), not crash the host");
+    assert.ok(/Recursion depth exceeded/.test(res.value.message ?? ""), `expected a 'Recursion depth exceeded' trap — got ${res.value.message ?? res.value.__tag}`);
+  }
+});
