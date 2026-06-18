@@ -49,3 +49,15 @@ They do **no cryptography**. So per axis:
 | 6 | CFG fingerprint beyond effects-only (#3) · runtime-observed surface (#102-104) | zero-trust (tamper/observe) | Phase-5 deferred |
 
 **Bottom line:** the pre-WASM stages are already math-secure + zero-trust by construction (deterministic, deny-by-default, fail-closed); their only crypto touchpoint (SHA-256 hashing) is already quantum-resilient. The real work is all in the WASM tier — finish the i32-trap (1,2), then **harden the silent fail-opens (3)** — plus the one standing PQ gap, ML-DSA-65 build signing (#34). Item **3 is buildable now and not owner-gated.**
+
+---
+
+## 2026-06-18 — cycle-end audit update (WASM emitter pass COMPLETE)
+
+The WASM-emitter math-security frontier from the audit above is now **closed**:
+- **i32 overflow → TRAP** across all three tiers (walker `cfb72f9`, bytecode VM `cfb72f9`, WASM emitter checked-arith helpers `6542bae`), single source of truth `i32-arith.ts`. Mul uses a magnitude-guarded fast-path (`(a*b)|0` for |operands| ≤ 46340; BigInt only for genuinely-large operands) — recovers the BigInt-per-multiply perf cost while staying byte-identical.
+- **Silent fail-opens hardened** (`8450174` + `b01f713`): all 10 genuine "emitter-cannot-lower" sites now `(unreachable)` (fail-closed → decline to walker), incl. `emitBlockLastExpr:1277` which the first pass missed (a double-quoted `return`). The legit void/empty/exhaustiveness defaults (`;; return void`, `;; empty block`, `;; no default arm`) are correctly left as `(i32.const 0)` — they are NOT fail-opens (exhaustiveness is guaranteed by the Phase-10 type-checker).
+
+**A 5-agent adversarial audit verdict (2026-06-18):** the enforcement core is **hardened + zero-trust/fail-closed** across all three tiers; `1277` was the single residual hole (now closed). The audit also caught + reconciled two of its own sub-reports being STALE (they claimed WASM slice 2/3 "not built" / "~13 fail-opens" — git `6542bae`/`8450174` show shipped). **No silent-wrong-value path remains in the WASM tier.**
+
+**Genuine residual gaps (defense-in-depth, by-design deferrals — not active holes):** the 0014 fidelity harness (slice 3/3) is NOT built (the gate for the lean→WASM router); ML-DSA-65 build-path signing (#34, owner-gated — the one PQ gap; hashing is already SHA-256/Grover-OK); trust-anchor pinning (rogue-signer); recursion-depth bound (8) documented but not adversarially measured; plugin-sandbox is a validator, not process isolation.

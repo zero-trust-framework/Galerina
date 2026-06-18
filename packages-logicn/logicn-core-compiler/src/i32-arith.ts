@@ -47,7 +47,13 @@ export function i32SubChecked(a: number, b: number): I32Result {
 }
 
 export function i32MulChecked(a: number, b: number): I32Result {
-  // i32 * i32 can reach 2^62, which exceeds double precision (2^53) — BigInt for an exact check.
+  // Fast path: if |a| <= 46340 AND |b| <= 46340 then |a*b| <= 46340^2 = 2_147_395_600 < I32_MAX,
+  // so the product is exact (< 2^53) and in-range — a plain multiply, no BigInt allocation. This
+  // covers the overwhelming majority of real multiplies; only genuinely large operands take the
+  // exact BigInt range-check below. (46341^2 = 2_147_488_281 > I32_MAX, so 46340 is the safe bound.)
+  if (a >= -46340 && a <= 46340 && b >= -46340 && b <= 46340) return (a * b) | 0;
+  // Slow path: operands large enough to possibly overflow i32 (product can reach 2^62 > 2^53) —
+  // BigInt for an exact check. Same result/trap semantics as the fast path, just exact for big values.
   const p = BigInt(a) * BigInt(b);
   return p < -2147483648n || p > 2147483647n ? "IntegerOverflow" : Number(p) | 0;
 }

@@ -57,3 +57,15 @@ For each item: **classify → if 🟢: build → verify (graph + tests) → comm
 job; if 🔴: stop and surface.** Run the full suite + graph at every phase boundary. Commit
 incrementally. The hard floors (crypto-on-core, K3 gate, secret/PII egress, three-valued border)
 are never touched by any item here.
+
+## ⚑ 2026-06-18 — cycle-end status + technical debt
+**Shipped this cycle:** 0011(a-config) `4261102` · #125 secure-flow-run `da17cfc` · R&D harvest `1867492` · pipeline-security audit `8559b81` · **0014 conformance — WASM tier now fully fail-closed**: slice 1/3 walker+bytecode trap `cfb72f9`, slice 2/3 WASM emitter checked-arith `6542bae`, item-3 fail-open hardening `8450174`, the audit-caught `1277` fail-open `b01f713`, + the BigInt-mul→fast-path optimization. Suite 49/49 · 4,551. R&D jobs 0021 (conformance verify + harness corpus) + 0022 (gas + zeroize-proof) dispatched.
+
+**Immediate next:** the **0014 fidelity differential harness (slice 3/3)** — THE gate that unblocks the lean→WASM router (~2,129× win) + ExecutionGraph lowering + promotes WASM to a certified runtime tier. R&D 0021 designs its adversarial corpus.
+
+**Technical debt introduced this cycle (honest):**
+1. **Tri-tier consistency burden** — the 3 execution tiers (walker/bytecode/WASM) now MUST agree on i32 trap semantics. Today that's held by `i32-arith.ts` (single source of truth) + unit tests + the parallel-agent test updates + manual review — NOT yet by a systematic differential. The 0014 harness is what *locks* this; until it lands, any future arithmetic change must manually update all three tiers + re-verify.
+2. **i32-trap perf cost** — overflow checks add ~2-3 i32 ops per add/sub; mul is a magnitude-guarded branch (BigInt only for |operands|>46340); div/rem are native traps (~free). Bounded + the owner-accepted "premium for safety." LogicN's tier ranking is unchanged.
+3. **WASM binary growth** — the checked-arith helpers (~6 lines each) are emitted when referenced (deterministic → wasmHash stable).
+
+**Known-bug backlog (from the 5-agent audit):** harness not built (high, in-flight) · lean→WASM unwired + ExecutionGraph NOP stub (high, gated on harness) · ML-DSA-65 #34 (high, owner-gated) · .tmf slices 4-5 (gated on #34) · recursion-depth bound not adversarially tested (medium) · root typecheck not reproducible from clean install (medium, CI/DX) · version.json/SECURITY.md count drift (low, #150) · GateCache/rotation-manager unwired-by-design (low) · #149 history-scrub + first push (owner-gated).
