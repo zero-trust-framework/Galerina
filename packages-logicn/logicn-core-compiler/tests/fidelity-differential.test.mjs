@@ -19,6 +19,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseProgram, executeFlow, clearBytecodeCache } from "../dist/index.js";
 import * as L from "../dist/index.js"; // WASM-tier path (assembleWAT / admitAndInstantiate / …) for slice-2
+import { resolveGovernanceMode } from "../dist/governance-mode.js"; // slice-3 (not re-exported from the index barrel)
 
 const MIN = -2147483648;
 const MAX = 2147483647;
@@ -123,5 +124,71 @@ test("0014 slice-2: WASM tier ≡ reference walker, byte-exact (value; trap⟺tr
         assert.ok(Object.is(ref.value, wasmVal), `WASM value divergence (incl. -0) — ${ctx}`);
       }
     }
+  }
+});
+
+// ── Slice 3: NEGATIVE corpus — floor-bearing flows are REFUSED lowering (0021 hub deliverable) ─────
+// `lean` is the *erasure of enforcement compiler-proved unnecessary*, never a relaxation of an
+// enforcement that exists. The monotone-safety invariant in governance-mode.ts proves
+// resolveGovernanceMode(...).tier === "lean" ⟹ (effectFree ∧ taintClean). This is the negative half of
+// the harness: flows that DECLARE an effect or TOUCH a governed sink must be FORCED to tier `full` —
+// never admitted to the faster `lean`/WASM tier. We drive the REAL shipped effect-checker
+// (L.checkEffects → EffectCheckerFlags.EffectFree, set only for a pure flow with no declared AND no
+// inferred effects) and feed its EffectFree fact to the REAL resolver (resolveGovernanceMode). Each
+// effectful flow → effectFree=false → tier `full` under `auto`, AND a safety-override to `full`
+// (+ LLN-CONFIG-GOV-002) even when `lean` is explicitly requested. taintClean is pinned true to isolate
+// the EFFECT floor (the easiest path to lean): proving these still refuse lowering shows the effect floor
+// alone suffices. A pure no-effect CONTROL flow is asserted lean-eligible so the test can't pass trivially.
+const NEG_GOV_CORPUS = [
+  ["secure flow negNet(u: Text) -> Text contract { effects [network.outbound] } { return u }", "negNet", "declared network.outbound effect"],
+  ["secure flow negFs(p: Text) -> Text contract { effects [filesystem.read] } { return p }", "negFs", "declared filesystem.read effect"],
+  ["secure flow negSink(u: Text) -> Text contract { effects [network.outbound] } { return http.get(u) }", "negSink", "touches governed sink http.get → inferred network.outbound"],
+  ["guarded flow negAudit(m: Text) -> Text contract { effects [audit.write] } { return m }", "negAudit", "declared audit.write effect"],
+];
+// Positive control: a pure, effect-free flow that IS lean-eligible — guards against a trivially-passing test.
+const POS_GOV_CONTROL = ["pure flow posPure(a: Int) -> Int contract { effects {} } { return a + 1 }", "posPure"];
+
+// EffectCheckerFlags.EffectFree for one parsed flow, via the shipped effect-checker.
+const effectFreeOf = (prog, flowName) => {
+  const r = L.checkEffects(prog.flows, prog.ast).find((x) => x.flowName === flowName);
+  assert.ok(r, `effect-checker produced no result for flow ${flowName}`);
+  return (r.checkerFlags & L.EffectCheckerFlags.EffectFree) !== 0;
+};
+
+test("0014 slice-3: floor-bearing flows are refused lowering — governance resolver forces full (never lean)", () => {
+  // Control: a pure effect-free flow MUST be lean-eligible — proves the corpus below isn't trivially `full`.
+  {
+    const [src, flow] = POS_GOV_CONTROL;
+    const prog = parseProgram(src, "fid-gov-ctrl.lln");
+    const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+    assert.equal(errs.length, 0, `control parse error: ${errs.map((d) => d.message).join("; ")}`);
+    const ef = effectFreeOf(prog, flow);
+    assert.equal(ef, true, `control pure flow ${flow} must be EffectFree`);
+    const res = resolveGovernanceMode({ projectDefault: "auto", flowRequest: "auto", effectFree: ef, taintClean: true });
+    assert.equal(res.tier, "lean", `control: an EffectFree+taint-clean flow under auto must reach lean — ${res.reason}`);
+  }
+
+  // Negative corpus: every effectful / sink-touching flow is forced to full and refused lowering.
+  for (const [src, flow, why] of NEG_GOV_CORPUS) {
+    const prog = parseProgram(src, "fid-gov.lln");
+    const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+    assert.equal(errs.length, 0, `parse error for ${flow} (${why}): ${errs.map((d) => d.message).join("; ")}`);
+
+    // 1. The shipped effect-checker proves this flow is NOT effect-free (the governance floor).
+    const ef = effectFreeOf(prog, flow);
+    assert.equal(ef, false, `floor: ${flow} (${why}) must NOT be EffectFree`);
+
+    // 2. Under `auto`, a non-effect-free flow resolves to full — not admitted to the faster tier.
+    const auto = resolveGovernanceMode({ projectDefault: "auto", flowRequest: "auto", effectFree: ef, taintClean: true });
+    assert.equal(auto.tier, "full", `auto: ${flow} (${why}) must resolve full, got ${auto.tier} — ${auto.reason}`);
+
+    // 3. Even an EXPLICIT `lean` request is overridden to full (lean cannot relax an enforcement that exists),
+    //    and the resolver must surface the LLN-CONFIG-GOV-002 safety-override diagnostic.
+    const lean = resolveGovernanceMode({ projectDefault: "lean", flowRequest: "lean", effectFree: ef, taintClean: true });
+    assert.equal(lean.tier, "full", `lean-override: ${flow} (${why}) must safety-override to full, got ${lean.tier} — ${lean.reason}`);
+    assert.ok(
+      lean.diagnostics.some((d) => d.includes("LLN-CONFIG-GOV-002")),
+      `lean-override: ${flow} (${why}) must emit LLN-CONFIG-GOV-002 — got [${lean.diagnostics.join(" | ")}]`,
+    );
   }
 });
