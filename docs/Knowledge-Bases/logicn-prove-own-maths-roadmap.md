@@ -143,4 +143,5 @@ re-applying them would be a no-op. Recorded here so the roadmap never routes pha
 `logicn-roadmap-autonomous-queue-2026-06-17.md` (0014 harness = X1's handoff; the in-flight gate) ·
 `logicn-roadmap-and-audit-2026-06-17.md` (Tower-Citizen completion criteria = X2*'s home) ·
 `logicn-rd-absorption-catalog.md` (where this absorption is cataloged) ·
-`logicn-substrate-failure-model.md` (NMR closed-form) · `logicn-rd-queue-drained-2026-06-18` (memory).
+`logicn-substrate-failure-model.md` (NMR closed-form) · `logicn-rd-queue-drained-2026-06-18` (memory) ·
+`logicn-formal-verification-direction.md` (Z3/SMT to PROVE the i32 conformance these benches currently sample — note 40).
