@@ -95,3 +95,24 @@ test("shared:true reserves a SharedArrayBuffer; never grows", () => {
   assert.ok(pool.buffer instanceof SharedArrayBuffer);
   assert.equal(pool.buffer.byteLength, 64);
 });
+
+// 0033 use-after-free guard (generation tag) — a stale Block must TRAP, not silently alias reused memory.
+test("use-after-free: accessing a freed Block traps LSM-UAF-001 (still-free case)", () => {
+  const pool = mkPool();
+  const b = pool.allocate(16);
+  pool.i32(b); // live access works
+  pool.free(b.ptr);
+  assert.equal(caught(() => pool.i32(b)).code, "LSM-UAF-001", "i32() on a freed Block must trap");
+  assert.equal(caught(() => pool.u8(b)).code, "LSM-UAF-001", "u8() on a freed Block must trap");
+});
+
+test("use-after-free: a stale Block after free+REALLOC traps LSM-UAF-001 (ABA / generation mismatch)", () => {
+  const pool = mkPool();
+  const stale = pool.allocate(16);
+  pool.free(stale.ptr);
+  const fresh = pool.allocate(16);            // reuses the same ptr, new generation
+  assert.equal(fresh.ptr, stale.ptr, "precondition: realloc reused the same ptr");
+  assert.ok(fresh.generation > stale.generation, "fresh allocation bumped the generation");
+  pool.i32(fresh); // the fresh handle works
+  assert.equal(caught(() => pool.i32(stale)).code, "LSM-UAF-001", "the STALE handle must trap, not alias the new owner");
+});

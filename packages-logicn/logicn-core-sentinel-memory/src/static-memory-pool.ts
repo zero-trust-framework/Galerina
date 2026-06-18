@@ -17,6 +17,9 @@ export interface Block {
   readonly ptr: number;
   readonly bytes: number;
   readonly segment: Segment;
+  /** Allocation generation (0033 fix): bumped each time this ptr is handed out, so a stale Block held
+   *  across free()+realloc() no longer matches the live generation → use-after-free traps (Vale/MTE-style). */
+  readonly generation: number;
 }
 
 export interface PoolConfig {
@@ -46,8 +49,10 @@ export class StaticMemoryPool {
   private readonly totalBlocks: number;
   private readonly compute: Region;
   private readonly governance: Region;
-  /** ptr -> number of contiguous blocks handed out at that ptr. */
-  private readonly live = new Map<number, { count: number; segment: Segment }>();
+  /** ptr -> { block count, segment, allocation generation } for the CURRENTLY-live allocation at that ptr. */
+  private readonly live = new Map<number, { count: number; segment: Segment; generation: number }>();
+  /** ptr -> last generation issued at that ptr (persists across free/realloc). 0033 use-after-free guard. */
+  private readonly genCounter = new Map<number, number>();
   private flightLocked = false;
 
   constructor(config: PoolConfig) {
@@ -122,8 +127,10 @@ export class StaticMemoryPool {
 
     const ptr = region.base + startLocal * this.blockBytes;
     const capacity = need * this.blockBytes;
-    this.live.set(ptr, { count: need, segment });
-    return { ptr, bytes: capacity, segment };
+    const generation = (this.genCounter.get(ptr) ?? 0) + 1; // 0033: bump per (re)allocation of this ptr
+    this.genCounter.set(ptr, generation);
+    this.live.set(ptr, { count: need, segment, generation });
+    return { ptr, bytes: capacity, segment, generation };
   }
 
   /** Find the start of the first run of `need` contiguous free blocks, or -1. */
@@ -164,12 +171,24 @@ export class StaticMemoryPool {
     return this.flightLocked;
   }
 
+  /** 0033 use-after-free guard: a Block whose ptr is no longer live, or whose generation no longer matches
+   *  the live allocation (the slot was freed and REUSED), is a stale handle — trap fail-closed. Catches both
+   *  the still-free case (no live record) and the free+realloc ABA case (generation mismatch). */
+  private assertLive(block: Block): void {
+    const rec = this.live.get(block.ptr);
+    if (rec === undefined || rec.generation !== block.generation) {
+      throw new SecurityTrap("LSM-UAF-001", `use-after-free / stale handle at ptr ${block.ptr} (gen ${block.generation})`);
+    }
+  }
+
   i32(block: Block): Int32Array {
+    this.assertLive(block);
     MemoryValidator.assertAligned(block.ptr);
     return new Int32Array(this.buffer, block.ptr, block.bytes / 4);
   }
 
   u8(block: Block): Uint8Array {
+    this.assertLive(block);
     return new Uint8Array(this.buffer, block.ptr, block.bytes);
   }
 
