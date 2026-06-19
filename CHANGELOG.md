@@ -24,6 +24,12 @@ verified**; the codebase is in a fail-closed, deterministic state. 48/48 package
   `epilogueReceipt`, `liabilityProfile`, `physicalHardeningTier`).
 
 ### Added
+- **`LLN-HW-004` UnknownHardwareTarget — yellow hardware uncertainty (R&D 0045 — Phase 1b).** A `contract.hardware`
+  target that is not in `HARDWARE_TRUST_PROFILES` was previously a **silent `continue`** (the uncertainty was
+  invisible). It now emits a **yellow `LLN-HW-004` warning** (K3 INDETERMINATE — *not* a red error): the build
+  proceeds, and the warning clears automatically once the target becomes registered (a driver/profile update
+  collapses the uncertainty into verification). Advisory only — a target *declaration* is not a governed sink
+  (where INDETERMINATE must still fail closed). +3 tests; registered in `compiler-diagnostics.md`.
 - **`//@` generated-comment tier (R&D 0045, structured-engineering metadata — Phase 1a).** The lexer now
   emits a distinct **`genComment`** token for `//@…` lines, scanned *before* the plain `//` branch so a
   generated line can never collapse into a human `comment` (fail-closed tier separation). This completes the

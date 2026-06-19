@@ -429,6 +429,7 @@ diagnostics (Phase 55+). See `logicn-post-quantum-hardware-security.md`.
 LLN-HW-001   HARDWARE_CLASS_MISMATCH        Flow requires hardware class X; target provides class Y
 LLN-HW-002   PROOF_LEVEL_INSUFFICIENT       Flow requires proof level X; current level is Y
 LLN-HW-003   IMMUTABLE_SEAL_VIOLATED        ImmutableInputSeal constraint violated by flow
+LLN-HW-004   UNKNOWN_HARDWARE_TARGET        Target not in the hardware-trust registry — yellow uncertainty (K3 INDETERMINATE), build proceeds; auto-clears once registered (R&D 0045 tier D)
 LLN-HW-101   MISSING_REQUIRED_ATTESTATION   High-trust flow requires attestation; none provided
 LLN-HW-102   UNSUPPORTED_ATTESTATION_ALG    Attestation algorithm not accepted by target trust profile
 LLN-HW-103   HYBRID_ATTESTATION_INCOMPLETE  Hybrid mode requires both ed25519 and ML-DSA signatures; one missing

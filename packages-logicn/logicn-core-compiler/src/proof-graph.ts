@@ -384,6 +384,22 @@ export const LLN_HW_003 = {
   suggestedFix: "Add `require runtime_attestation` to the audit block.",
 } as const;
 
+/**
+ * LLN-HW-004: contract.hardware declares a target NOT in the hardware-trust registry for this build.
+ * R&D 0045 (tier D): an unrecognised capability is K3 INDETERMINATE — surfaced as a YELLOW uncertainty
+ * warning, NOT a red denial. The build still succeeds; the warning auto-clears once the target becomes
+ * registered (a driver/profile update collapses the uncertainty into verification). Advisory only — a
+ * target DECLARATION is not a governed sink (where INDETERMINATE would have to fail closed).
+ */
+export const LLN_HW_004 = {
+  code: "LLN-HW-004",
+  name: "UnknownHardwareTarget",
+  severity: "warning" as const,
+  message: "is not in the hardware-trust registry for this build — its trust profile and proof requirements cannot be verified (uncertainty, not a denial). The build proceeds; this clears automatically once the target is registered.",
+  why: "An unrecognised target is K3 INDETERMINATE: the compiler cannot validate its trust profile, so it cannot prove the hardware governance requirements are met. Reported yellow so a new/experimental target is not a hard build break.",
+  suggestedFix: "Check the target name spelling, or register it in HARDWARE_TRUST_PROFILES. If the target is intentionally experimental, this warning is informational.",
+} as const;
+
 // ---------------------------------------------------------------------------
 // ProofObligation
 //

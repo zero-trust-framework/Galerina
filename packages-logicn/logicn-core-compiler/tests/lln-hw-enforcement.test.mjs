@@ -154,6 +154,45 @@ describe("LLN-HW-001: QuantumTargetRequiresFormalProof", () => {
 });
 
 // ---------------------------------------------------------------------------
+// LLN-HW-004: UnknownHardwareTarget — yellow uncertainty (R&D 0045 tier D)
+// ---------------------------------------------------------------------------
+
+describe("LLN-HW-004: UnknownHardwareTarget (yellow uncertainty, not red)", () => {
+  it("emits a WARNING (not an error) for an unrecognised hardware target", () => {
+    const result = verifySource([
+      "secure flow f(n: Int) -> Bool",
+      "contract { effects { audit.write } hardware { target foobar_accelerator } }",
+      "{ return true }",
+    ].join("\n"));
+    const hw4 = result.diagnostics.filter(d => d.code === "LLN-HW-004");
+    assert.equal(hw4.length, 1, "expected one LLN-HW-004 for the unknown target (was a silent continue)");
+    assert.equal(hw4[0].severity, "warning", "must be YELLOW (warning), not a red error — it is K3 INDETERMINATE");
+    assert.ok(hw4[0].message.includes("foobar_accelerator"), "names the unrecognised target");
+  });
+
+  it("does NOT fire for registered targets (cpu / wasm / quantum / arm.sve2)", () => {
+    for (const target of ["cpu", "wasm", "quantum", "arm.sve2"]) {
+      const result = verifySource([
+        "secure flow f(n: Int) -> Bool",
+        `contract { effects { audit.write } hardware { target ${target} } }`,
+        "{ return true }",
+      ].join("\n"));
+      assert.ok(!hwDiagCodes(result).includes("LLN-HW-004"), `${target} is registered → no LLN-HW-004`);
+    }
+  });
+
+  it("the uncertainty warning never fails the build (never severity error)", () => {
+    const result = verifySource([
+      "secure flow f(n: Int) -> Bool",
+      "contract { effects { audit.write } hardware { target made_up_device } }",
+      "{ return true }",
+    ].join("\n"));
+    const asErr = result.diagnostics.filter(d => d.code === "LLN-HW-004" && d.severity === "error");
+    assert.equal(asErr.length, 0, "LLN-HW-004 must never be an error (build proceeds under uncertainty)");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // LLN-HW-002: sealed target without audit.write
 // ---------------------------------------------------------------------------
 

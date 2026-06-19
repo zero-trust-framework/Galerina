@@ -40,7 +40,7 @@ import { type AstNode, type AstNodeKind, type FlowMeta, type SourceLocation } fr
 import { KNOWN_SIGNALS, KNOWN_FLOORS, normaliseFloor, KNOWN_CAPABILITIES } from "./capability-types.js";
 import { type EffectCheckResult } from "./effect-checker.js";
 import { GovernanceFlags, type GovernanceFlagsMask, type RuntimeManifest } from "./type-registry.js";
-import { buildProofGraphCached, computeExecutionSignature, generateEpilogueReceipt, type EpilogueFailureAction, type EpilogueProofStrategy, type ProofGraph, type ProofObligation, LLN_HW_001, LLN_HW_002, LLN_HW_003, TAMPER_RESPONSE_STRATEGIES } from "./proof-graph.js";
+import { buildProofGraphCached, computeExecutionSignature, generateEpilogueReceipt, type EpilogueFailureAction, type EpilogueProofStrategy, type ProofGraph, type ProofObligation, LLN_HW_001, LLN_HW_002, LLN_HW_003, LLN_HW_004, TAMPER_RESPONSE_STRATEGIES } from "./proof-graph.js";
 import { HARDWARE_TRUST_PROFILES, ProofLevel } from "./type-registry.js";
 import { checkResilienceViolations } from "./resilience-inference.js";
 import { checkObservabilityWarnings } from "./observability-inference.js";
@@ -1659,7 +1659,19 @@ class GovernanceVerifier {
 
       for (const targetId of hwTargets) {
         const profile = HARDWARE_TRUST_PROFILES.get(targetId);
-        if (profile === undefined) continue; // unknown target — not our concern here
+        if (profile === undefined) {
+          // R&D 0045 (tier D): an unrecognised hardware target is K3 INDETERMINATE — surface a YELLOW
+          // uncertainty warning (LLN-HW-004), not a red error. The build still succeeds; the warning
+          // clears automatically once the target is registered. Advisory only (a target declaration is
+          // not a governed sink). Was previously a silent `continue` (uncertainty was invisible).
+          this.diagnostics.push({
+            ...LLN_HW_004,
+            message: `Flow '${flow.name}' declares hardware target '${targetId}', which ${LLN_HW_004.message}`,
+            location: loc,
+            suggestedFix: LLN_HW_004.suggestedFix,
+          });
+          continue;
+        }
 
         // LLN-HW-001: quantum target requires FormalRequired proof chain
         if (profile.requiredProofLevel >= ProofLevel.FormalRequired) {
