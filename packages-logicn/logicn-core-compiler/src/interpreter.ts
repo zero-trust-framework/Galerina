@@ -913,7 +913,11 @@ class Interpreter {
       this.capabilityHost !== undefined
     ) {
       const plan = this.executionPlans.get(flowName);
-      if (plan !== undefined && plan.qualifier === "pure") {
+      // 0040/#70: the execution-plan fast-path returns its value BEFORE the output post-condition
+      // gate below. A flow with an `ensure result …` must NOT use it — skip so it falls through to
+      // the normal flow body + the single-exit gate (fail-closed). (Latent today: no in-tree caller
+      // sets useExecutionPlan, but this keeps the governed runFlow path airtight if it is enabled.)
+      if (plan !== undefined && plan.qualifier === "pure" && !flowHasResultPostcondition(this.ast, flowName)) {
         const ctx = this.getContext(flowName);
         try {
           const planResult = await executePlan(plan, this.capabilityHost, ctx);
@@ -2674,6 +2678,11 @@ export function executeFlowSync(
 ): LogicNValue | null {
   const flowMeta = knownFlows.find(f => f.name === flowName);
   if (flowMeta === undefined || flowMeta.qualifier !== "pure") return null;
+  // 0040/#70: a flow with an output post-condition (`ensure result …`) must take the governed
+  // async exit gate (checkOutputPostconditions). The sync fast-path ignores the invariant {} block,
+  // so DECLINE here (return null) — every caller of executeFlowSync falls back to the async
+  // executeFlow, which enforces the post-condition fail-closed. Closes the exported-sync bypass.
+  if (flowHasResultPostcondition(ast, flowName)) return null;
   return tryPureFlowSync(ast, knownFlows, flowName, args);
 }
 

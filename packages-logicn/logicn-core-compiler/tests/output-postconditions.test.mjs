@@ -17,7 +17,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  run, parseProgram, executeFlow, clearBytecodeCache, clearPureFlowCache,
+  run, parseProgram, executeFlow, executeFlowSync, clearBytecodeCache, clearPureFlowCache,
 } from "../dist/index.js";
 
 const I = (value) => ({ __tag: "int", value });
@@ -161,5 +161,19 @@ describe("0040 output post-conditions — three-tier fidelity (no fast-path fail
     );
     assert.equal(ref.value.__tag, "runtimeError", "reference tree-walker also fails closed");
     assert.equal(bad.value.message, ref.value.message, "fast-path-declined + reference traps are byte-identical");
+  });
+
+  it("the exported sync entry (executeFlowSync) DECLINES a post-condition flow (no unchecked bypass)", () => {
+    const p = parseProgram(POST_SRC, "sync.lln");
+    // A post-condition flow must NOT run on the gate-less sync fast-path — it declines (null) so
+    // the caller falls back to the governed async executeFlow, which enforces fail-closed.
+    const declined = executeFlowSync("clampInt", new Map([["a", I(200)]]), p.ast, p.flows);
+    assert.equal(declined, null, "post-condition flow declines the exported sync fast-path");
+
+    // a plain pure flow (no post-condition) still runs on the sync path — not regressed.
+    const plain = parseProgram(`pure flow idn(a: Int) -> Int contract { effects {} } { return a }`, "idn.lln");
+    const okv = executeFlowSync("idn", new Map([["a", I(7)]]), plain.ast, plain.flows);
+    assert.equal(okv?.__tag, "int");
+    assert.equal(okv?.value, 7);
   });
 });
