@@ -1140,6 +1140,18 @@ function collectUnresolvedIdentifiers(
   return [...unresolved];
 }
 
+/**
+ * 0040/#70: true when an `ensure` expression references the magic `result` symbol — i.e.
+ * it is an OUTPUT POST-CONDITION over the flow's return value (`ensure result <= MAX`),
+ * not a parameter pre-condition. Walks the whole expr including member receivers so that
+ * `result.field` is also recognised. `result` is reserved only inside `invariant {} ensure`.
+ */
+function exprReferencesResult(node: AstNode): boolean {
+  if (node.kind === "identifier" && node.value === "result") return true;
+  for (const child of node.children ?? []) if (exprReferencesResult(child)) return true;
+  return false;
+}
+
 class GovernanceVerifier {
   private readonly diagnostics: GovernanceDiagnostic[] = [];
   private readonly intentStatus = new Map<string, "satisfied" | "missing" | "mismatch">();
@@ -2152,6 +2164,12 @@ class GovernanceVerifier {
         .map(c => ((c.value ?? "").split(":")[0] ?? "").trim())
         .filter(n => n.length > 0)
     );
+    // 0040/#70: `result` is the magic OUTPUT symbol. An `ensure` that references it is an
+    // output post-condition checked against the return value at the single flow exit — not a
+    // parameter pre-condition. Add it to the in-scope set so it is NOT rejected as LLN-INV-004;
+    // it is enforced fail-closed by the interpreter (interpreter.checkOutputPostconditions),
+    // and the WAT tier declines such flows to that interpreter until single-exit lowering lands.
+    const scopeNames = new Set<string>([...paramNames, "result"]);
 
     // Scan children for ensureDecl nodes
     let invariantCount = 0;
@@ -2161,9 +2179,11 @@ class GovernanceVerifier {
       const exprNode = child.children?.[0];
       if (exprNode === undefined) continue;
 
-      // LLN-INV-004: check all identifier references in ensure expr are in parameter scope.
-      // The emitter silently emits (i32.const 0) for unresolved names — catch this here.
-      const unresolvedNames = collectUnresolvedIdentifiers(exprNode, paramNames);
+      const isPostcondition = exprReferencesResult(exprNode);
+
+      // LLN-INV-004: every identifier in the ensure expr must be in scope — a flow parameter,
+      // or `result` for an output post-condition. Unknown names (typos) are still rejected.
+      const unresolvedNames = collectUnresolvedIdentifiers(exprNode, scopeNames);
       for (const name of unresolvedNames) {
         this.diagnostics.push(makeGovDiag(
           "LLN-INV-004",
@@ -2194,7 +2214,11 @@ class GovernanceVerifier {
       }
       // Record in ProofGraph regardless of static result
       const exprDesc = this.describeExpr(exprNode);
-      if (staticResult === true) {
+      if (isPostcondition) {
+        // 0040/#70: output post-condition — enforced fail-closed against the return value at
+        // the single flow exit by the interpreter (and any tier with single-exit lowering).
+        this.proofObligations.push(`invariant_postcondition:${flow.name}:ensure ${exprDesc}:runtime-postcondition`);
+      } else if (staticResult === true) {
         // Statically verified — no WAT gate, no runtime overhead (Goal A)
         this.proofObligations.push(`invariant_static:${flow.name}:ensure ${exprDesc}:statically_verified`);
       } else if (staticResult === null) {

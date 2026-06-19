@@ -1008,6 +1008,19 @@ class Interpreter {
       });
     }
 
+    // 0040/#70: output post-conditions — evaluate `invariant { ensure result … }` against the
+    // computed return value at the single flow exit. A violation FAILS CLOSED (LLN-INV-002): the
+    // result never escapes — the same fail-closed posture as the i32 trap (Fork-A) / 0038. Runs
+    // only on the success path (a runtimeError already short-circuits to a closed result).
+    if (runtimeError === undefined && !isRuntimeError(returnValue) && flowNode !== undefined) {
+      const violation = await this.checkOutputPostconditions(flowNode, flowName, args, returnValue);
+      if (violation !== undefined) {
+        runtimeError = violation;
+        this.diagnostics.push({ code: "LLN-INV-002", message: violation });
+        returnValue = { __tag: "runtimeError", message: violation };
+      }
+    }
+
     return this.buildResult(flowName, qualifier, startedAt, returnValue, runtimeError);
   }
 
@@ -1049,6 +1062,47 @@ class Interpreter {
       audit,
       ...(this.enforcer !== undefined ? { enforcementRecord: this.enforcer.enforcementRecord } : {}),
     };
+  }
+
+  /**
+   * 0040/#70: enforce OUTPUT post-conditions (`invariant { ensure result … }`) at the single
+   * flow exit. Each such `ensure` is evaluated with `result` bound to the return value (and the
+   * flow parameters re-bound, so a mixed predicate like `ensure result >= floor` resolves). A
+   * failing OR non-evaluable predicate FAILS CLOSED — returns a violation message so the caller
+   * replaces the value with a runtimeError; the violating result never escapes. Returns
+   * undefined when every output post-condition holds. Body-local (non-`result`) computed-state
+   * invariants are deferred (Phase 4 / SMT) — only `result`-referencing ensures are enforced here.
+   */
+  private async checkOutputPostconditions(
+    flowNode: AstNode,
+    flowName: string,
+    args: ReadonlyMap<string, LogicNValue>,
+    result: LogicNValue,
+  ): Promise<string | undefined> {
+    const ensures = extractOutputPostconditions(flowNode);
+    if (ensures.length === 0) return undefined;
+    this.pushScope();
+    try {
+      for (const [name, val] of args) this.declare(name, val, false);
+      this.declare("result", result, false);
+      for (const expr of ensures) {
+        let val: LogicNValue;
+        try {
+          val = await this.evalExpr(expr);
+        } catch {
+          return `[Flow '${flowName}'] output post-condition 'ensure ${describeEnsureExpr(expr)}' could not be evaluated — fail-closed (LLN-INV-002).`;
+        }
+        const holds =
+          (val.__tag === "bool" && val.value === true) ||
+          (val.__tag === "int" && val.value !== 0);
+        if (!holds) {
+          return `[Flow '${flowName}'] violated output post-condition 'ensure ${describeEnsureExpr(expr)}' — fail-closed (LLN-INV-002).`;
+        }
+      }
+      return undefined;
+    } finally {
+      this.popScope();
+    }
   }
 
   private pushScope(): void {
@@ -2430,6 +2484,76 @@ function resolveCapabilityEffect(fullName: string): string | undefined {
 }
 
 // =============================================================================
+// 0040/#70 — Output post-condition extraction (DbC `invariant { ensure result … }`)
+// =============================================================================
+
+/**
+ * Extract the OUTPUT post-condition `ensure` expressions (those referencing the magic `result`
+ * symbol) from a flow's `invariant {}` block. Parameter-only ensures are PRE-conditions
+ * (handled by the WAT entry gate / static verifier) and are excluded here.
+ */
+function extractOutputPostconditions(flowNode: AstNode): AstNode[] {
+  const contractNode = (flowNode.children ?? []).find((c) => c.kind === "contractDecl");
+  if (contractNode === undefined) return [];
+  const invariantBlock = (contractNode.children ?? []).find(
+    (c) => c.kind === "identifier" && c.value === "invariant:block",
+  );
+  if (invariantBlock === undefined) return [];
+  const out: AstNode[] = [];
+  for (const child of invariantBlock.children ?? []) {
+    if (child.kind !== "ensureDecl") continue;
+    const expr = child.children?.[0];
+    if (expr !== undefined && exprReferencesResult(expr)) out.push(expr);
+  }
+  return out;
+}
+
+/** Walk an expression for any identifier named `result` (including member receivers). */
+function exprReferencesResult(node: AstNode): boolean {
+  if (node.kind === "identifier" && node.value === "result") return true;
+  for (const child of node.children ?? []) if (exprReferencesResult(child)) return true;
+  return false;
+}
+
+/**
+ * 0040/#70: true if the named flow declares an OUTPUT post-condition (`invariant { ensure result … }`).
+ * Such flows MUST run through the governed flow exit (runFlow) where the post-condition gate fires.
+ * The fast tiers (bytecode VM, sync fast-path, ExecutionGraph fast-path, pure-flow cache) all return
+ * early and would bypass the gate — so executeFlow excludes post-condition flows from them (fail-closed).
+ */
+function flowHasResultPostcondition(ast: AstNode, flowName: string): boolean {
+  let found = false;
+  const FLOW_KINDS = new Set(["pureFlowDecl", "flowDecl", "secureFlowDecl", "guardedFlowDecl"]);
+  function walk(node: AstNode): void {
+    if (found) return;
+    if (FLOW_KINDS.has(node.kind) && node.value === flowName && extractOutputPostconditions(node).length > 0) {
+      found = true;
+      return;
+    }
+    for (const c of node.children ?? []) walk(c);
+  }
+  walk(ast);
+  return found;
+}
+
+/** Minimal human-readable rendering of an `ensure` expression for fail-closed diagnostics. */
+function describeEnsureExpr(expr: AstNode): string {
+  if (expr.kind === "identifier" || expr.kind === "numberLiteral" || expr.kind === "boolLiteral") {
+    return expr.value ?? "?";
+  }
+  if (expr.kind === "binaryExpr" && expr.children?.length === 2) {
+    return `${describeEnsureExpr(expr.children[0]!)} ${expr.value ?? "?"} ${describeEnsureExpr(expr.children[1]!)}`;
+  }
+  if (expr.kind === "unaryExpr" && expr.children?.length === 1) {
+    return `${expr.value ?? "?"}${describeEnsureExpr(expr.children[0]!)}`;
+  }
+  if (expr.kind === "memberExpr" && expr.children?.length === 1) {
+    return `${describeEnsureExpr(expr.children[0]!)}.${expr.value ?? "?"}`;
+  }
+  return "...";
+}
+
+// =============================================================================
 // Phase R1A — Request-time limit extraction from contract.limits
 // =============================================================================
 
@@ -2666,7 +2790,11 @@ export async function executeFlow(
   // those respected unconditionally.
   if (
     runtimeOptions?.pureFastPath === true &&   // opt-in: pass { pureFastPath: true } to enable
-    isPureEffectFree(ast, flowName)
+    isPureEffectFree(ast, flowName) &&
+    // 0040/#70: a flow with an output post-condition (`ensure result …`) must take the governed
+    // exit (runFlow), where the post-condition gate fires fail-closed. The bytecode VM / sync /
+    // cache tiers below return early and would bypass it — exclude such flows from the fast path.
+    !flowHasResultPostcondition(ast, flowName)
   ) {
     // Phase 49: per-request cache scoping.
     // The cache key includes a sourceTag so that pure flows cached for one request
@@ -2850,7 +2978,10 @@ export async function executeFlow(
       // until the graph builder handles all node kinds correctly.
       // Enable with: { egraphFastPath: true } in runtimeOptions.
       const egraphEnabled = (runtimeOptions as Record<string, unknown>)?.egraphFastPath === true;
-      if (egraphEnabled && egraph.isPure && enforcer === undefined && capabilityHost === undefined) {
+      // 0040/#70: the ExecutionGraph fast-path also returns early, bypassing the output
+      // post-condition gate — exclude post-condition flows so they fall through to runFlow.
+      if (egraphEnabled && egraph.isPure && enforcer === undefined && capabilityHost === undefined
+          && !flowHasResultPostcondition(ast, flowName)) {
         const fastResult = runFromGraph(egraph, args);
         if (fastResult !== null) {
           // Fast-path succeeded — return a synthetic FlowExecutionResult

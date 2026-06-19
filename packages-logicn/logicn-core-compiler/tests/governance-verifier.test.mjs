@@ -1420,6 +1420,33 @@ contract {
     assert.ok(!hasDiag(result, "LLN-INV-004"), "No INV-004 for valid parameter ref");
   });
 
+  it("0040/#70: `result` is in scope inside an ensure (output post-condition) — no LLN-INV-004", () => {
+    const result = parseAndVerify(`
+pure flow t(amount: Int) -> Int
+contract {
+  intent { "Test." }
+  invariant { ensure result <= 100; }
+}
+{ return amount }
+`);
+    assert.ok(!hasDiag(result, "LLN-INV-004"), "`result` is the magic output symbol — accepted");
+    assert.ok(!hasDiag(result, "LLN-INV-001"), "result-referencing ensure is not statically false");
+  });
+
+  it("0040/#70: a typo alongside `result` is still rejected (LLN-INV-004)", () => {
+    const result = parseAndVerify(`
+pure flow t(amount: Int) -> Int
+contract {
+  intent { "Test." }
+  invariant { ensure result >= bogus; }
+}
+{ return amount }
+`);
+    assert.ok(hasDiag(result, "LLN-INV-004"), "unknown symbol next to result is still flagged");
+    const diag = result.diagnostics.find(d => d.code === "LLN-INV-004");
+    assert.ok(diag?.message.includes("bogus"), "names the unresolved symbol, not result");
+  });
+
   it("LLN-INV-004: builtins (true/false/None) are always in scope", () => {
     const result = parseAndVerify(`
 pure flow t(x: Int) -> Int

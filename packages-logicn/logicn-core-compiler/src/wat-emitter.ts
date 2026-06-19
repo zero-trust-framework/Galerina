@@ -1808,6 +1808,15 @@ export function emitWATFromFlowAST(
   layouts: ReadonlyMap<string, readonly string[]> | null = null,
   enums: ReadonlyMap<string, readonly string[]> | null = null,
 ): string | null {
+  // 0040/#70: a flow with an OUTPUT post-condition (`invariant { ensure result … }`) needs
+  // the single-exit `$logicn_result` binding + `br $logicn_exit` transformation the WAT tier
+  // does not yet emit (a bare `result` would otherwise lower to `(unreachable)`). Until that
+  // lands, DECLINE such a flow here — returning null routes it to the governed interpreter,
+  // which enforces output post-conditions fail-closed at the flow exit
+  // (interpreter.checkOutputPostconditions). This is the established "cannot lower → falls
+  // back to walker" path (callers at the phase25Body / guardedBody sites).
+  if (flowHasResultPostcondition(flowNode)) return null;
+
   // Build variable map: LogicN name → WAT local name.
   // Params are $p0, $p1, … — immutable (parameters are passed by value in WAT).
   const vars = new Map<string, string>();
@@ -1959,6 +1968,10 @@ function extractInvariantEnsures(flowNode: AstNode): AstNode[] {
     if (child.kind !== "ensureDecl") continue;
     const expr = child.children?.[0];
     if (expr === undefined) continue;
+    // 0040/#70: output post-conditions (ensure over `result`) are NOT param pre-conditions —
+    // never emit a WAT entry/tail gate for them (a bare `result` would lower to `(unreachable)`).
+    // emitWATFromFlowAST already declines such flows to the interpreter; this is defence-in-depth.
+    if (exprReferencesResult(expr)) continue;
     // Skip statically provable TRUE (constant fold = true) — no WAT gate needed
     const staticResult = tryConstantFold(expr);
     if (staticResult === true) continue;
@@ -1968,6 +1981,33 @@ function extractInvariantEnsures(flowNode: AstNode): AstNode[] {
     ensures.push(expr);
   }
   return ensures;
+}
+
+/**
+ * 0040/#70: true when a flow declares an `invariant { ensure … }` whose expression references
+ * the magic `result` symbol — an output post-condition over the return value. Such flows are
+ * declined by emitWATFromFlowAST and enforced fail-closed by the governed interpreter at exit.
+ */
+function flowHasResultPostcondition(flowNode: AstNode): boolean {
+  const contractNode = (flowNode.children ?? []).find(c => c.kind === "contractDecl");
+  if (contractNode === undefined) return false;
+  const invariantBlock = (contractNode.children ?? []).find(
+    c => c.kind === "identifier" && c.value === "invariant:block"
+  );
+  if (invariantBlock === undefined) return false;
+  for (const child of invariantBlock.children ?? []) {
+    if (child.kind !== "ensureDecl") continue;
+    const expr = child.children?.[0];
+    if (expr !== undefined && exprReferencesResult(expr)) return true;
+  }
+  return false;
+}
+
+/** Walk an expression for any identifier named `result` (including member receivers). */
+function exprReferencesResult(node: AstNode): boolean {
+  if (node.kind === "identifier" && node.value === "result") return true;
+  for (const child of node.children ?? []) if (exprReferencesResult(child)) return true;
+  return false;
 }
 
 /** Lightweight constant-fold for WAT emitter (mirrors governance verifier logic) */

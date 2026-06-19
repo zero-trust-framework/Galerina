@@ -24,6 +24,19 @@ verified**; the codebase is in a fail-closed, deterministic state. 48/48 package
   `epilogueReceipt`, `liabilityProfile`, `physicalHardeningTier`).
 
 ### Added
+- **DbC output post-conditions (0040 / #70).** `invariant { ensure result … }` now expresses an OUTPUT
+  post-condition over a flow's return value, enforced **fail-closed at the single flow exit**: a return
+  value violating the post-condition becomes a `runtimeError` (`LLN-INV-002`) and never escapes — the same
+  posture as the i32 trap (Fork-A) / 0038. The magic `result` symbol is recognised by the symbol resolver
+  and governance verifier *only* inside an `ensure` (so `ensure result <= 100` is accepted; genuine typos
+  still raise `LLN-NAME-001`/`LLN-INV-004`). Enforcement holds on **every interpreter tier**: the async
+  tree-walker enforces the gate, and a post-condition flow is excluded from the bytecode VM / sync
+  fast-path / ExecutionGraph fast-path / pure-flow cache (which return early and would bypass it) and from
+  the WASM tier (declines to the governed interpreter until single-exit `$logicn_result` lowering lands).
+  Previously `ensure result …` was hard-*rejected* at compile time — a fail-safe capability gap, now a
+  working fail-closed contract. +9 tests (incl. a three-tier fast-path fidelity check). Follow-ups: WASM
+  single-exit lowering (so these flows also run on WASM), Z3 discharge of decidable bounds (the 0024 track),
+  and `result.taint`/`result.cardinality` as compile-time governance metadata.
 - **AOT #1 — constant-expression folding (WAT emitter).** `foldToInt` now folds `const <op> const` arithmetic
   at build time via the *checked* i32 ops → emits `(i32.const RESULT)` instead of the runtime op (also lets
   `static NAME = 60*24` resolve). Trap-safe: an overflowing/div0 constant is NOT folded (the runtime checked

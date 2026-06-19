@@ -485,6 +485,17 @@ class SymbolResolver {
         }
         return;
 
+      case "ensureDecl":
+        // 0040/#70: inside an `invariant { ensure … }` clause the magic `result` symbol (the
+        // flow's output value) is in scope — an output post-condition. Scope it to JUST the
+        // ensure expression (a nested scope) so parameters still resolve via the parent flow
+        // scope, the body is unaffected, and genuine typos are still flagged LLN-NAME-001.
+        this.pushScope();
+        this.declareInCurrentScope("result", node);
+        this.walkChildren(node, "normal");
+        this.popScope();
+        return;
+
       case "identifier":
         if (context === "normal") {
           if ((node.children?.length ?? 0) > 0) {
