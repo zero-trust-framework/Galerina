@@ -33,6 +33,10 @@ verified**; the codebase is in a fail-closed, deterministic state. 48/48 package
   yet — the source-writer is a later phase, gated on the human-edit decision). Naming standardised on the
   clean antonym pair **USES** (what I call) / **USEDBY** (who calls me); recursion/self-calls and
   stdlib/method calls are excluded. +8 tests.
+- **`//@COMPLEXITY` cyclomatic complexity metric (R&D 0045 — Phase 1c).** `cyclomaticComplexity(node)` =
+  `1 + decision points` (if / while / for-each / match arm / `&&` / `||`). `renderComplexityComment()` emits
+  `//@COMPLEXITY: N` and stays **silent at complexity 1** (the owner's low-noise rule). Surfaced per flow in
+  `logicn deps`. +6 tests.
 - **`LLN-HW-004` UnknownHardwareTarget — yellow hardware uncertainty (R&D 0045 — Phase 1b).** A `contract.hardware`
   target that is not in `HARDWARE_TRUST_PROFILES` was previously a **silent `continue`** (the uncertainty was
   invisible). It now emits a **yellow `LLN-HW-004` warning** (K3 INDETERMINATE — *not* a red error): the build

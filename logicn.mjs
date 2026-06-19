@@ -737,6 +737,11 @@ Baseline comparison (governance-cost):
       process.exit(1);
     }
     const depMap = m.analyzeFlowDependencies(parsed.ast);
+    const FK = new Set(["pureFlowDecl", "flowDecl", "secureFlowDecl", "guardedFlowDecl"]);
+    const flowNodeByName = new Map();
+    for (const child of parsed.ast.children ?? []) {
+      if (FK.has(child.kind) && child.value) flowNodeByName.set(child.value, child);
+    }
     const flagIdx = rest.indexOf("--flow");
     const only = flagIdx >= 0 ? rest[flagIdx + 1] : undefined;
     if (only !== undefined && !depMap.has(only)) {
@@ -750,6 +755,8 @@ Baseline comparison (governance-cost):
       if (d === undefined) continue;
       console.log(`flow ${name}`);
       for (const line of m.renderDependencyComments(d)) console.log(`  ${line}`);
+      const node = flowNodeByName.get(name);
+      if (node !== undefined) for (const line of m.renderComplexityComment(node)) console.log(`  ${line}`);
     }
     process.exit(0);
   }

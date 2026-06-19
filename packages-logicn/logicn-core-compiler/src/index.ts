@@ -435,6 +435,10 @@ export {
   renderDependencyComments,
   type FlowDependencies,
 } from "./flow-dependency-analysis.js";
+export {
+  cyclomaticComplexity,
+  renderComplexityComment,
+} from "./flow-complexity.js";
 export type { SemanticGraph } from "@logicn/devtools-graph-algorithms";
 
 // Phase 15 — Passive Execution Plans
