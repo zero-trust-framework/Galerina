@@ -5,6 +5,13 @@
 > Machine: Intel i9-9900K @ 3.60GHz · node v24.16.0 · win32. **No photonic/HW number is claimed** —
 > the substrate is software-simulated (README: WASM is the production path), so all optics/"bare-metal
 > cycle"/"512-bit lane" claims are EXCLUDED, exactly as for 0028.
+>
+> **Worker-verified + extended (R&D 0037, 2026-06-19):** re-ran this harness (6/6) + the AOT one (5/5). Confirmed
+> the branchless filter is MODEST (≈1.0× ± noise, inverts for expensive f). **Proved the SEPARATE-PRESENCE-CHANNEL
+> correctness fix end-to-end** (trit-0-as-mask aliases 0=INDETERMINATE → fail-open/read; a distinct presence bit
+> restores it, stays fail-closed) → **adoptable trick #1 (correctness, do first; one bit lane).** Dynamic-`where`
+> = runtime mask over columnar layout (taken path, NOT superposition). Precompute envelope measured (WIN
+> small+dense+repeated all-pairs; LOSE sparse/single-source/large). Nothing built; see the corpus-closure ledger.
 
 ## The ask
 The `for`/`where` constructs incur tree-walker overhead (sequential, branch-heavy, pointer-chasing).

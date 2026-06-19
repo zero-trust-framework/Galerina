@@ -4,6 +4,13 @@
 > (5/5 vs ground truth, i9-9900K). **No photonic/HW number** — software-sim (README: WASM is production).
 > The harness self-corrected twice while being written (an LCG low-bit RNG bug, then shared FLOP counters)
 > — both caught by *running* it; recorded for honesty (don't-trust-check applies to our own proofs too).
+>
+> **Worker-verified + extended (R&D 0036, 2026-06-19):** re-ran this harness (5/5) + independently re-derived
+> D2/D4 — D1–D5 confirmed, none refuted. NEW proof `aot-classical-tricks.mjs`: const-fold + propagation +
+> branch-fold + DCE = **1.64× wall-clock, 7.1× fewer AST nodes**, byte-identical over 50k inputs. Source-verified
+> that LogicN has literal-const substitution (`staticConsts`) but **NOT** const-*expression* folding or
+> branch-folding → **ADOPT #1 (const-expr-fold+prop), #2 (branch-fold+dead-arm-DCE)**; build order ①…⑥ in the
+> corpus-closure ledger's "Worker R&D Results" section. Nothing built (owner-gated).
 
 ## The ask
 (1) What AOT tricks do Rust/C++/Zig/Go use, and which can LogicN adopt? (2) Can the tower-citizen

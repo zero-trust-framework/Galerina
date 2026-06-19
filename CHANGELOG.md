@@ -35,8 +35,22 @@ verified**; the codebase is in a fail-closed, deterministic state. 48/48 package
   (tests in `wat-forin-execution.test.mjs`).
 - **Fail-closed invariant test suite** (`fail-closed-invariant.test.mjs`) — a global guard that a checked-op
   trap (overflow, div0) must fail the flow closed regardless of where its result lands (return / dead
-  binding / discarded-in-loop). Return-path cases pass; the discard cases are `todo` pending the R&D-0038
-  fix (a confirmed fail-open: an overflow assigned to a never-returned binding is silently discarded).
+  binding / discarded-in-loop / nested in an expression). All 6 cases pass (permanent guards) after the
+  0038 fix below.
+
+### Fixed
+- **i32-overflow fail-OPEN (soundness, R&D 0038).** A checked-op trap (`IntegerOverflow` / `DivisionByZero`)
+  became a `runtimeError` *value*; assigned to a never-returned binding (or nested past one, e.g.
+  `(seed*K)+C`) it was silently discarded and the flow completed with a wrong result (arithmetic-threshold
+  returned `63248` while the WASM tier trapped). Now a checked trap propagates out of binding/expression
+  statements and through binary operands (incl. `&&`/`||`), failing the flow closed regardless of placement
+  — completing Fork-A=TRAP. Narrowed to checked traps so soft runtimeErrors (e.g. a missing field) keep
+  value semantics. compute-mix + arithmetic-threshold now fail closed fast (0–4 ms, clean `IntegerOverflow`).
+- **Pure-flow sync fast-path infinite loop (R&D 0032 completion).** `tryPureFlowSync` had no loop cap and
+  swallowed non-`SyncReturn` throws → a post-Fork-A overflow spun forever (hung the compute-mix benchmark
+  ~31 min). Now bails to the bounded trapping tree-walker + caps the loop.
+- **Bytecode VM** — added a loop-iteration cap (`runBytecode` back-edge counting) and re-keyed the
+  compile cache from flow-name-only to per-AST (`WeakMap<AstNode,…>`), removing a wrong-result hazard.
 - `crypto-ops` benchmark now measures ML-DSA-65 + hybrid Ed25519+ML-DSA-65 signatures (PQ-tax visibility).
 - KB §7a — ratified domain-guard `permitted_effects` state machine.
 - Roadmap #125–#128 (CLI governed-run, parser-level bitwise hint, shape-stable governance objects, GAP-4).

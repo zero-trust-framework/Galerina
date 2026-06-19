@@ -44,6 +44,47 @@ Citation verifiers exit 0 (the content-assert caught + fixed a real mis-cite in 
 
 **Still parked (owner-gated / not started):** 0034 `move`/`USE_AFTER_MOVE` wiring (new syntax — needs owner design); 0031 **34B** route-handler auto-taint (breaking — strict-profile-gated, needs routeDecl wiring); 0035 trit-fold reachability + 0025 governance-T-MAC decision path (security-critical governance decision path); 0033 WASM handles/WasmGC (ABI); GAP-2 (CLI: expose effectful `secure flow main` to `--invoke` — fuzzy, "document or expose"). **Item 4's clear half (GAP-4 forEach) + 0031-34A SHIPPED above.**
 
+## WORKER R&D RESULTS 2026-06-19 (bridge 0036–0041 — worker session drained the queue; 0040 HELD)
+The R&D worker ran the six tasks the hub filed this session. **0036/0037/0038/0039/0041 DONE** (done-reports
+committed `5e7b9e4`/`158dc68`/`48e85fe`); **0040 HELD** (DbC/formal-verification — worker respected the owner
+"do not run yet"). All re-ran the hub harnesses (don't-trust-check) + extended them; each self-corrected at
+least once (recorded). Nothing built into production (owner-gated). Summaries:
+
+- **0036 — AOT adoption.** Re-verified D1–D5 (none refuted) + independently re-derived D2/D4. NEW proof
+  `aot-classical-tricks.mjs`: const-fold + propagation + branch-fold + DCE = **1.64× wall-clock, 7.1× fewer
+  AST nodes, 2.1× fewer taken-path dispatches**, byte-identical over 50k random inputs. Source-verified that
+  LogicN has literal-const substitution (`staticConsts`) but **NOT** const-*expression* folding or
+  branch-folding → **ADOPT #1/#2**. Build order: ①const-expr-fold+prop ②branch-fold+dead-arm-DCE
+  ③trap-tail simplify ④small-pure-flow inlining ⑤cross-flow LTO ⑥PGO(defer). (Self-correction: dead-arm
+  DCE is a code-size/cache/lowering-speed win, NOT a per-call traversal win — a correct walker never walks
+  the dead arm.)
+- **0037 — trit graph-query engine** (⚠ "Mesh" rename pending; also flags `tri-encription/bench/meshql.mjs`).
+  Confirmed for/where branchless filter is **MODEST** (≈1.0× ± noise; inverts for expensive f). **Proved the
+  SEPARATE-PRESENCE-CHANNEL correctness fix end-to-end** (trit-0 as a filter mask aliases 0=INDETERMINATE → a
+  fail-open/read bug; a distinct presence bit restores distinguishability + stays fail-closed) → **adoptable
+  trick #1 (correctness, do first; cheap — one bit lane).** Dynamic-`where` = runtime mask over columnar
+  layout, taken path (NOT superposition = 2–4× work). Precompute envelope MEASURED: WIN small+dense+repeated
+  all-pairs; LOSE sparse/single-source/large; O(N²)/relationship memory.
+- **0038 — i32 fail-open.** INDEPENDENTLY confirmed (11/11) + fix-spec'd. **Hub already shipped the fix**
+  (`3596fb5`+`490c492`, value-propagation). Worker's recommended design is **cleaner**: make `i32R` THROW at
+  the op (trap-at-point) — then a trap can never reach a downstream op or assignment, so the message
+  divergence + the `isCheckedTrap` checks both become unnecessary, and all tiers align to the bare trap-kind.
+  → **the throw-at-op refactor is the recommended follow-up** to my value-propagation fix.
+- **0039 — benchmark alignment** (SPEC; production edit owner-gated). Unify matrix-multiply to **n=32 for ALL**
+  (tree-walker cap; unit `mul-adds/s`, N=32768); tri-logic = every runtime `runBulkTri(100000)` (`trit-ops/s`);
+  data-query = one query `filterAndCount` at **N=2000** (fix the `logicnOpsPerRun=1000` undercount). Model
+  harness proves the unit logic + that it introduces no nbody-class false win. **Ready for the hub/owner to apply.**
+- **0041 — memoization.** Win/loss envelope: **5.27× on repeated/pure**, **1.77× SLOWER + unbounded memory on
+  unique**, cold = full price, content-addressed store 4.62× for hot static, pure-only/PII preserved (0 leaks).
+  Verdict: **DON'T build by default** — the shipped whole-flow LRU already captures most of the win; the
+  sub-expression tier earns its keep only for a profiled hot pure sub-result recurring across whole-flow args.
+
+**Answer to "what R&D is on hold / unlockable":** **0040 (DbC + formal verification) is the only HELD R&D
+task** — unlock by owner go (verify-before-build: ~80% likely already shipped). Everything else in the worker
+queue is DONE. Owner-gated PRODUCTION builds (separate from R&D-worker tasks) still pending a steer: 0036
+const-fold/DCE adoption (build order above), 0037 presence-channel + tricks, 0038 throw-at-op refactor, 0039
+benchmark re-author (spec ready), 0031-34B, 0025/0035 governance decision-path, `move` syntax, WASM handles.
+
 ## Shipping-readiness / unblock map (what gates the *application* of the proven work)
 1. **Owner-gated (production read-only — the big bucket; batch applied per owner Go 2026-06-18/19, see APPLY PHASE above):**
    - **0032 liveness hazards** — **✅ SHIPPED** `a728e44`+`a9c4ebd`+`264723a` (incl. the sync fast-path completion).
