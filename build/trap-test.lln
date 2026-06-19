@@ -1,3 +1,0 @@
-pure flow testTrap(n: Int) -> Int
-contract { intent "Test trap fires on negative input" effects {} }
-{ trap n <= 0 : ERR_NEGATIVE; return n }

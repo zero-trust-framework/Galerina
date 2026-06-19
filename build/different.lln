@@ -1,1 +1,0 @@
-pure flow different() -> Int contract { intent { "different" } } { return 42 }
