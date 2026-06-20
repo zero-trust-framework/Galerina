@@ -34,6 +34,28 @@ const candidate = (prog, flow, args) =>
 const show = (v) =>
   v.__tag === "runtimeError" ? `trap:${v.message}` : v.__tag === "int" ? `int:${v.value}` : v.__tag;
 
+// ── Deterministic fuzz (slice-5): a seeded xorshift32 PRNG so the for-all-inputs gate is
+// reproducible + CI-stable (no Math.random). ~30% of samples are drawn from the i32 edge set
+// (so overflow / div0 / mod0 / sqrt-boundary / INT32_MIN÷-1 are exercised), the rest uniform i32.
+const EDGE = [0, 1, -1, 2, -2, MIN, MAX, MIN + 1, MAX - 1, 46340, 46341, -46340, -46341, 65536, -65536];
+function makePRNG(seed) {
+  let s = seed >>> 0 || 1;
+  return () => {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >>> 17;
+    s ^= s << 5; s >>>= 0;
+    return s; // u32
+  };
+}
+function makeSampler(seed) {
+  const rng = makePRNG(seed);
+  return () => {
+    const r = rng();
+    if ((r & 7) < 3) return EDGE[rng() % EDGE.length]; // ~30% edge values
+    return r | 0; // uniform i32 (u32 → signed)
+  };
+}
+
 // [source, flowName, paramNames, [ [args…] … ]] — pure i32 flows over the hardened edge set.
 // NOTE: each flow has a UNIQUE name. On the harness's first run a shared name ("f") exposed that the
 // GLOBAL bytecode cache keys on flow name, so the fast tier reused the first "f"'s bytecode across
@@ -216,5 +238,68 @@ test("0014 slice-4: liveness fail-closed — runaway loop + deep recursion TRAP 
     const res = await executeFlow("recur", new Map([["n", { __tag: "int", value: 0 }]]), prog.ast, prog.flows, undefined, undefined, { maxCallDepth: 50 });
     assert.equal(res.value.__tag, "runtimeError", "unbounded recursion must fail closed (runtimeError), not crash the host");
     assert.ok(/Recursion depth exceeded/.test(res.value.message ?? ""), `expected a 'Recursion depth exceeded' trap — got ${res.value.message ?? res.value.__tag}`);
+  }
+});
+
+// ── Slice 5: FUZZ / for-all-inputs gate (0014 + 0048 deliverable) ──────────────────────────────────
+// The fixed corpus above proves the KNOWN i32 edges; this slice is the structural guarantee the harness
+// was missing — a deterministic property gate that drives MANY random i32 inputs through every tier and
+// asserts byte-exact agreement, so a future change that fails-open on some non-hand-picked input is
+// caught here (the cross-tier fail-open family memory flags as structurally under-covered). Seeded →
+// reproducible; a failure prints the exact seed-derived args so it is debuggable.
+test("0014 slice-5a: FUZZ tree-walker ≡ bytecode/fast tier, byte-exact over random i32 inputs", async () => {
+  const N = 400;
+  const sample = makeSampler(0x9e3779b1);
+  for (const [src, flow, params] of CORPUS) {
+    clearBytecodeCache(); // isolate each entry from the cross-compilation cache (see the NOTE above)
+    const prog = parseProgram(src, "fid-fuzz.lln");
+    const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+    assert.equal(errs.length, 0, `parse error in "${src}": ${errs.map((d) => d.message).join("; ")}`);
+    for (let i = 0; i < N; i++) {
+      const vals = params.map(() => sample());
+      const args = argMap(params, vals);
+      const ref = (await reference(prog, flow, args)).value;
+      const cand = (await candidate(prog, flow, args)).value;
+      const ctx = `flow=${flow} args=[${vals}] : walker=${show(ref)} fast=${show(cand)}`;
+      assert.equal(ref.__tag, cand.__tag, `FUZZ tier TAG divergence — ${ctx}`);
+      if (ref.__tag === "int") assert.ok(Object.is(ref.value, cand.value), `FUZZ tier VALUE divergence (incl. -0) — ${ctx}`);
+      if (ref.__tag === "runtimeError") assert.equal(ref.message, cand.message, `FUZZ tier TRAP divergence — ${ctx}`);
+    }
+  }
+});
+
+test("0014 slice-5b: FUZZ WASM tier ≡ reference walker, byte-exact (value; trap⟺trap) over random i32 inputs", async () => {
+  const N = 200;
+  const prog = parseProgram(WASM_SRC, "fid-fuzz-wasm.lln");
+  const errs = (prog.diagnostics ?? []).filter((d) => d.severity === "error");
+  assert.equal(errs.length, 0, `parse error: ${errs.map((d) => d.message).join("; ")}`);
+
+  // One assemble + #105-admit + instantiate for all flows (same path as slice-2).
+  const fx = L.checkEffects(prog.flows, prog.ast);
+  const { gir } = L.emitGIR(prog.ast, prog.flows, fx);
+  const wat = L.renderWAT(L.buildWATModuleFromGIR(gir, undefined, "fidfuzz", prog.ast, true));
+  const asm = await L.assembleWAT(wat);
+  assert.ok(asm.valid && asm.diagnostics.length === 0, `module assembles: ${JSON.stringify(asm.diagnostics)}`);
+  const kp = L.generateRunnerKeypair();
+  const att = L.signWasm(asm.wasm, kp.privateKeyPem, "dev");
+  const { instance } = await L.admitAndInstantiate({
+    wasm: asm.wasm, attestation: att,
+    policy: { requireSigned: true, publicKeyPem: kp.publicKeyPem },
+    host: L.createHostRuntime(),
+  });
+
+  const sample = makeSampler(0x12345677);
+  for (const [, flow, params] of CORPUS) {
+    assert.equal(typeof instance.exports[flow], "function", `WASM exports pure flow ${flow}`);
+    for (let i = 0; i < N; i++) {
+      const vals = params.map(() => sample());
+      const ref = (await executeFlow(flow, argMap(params, vals), prog.ast, prog.flows)).value;
+      const refTrap = ref.__tag === "runtimeError";
+      let wasmTrap = false, wasmVal;
+      try { wasmVal = instance.exports[flow](...vals); } catch { wasmTrap = true; }
+      const ctx = `flow=${flow} args=[${vals}] : walker=${refTrap ? "trap" : "int:" + ref.value} wasm=${wasmTrap ? "trap" : "int:" + wasmVal}`;
+      assert.equal(refTrap, wasmTrap, `FUZZ WASM TRAP/VALUE divergence — ${ctx}`);
+      if (!refTrap) assert.ok(Object.is(ref.value, wasmVal), `FUZZ WASM value divergence (incl. -0) — ${ctx}`);
+    }
   }
 });
