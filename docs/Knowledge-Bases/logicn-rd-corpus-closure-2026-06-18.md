@@ -44,9 +44,13 @@ arm is NET-NEW kernel→runtime bridge wiring; egress fence (never export `Audit
 verified-import HYBRID = prod/mesh signed-hash + dev file-path, profile DERIVED from `SecurityPosture`, NO lockfile
 (emit untrusted `import-closure.json`). **0052** (`logicn-wasm-compilation-granularity.md`) — default AOT-fuse +
 opt-in multi-module/component mode; ship interim host-linker over `capabilityRegistry` FIRST, don't block on
-#102–104; bench 15/15. **Three OWNER-GATED builds pending an ask:** the 0050 exporter, the 0051 posture-derived
-import profile, the 0052 multi-module Phase A. **0052's worker artifacts (wasm-granularity/) committed by the
-worker; R&D tree clean.**
+#102–104; bench 15/15. **0052's worker artifacts (wasm-granularity/) committed by the worker; R&D tree clean.**
+
+**▶ OWNER DECISIONS 2026-06-20:** (1) 0050 name = **`logicn-governance-telemetry`** (panel rec'd `-exporter`; owner
+kept "telemetry"). (2) Next build = **0052 multi-module Phase A** → **SLICE 1 SHIPPED** (`fuse-loader.ts`:
+`fusePackages` + pure `planComposition` [SET-SIGNED, deny-by-default, acyclic, unambiguous] + `makeProviderFactory`;
+unconsumed `provides`=inert seam; +13 tests, app-kernel 51/51, SOT 3705). **Slice 2 NEXT** = real cross-module wasm
+call (needs .wasm fixtures). **Still pending an ask:** the 0050 exporter build + the 0051 posture-derived import profile.
 
 **▶ AOT #2 — branch-folding + dead-arm DCE — ✅ SHIPPED `056ac70`** (`foldToBool` folds a const `if`
 condition → emit only the taken arm; dead arm + locals dropped; nested=true → explicit returns valid

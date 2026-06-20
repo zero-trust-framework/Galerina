@@ -370,25 +370,28 @@ export function buildCapabilityImports(
   return { imports: imports as unknown as WebAssembly.Imports, grantedNamespaces };
 }
 
-/**
- * Fuse a built LogicN package directory into a host-callable component.
- *
- * Expects `<dir>` to contain (from `logicn build --package`):
- *   <name>.wasm, <name>.lmanifest.json (signed, with embedded `fuse` block),
- *   and optionally <name>.fuse.json (convenience copy).
- *
- * Fail-closed on: hash mismatch, invalid signature, unknown/undeclarable capability.
- */
-export async function fusePackage(dir: string, opts: FusePackageOptions = {}): Promise<FusedComponent> {
-  const warn = opts.warn ?? ((m: string) => console.warn(m));
-  const node = await loadNode();
-  const { crypto, fs, path } = node;
-  const registry: Record<string, CapabilityImportFactory> = {
-    ...BUILTIN_CAPABILITY_REGISTRY,
-    ...(opts.capabilityRegistry ?? {}),
-  };
+/** A package after Gates 1+2 (hash + signature) but BEFORE instantiation (Gate 3). */
+interface AdmittedPackage {
+  readonly name: string;
+  readonly descriptor: FuseDescriptor;
+  readonly wasmBytes: Uint8Array;
+  readonly signature: "verified" | "unsigned";
+}
 
-  // ── Locate the package descriptor to learn the package name ──────────────────
+/**
+ * Run Gates 1 (hash) + 2 (signature) for one package directory and return its verified
+ * descriptor + bytes WITHOUT instantiating. Shared by {@link fusePackage} (single) and
+ * {@link fusePackages} (multi-module). Fail-closed on hash mismatch / sidecar drift; the
+ * unsigned POLICY decision (refuse vs allowUnsigned) is left to the caller — a multi-module
+ * compose enforces the set-level invariant, a single fuse enforces it per package.
+ */
+async function loadAndVerifyPackage(
+  node: { crypto: NodeCrypto; fs: NodeFs; path: NodePath },
+  dir: string,
+  opts: FusePackageOptions,
+  warn: (m: string) => void,
+): Promise<AdmittedPackage> {
+  const { crypto, fs, path } = node;
   const pkgDescPath = path.join(dir, "package.lln.json");
   const pkgDesc = readJson(fs, pkgDescPath, "LLN-FUSE-NO-PACKAGE") as Record<string, unknown>;
   const name = typeof pkgDesc["name"] === "string" ? (pkgDesc["name"] as string) : path.basename(dir);
@@ -397,7 +400,6 @@ export async function fusePackage(dir: string, opts: FusePackageOptions = {}): P
   const manifestJsonPath = path.join(distDir, `${name}.lmanifest.json`);
   const wasmPath = path.join(distDir, `${name}.wasm`);
 
-  // ── Load the SIGNED manifest (authoritative) ─────────────────────────────────
   const manifestObj = readJson(fs, manifestJsonPath, "LLN-FUSE-NO-MANIFEST") as Record<string, unknown>;
   const descriptor = extractFuse(manifestObj, manifestJsonPath);
 
@@ -417,7 +419,6 @@ export async function fusePackage(dir: string, opts: FusePackageOptions = {}): P
   }
 
   // ── Cross-check the convenience .fuse.json against the signed descriptor ─────
-  // The signed manifest wins on any disagreement (the .fuse.json is unsigned).
   const fuseJsonPath = path.join(distDir, `${name}.fuse.json`);
   if (fs.existsSync(fuseJsonPath)) {
     const sidecar = readJson(fs, fuseJsonPath, "LLN-FUSE-BAD-SIDECAR") as Record<string, unknown>;
@@ -429,32 +430,25 @@ export async function fusePackage(dir: string, opts: FusePackageOptions = {}): P
     }
   }
 
-  // ── Gate 2: signature — fail-closed unless allowUnsigned ─────────────────────
-  const sigState = verifyManifestSignature(node, manifestObj, opts.governanceDir, dir, warn);
-  if (sigState === "unsigned") {
-    if (opts.allowUnsigned !== true) {
-      const keysExist = governanceKeysPresent(fs, path, opts.governanceDir, dir);
-      return fuseError(
-        "LLN-FUSE-UNSIGNED",
-        keysExist
-          ? `manifest is unsigned but governance signing keys exist — refusing to fuse (pass allowUnsigned to override)`
-          : `manifest is unsigned — refusing to fuse (pass allowUnsigned to override)`,
-      );
-    }
-    warn(`LLN-FUSE-UNSIGNED-ALLOWED: fusing '${name}' from an UNSIGNED manifest because allowUnsigned was set`);
-  }
+  // ── Gate 2: signature state (caller decides the unsigned policy) ─────────────
+  const signature = verifyManifestSignature(node, manifestObj, opts.governanceDir, dir, warn);
+  return { name, descriptor, wasmBytes, signature };
+}
 
-  // ── Gate 3: instantiate with ONLY capability-permitted host imports ──────────
-  const { imports } = buildCapabilityImports(descriptor.capabilities, registry);
-  const result: unknown = await WebAssembly.instantiate(wasmBytes as BufferSource, imports);
+/** Gate 3: instantiate `wasmBytes` with the closed capability import object and wrap it. */
+async function instantiateComponent(
+  admitted: AdmittedPackage,
+  imports: WebAssembly.Imports,
+): Promise<FusedComponent> {
+  const result: unknown = await WebAssembly.instantiate(admitted.wasmBytes as BufferSource, imports);
   const instance =
     (result as { instance?: WebAssembly.Instance }).instance ?? (result as WebAssembly.Instance);
   const exportsObj = instance.exports as Record<string, unknown>;
-
+  const name = admitted.name;
   return {
     name,
-    seam: descriptor.seam,
-    capabilities: descriptor.capabilities,
+    seam: admitted.descriptor.seam,
+    capabilities: admitted.descriptor.capabilities,
     invoke(exportName: string, ...args: number[]): number {
       const fn = exportsObj[exportName];
       if (typeof fn !== "function") {
@@ -464,4 +458,310 @@ export async function fusePackage(dir: string, opts: FusePackageOptions = {}): P
       return typeof ret === "number" ? ret : 0;
     },
   };
+}
+
+/**
+ * Fuse a built LogicN package directory into a host-callable component.
+ *
+ * Expects `<dir>` to contain (from `logicn build --package`):
+ *   <name>.wasm, <name>.lmanifest.json (signed, with embedded `fuse` block),
+ *   and optionally <name>.fuse.json (convenience copy).
+ *
+ * Fail-closed on: hash mismatch, invalid signature, unknown/undeclarable capability.
+ */
+export async function fusePackage(dir: string, opts: FusePackageOptions = {}): Promise<FusedComponent> {
+  const warn = opts.warn ?? ((m: string) => console.warn(m));
+  const node = await loadNode();
+  const { fs, path } = node;
+  const registry: Record<string, CapabilityImportFactory> = {
+    ...BUILTIN_CAPABILITY_REGISTRY,
+    ...(opts.capabilityRegistry ?? {}),
+  };
+
+  const admitted = await loadAndVerifyPackage(node, dir, opts, warn);
+
+  // ── Gate 2 policy (single package): fail-closed unless allowUnsigned ─────────
+  if (admitted.signature === "unsigned") {
+    if (opts.allowUnsigned !== true) {
+      const keysExist = governanceKeysPresent(fs, path, opts.governanceDir, dir);
+      return fuseError(
+        "LLN-FUSE-UNSIGNED",
+        keysExist
+          ? `manifest is unsigned but governance signing keys exist — refusing to fuse (pass allowUnsigned to override)`
+          : `manifest is unsigned — refusing to fuse (pass allowUnsigned to override)`,
+      );
+    }
+    warn(`LLN-FUSE-UNSIGNED-ALLOWED: fusing '${admitted.name}' from an UNSIGNED manifest because allowUnsigned was set`);
+  }
+
+  // ── Gate 3: instantiate with ONLY capability-permitted host imports ──────────
+  const { imports } = buildCapabilityImports(admitted.descriptor.capabilities, registry);
+  return instantiateComponent(admitted, imports);
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Multi-module composition — R&D 0052 Phase A (interim host-linker, FIRST-PARTY ONLY)
+//
+// Packages can live OUTSIDE the app as separate signed .wasm modules and be composed
+// at admission: a package that `provides` a capability backs another package's DECLARED
+// capability, routed through the existing CapabilityImportFactory hook. Module→module
+// routing is itself deny-by-default — a declared capability with neither a host shim nor
+// a peer provider is refused.
+//
+// SECURITY MODEL (Phase A): capability SHAPES (namespace + function names) are host-defined
+// (the built-in registry + opts.capabilityRegistry) — a closed import surface. A provider
+// can only RE-BACK a capability whose shape is registered; it cannot invent new import
+// surface. Per-module signed admission holds (each module runs Gates 1+2); the SET-LEVEL
+// invariant: a multi-module admission is "signed" iff EVERY module verified — one unsigned
+// member refuses the WHOLE set. Phase A shares process memory between co-resident modules,
+// so it is valid for TRUSTED / FIRST-PARTY packages only; the memory-isolated upgrade is
+// Phase B (Wasmtime Component Model, #102–104).
+// ═════════════════════════════════════════════════════════════════════════════
+
+/** One package's admission-relevant facts, for pure composition planning. */
+export interface CompositionMember {
+  readonly name: string;
+  /** The capability this package PROVIDES to peers (FuseDescriptor.provides), or null. */
+  readonly provides: string | null;
+  /** The capabilities this package DECLARES / consumes (FuseDescriptor.capabilities). */
+  readonly capabilities: readonly string[];
+  /** Gate-2 outcome for this package's manifest. */
+  readonly signature: "verified" | "unsigned";
+}
+
+/** How a consumer's declared capability is satisfied. */
+export type CapabilitySource =
+  | { readonly kind: "builtin" }
+  | { readonly kind: "provider"; readonly provider: string };
+
+export interface CompositionPlan {
+  /** Instantiation order: every provider appears BEFORE the consumers that import it. */
+  readonly order: readonly string[];
+  /** Per package name → (declared capability → who satisfies it). */
+  readonly resolution: ReadonlyMap<string, ReadonlyMap<string, CapabilitySource>>;
+}
+
+/**
+ * Plan a multi-module composition, fail-closed. PURE — no I/O, no instantiation.
+ *
+ * Invariants (all fail-closed):
+ *  - SET-SIGNED — every member must be "verified" unless `allowUnsigned`; one unsigned member
+ *    refuses the whole set (LLN-FUSE-SET-UNSIGNED).
+ *  - PROVIDER SHAPE — a `provides` capability must have a registered host-import shape, else the
+ *    host cannot wire its import surface (LLN-FUSE-PROVIDES-UNKNOWN).
+ *  - UNAMBIGUOUS — two members providing the same capability is refused (LLN-FUSE-SET-AMBIGUOUS).
+ *  - DENY-BY-DEFAULT — each declared capability resolves to a peer provider (preferred) or a
+ *    built-in host shim; anything unsatisfied refuses the set (LLN-FUSE-UNKNOWN-CAP). A package
+ *    that both provides and declares the same capability is refused (LLN-FUSE-SET-SELF).
+ *  - ACYCLIC — consumer→provider edges must form a DAG (LLN-FUSE-SET-CYCLE).
+ *
+ * @param knownCapabilities capabilities with a registered host-import shape (builtins + overrides).
+ */
+export function planComposition(
+  members: readonly CompositionMember[],
+  knownCapabilities: ReadonlySet<string>,
+  opts: { readonly allowUnsigned?: boolean } = {},
+): CompositionPlan {
+  // 0 — SET-SIGNED invariant.
+  if (opts.allowUnsigned !== true) {
+    const unsigned = members.filter((m) => m.signature !== "verified").map((m) => m.name);
+    if (unsigned.length > 0) {
+      fuseError(
+        "LLN-FUSE-SET-UNSIGNED",
+        `refusing to compose: unsigned member(s) [${unsigned.join(", ")}] — a multi-module admission is signed only if EVERY module verified (pass allowUnsigned to override)`,
+      );
+    }
+  }
+
+  // 1 — provider map. A `provides` value is a cross-module link ONLY when a peer actually
+  // CONSUMES it (declares it as a capability). An unconsumed `provides` is inert seam/protocol
+  // metadata (e.g. "rest") — ignored here, not required to have a host-import shape.
+  const consumed = new Set<string>();
+  for (const m of members) for (const cap of m.capabilities) consumed.add(cap);
+  const rawProviders = new Map<string, string[]>();
+  for (const m of members) {
+    if (m.provides === null) continue;
+    const list = rawProviders.get(m.provides);
+    if (list === undefined) rawProviders.set(m.provides, [m.name]);
+    else list.push(m.name);
+  }
+  const providerOf = new Map<string, string>();
+  for (const [cap, provs] of rawProviders) {
+    if (!consumed.has(cap)) continue; // inert seam — no peer imports it
+    // A provided+consumed capability must have a registered host-import SHAPE to be wireable.
+    if (!knownCapabilities.has(cap)) {
+      fuseError(
+        "LLN-FUSE-PROVIDES-UNKNOWN",
+        `capability '${cap}' is provided by [${provs.join(", ")}] and consumed by a peer, but has no registered host-import shape — cannot wire an unknown import surface`,
+      );
+    }
+    if (provs.length > 1) {
+      fuseError(
+        "LLN-FUSE-SET-AMBIGUOUS",
+        `capability '${cap}' is provided by multiple packages [${provs.join(", ")}] — refusing (ambiguous provider)`,
+      );
+    }
+    providerOf.set(cap, provs[0] as string);
+  }
+
+  // 2 — resolve each declared capability, deny-by-default; collect consumer→provider edges.
+  const resolution = new Map<string, Map<string, CapabilitySource>>();
+  const dependsOn = new Map<string, Set<string>>(); // consumer → providers it imports
+  for (const m of members) {
+    const capMap = new Map<string, CapabilitySource>();
+    const deps = new Set<string>();
+    for (const cap of m.capabilities) {
+      const provider = providerOf.get(cap);
+      if (provider === m.name) {
+        fuseError(
+          "LLN-FUSE-SET-SELF",
+          `package '${m.name}' both provides and declares '${cap}' — refusing (self-provision)`,
+        );
+      } else if (provider !== undefined) {
+        capMap.set(cap, { kind: "provider", provider });
+        deps.add(provider);
+      } else if (knownCapabilities.has(cap)) {
+        capMap.set(cap, { kind: "builtin" });
+      } else {
+        fuseError(
+          "LLN-FUSE-UNKNOWN-CAP",
+          `package '${m.name}' declares capability '${cap}' satisfied by neither a host shim nor a peer provider — refusing (deny-by-default)`,
+        );
+      }
+    }
+    resolution.set(m.name, capMap);
+    dependsOn.set(m.name, deps);
+  }
+
+  // 3 — topological order (Kahn): providers before consumers; any cycle is refused.
+  const order = topoOrder(members.map((m) => m.name), dependsOn);
+  return { order, resolution };
+}
+
+/** Kahn topological sort over consumer→provider deps; providers emitted first. Cycle → throw. */
+function topoOrder(names: readonly string[], dependsOn: ReadonlyMap<string, ReadonlySet<string>>): string[] {
+  const indeg = new Map<string, number>();
+  const dependents = new Map<string, string[]>(); // provider → consumers depending on it
+  for (const n of names) {
+    indeg.set(n, dependsOn.get(n)?.size ?? 0);
+    dependents.set(n, []);
+  }
+  for (const n of names) {
+    for (const dep of dependsOn.get(n) ?? []) {
+      (dependents.get(dep) ?? (dependents.set(dep, []), dependents.get(dep)!)).push(n);
+    }
+  }
+  const ready = names.filter((n) => (indeg.get(n) ?? 0) === 0);
+  const out: string[] = [];
+  while (ready.length > 0) {
+    const n = ready.shift() as string;
+    out.push(n);
+    for (const consumer of dependents.get(n) ?? []) {
+      const d = (indeg.get(consumer) ?? 0) - 1;
+      indeg.set(consumer, d);
+      if (d === 0) ready.push(consumer);
+    }
+  }
+  if (out.length !== names.length) {
+    const stuck = names.filter((n) => !out.includes(n));
+    return fuseError(
+      "LLN-FUSE-SET-CYCLE",
+      `multi-module composition has a provider cycle among [${stuck.join(", ")}] — refusing`,
+    );
+  }
+  return out;
+}
+
+/**
+ * A CapabilityImportFactory that RE-BACKS capability `cap` with a peer module: it mirrors the
+ * registered host-import SHAPE (namespace + function names) but routes every function to the
+ * provider's `invoke`. The closed shape is the ABI contract — the provider must export a
+ * function named like each host-import function of `cap`.
+ */
+export function makeProviderFactory(
+  cap: string,
+  registry: Readonly<Record<string, CapabilityImportFactory>>,
+  getProvider: () => FusedComponent,
+): CapabilityImportFactory {
+  const shapeFactory = registry[cap];
+  if (shapeFactory === undefined) {
+    // Unreachable when called via planComposition (a provider cap is always known-shape),
+    // but fail-closed if used directly.
+    return fuseError("LLN-FUSE-PROVIDES-UNKNOWN", `cannot back capability '${cap}': no registered host-import shape`);
+  }
+  const shape = shapeFactory();
+  return () => {
+    const routed: Record<string, (...a: number[]) => number | void> = {};
+    for (const fname of Object.keys(shape.functions)) {
+      routed[fname] = (...a: number[]): number | void => getProvider().invoke(fname, ...a);
+    }
+    return { namespace: shape.namespace, functions: routed };
+  };
+}
+
+/**
+ * Compose MULTIPLE built LogicN packages into a host-linked set — R&D 0052 Phase A.
+ *
+ * Each package is admitted through the same fail-closed gates as {@link fusePackage} (hash +
+ * signature), then the set is planned ({@link planComposition}: set-signed, deny-by-default,
+ * unambiguous, acyclic) and instantiated in provider-before-consumer order, wiring each
+ * provider-backed capability through {@link makeProviderFactory}.
+ *
+ * FIRST-PARTY / TRUSTED packages only (shared process memory; isolation is Phase B). Returns a
+ * Map keyed by package name. Fail-closed throughout (LLN-FUSE-* codes).
+ */
+export async function fusePackages(
+  dirs: readonly string[],
+  opts: FusePackageOptions = {},
+): Promise<Map<string, FusedComponent>> {
+  const warn = opts.warn ?? ((m: string) => console.warn(m));
+  const node = await loadNode();
+  const registry: Record<string, CapabilityImportFactory> = {
+    ...BUILTIN_CAPABILITY_REGISTRY,
+    ...(opts.capabilityRegistry ?? {}),
+  };
+  const known = new Set(Object.keys(registry));
+
+  // 1 — load + verify EVERY package (Gates 1+2), no instantiation yet.
+  const admitted: AdmittedPackage[] = [];
+  for (const dir of dirs) admitted.push(await loadAndVerifyPackage(node, dir, opts, warn));
+
+  // Refuse a duplicate package name in the set (names key the plan + provider routing).
+  const seen = new Set<string>();
+  for (const a of admitted) {
+    if (seen.has(a.name)) fuseError("LLN-FUSE-SET-DUPLICATE", `package '${a.name}' appears twice in the composition set — refusing`);
+    seen.add(a.name);
+  }
+
+  // 2 — plan (set-signed invariant + deny-by-default routing + acyclic).
+  const members: CompositionMember[] = admitted.map((a) => ({
+    name: a.name,
+    provides: a.descriptor.provides,
+    capabilities: a.descriptor.capabilities,
+    signature: a.signature,
+  }));
+  const plan = planComposition(members, known, { allowUnsigned: opts.allowUnsigned === true });
+  if (opts.allowUnsigned === true) {
+    for (const a of admitted) {
+      if (a.signature === "unsigned") warn(`LLN-FUSE-UNSIGNED-ALLOWED: composing '${a.name}' from an UNSIGNED manifest because allowUnsigned was set`);
+    }
+  }
+
+  // 3 — instantiate in provider-before-consumer order, wiring peer-backed capabilities.
+  const byName = new Map(admitted.map((a) => [a.name, a]));
+  const components = new Map<string, FusedComponent>();
+  for (const name of plan.order) {
+    const a = byName.get(name) as AdmittedPackage;
+    const capMap = plan.resolution.get(name) as ReadonlyMap<string, CapabilitySource>;
+    const consumerRegistry: Record<string, CapabilityImportFactory> = { ...registry };
+    for (const [cap, src] of capMap) {
+      if (src.kind === "provider") {
+        // The provider was instantiated earlier (topo order guarantees it).
+        consumerRegistry[cap] = makeProviderFactory(cap, registry, () => components.get(src.provider) as FusedComponent);
+      }
+    }
+    const { imports } = buildCapabilityImports(a.descriptor.capabilities, consumerRegistry);
+    components.set(name, await instantiateComponent(a, imports));
+  }
+  return components;
 }

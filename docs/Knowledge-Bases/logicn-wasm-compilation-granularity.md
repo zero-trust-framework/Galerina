@@ -71,8 +71,30 @@ module changed; supports per-module revocation).
 - **NO perf/size numbers claimed** (owner: "no maths yet" — binding scope guard). The size-vs-build-speed-vs-boundary-cost
   bench is a **named later phase**; the grounding bench is a *surface/existence* check carrying zero timing/size data.
 
+## Phase A — Slice 1 SHIPPED 2026-06-20 (owner green-lit the build)
+`logicn-framework-app-kernel/src/fuse-loader.ts` — the multi-module host-linker, first-party only:
+- **`fusePackages(dirs, opts)`** — composes MULTIPLE built packages: each runs the same Gates 1+2 (hash + signature)
+  as `fusePackage` (refactored to share `loadAndVerifyPackage` + `instantiateComponent` — the 7 single-package tests
+  still pass), then the set is planned and instantiated in **provider-before-consumer order**, wiring peer-backed
+  capabilities through the existing `capabilityRegistry` hook.
+- **`planComposition(members, knownCaps, opts)`** — PURE, fail-closed planner enforcing the Phase A invariants:
+  **SET-SIGNED** (one unsigned member refuses the whole set — `LLN-FUSE-SET-UNSIGNED`), **DENY-BY-DEFAULT** routing
+  (a consumed capability resolves to a peer provider or a host shim; unsatisfied → `LLN-FUSE-UNKNOWN-CAP`),
+  **UNAMBIGUOUS** (`LLN-FUSE-SET-AMBIGUOUS`), **ACYCLIC** (Kahn topo-sort; `LLN-FUSE-SET-CYCLE`), no self-provision
+  (`LLN-FUSE-SET-SELF`), and the closed-import-surface rule (a *consumed* provided capability must have a registered
+  host-import shape — `LLN-FUSE-PROVIDES-UNKNOWN`). An **unconsumed `provides`** (a seam/protocol like `"rest"`) is
+  inert metadata, not a capability link.
+- **`makeProviderFactory(cap, registry, getProvider)`** — re-backs a capability by mirroring its registered host-import
+  SHAPE and routing every function to the provider module's `invoke` (the closed shape IS the cross-module ABI).
+- **Set-level signed invariant** = "signed iff EVERY module verified"; per-module fingerprints/admission unchanged.
+  +13 tests (`fuse-compose.test.mjs`); app-kernel 51/51; SOT core 3705.
+
+**Slice 2 (next):** an end-to-end producer→consumer cross-module CALL needs real `.wasm` fixtures (a provider exporting
+the capability's shaped functions + a consumer importing them) — Slice 1 unit-tests the routing with a fake provider;
+Slice 2 proves a real wasm→wasm call. **Phase B/C remain** (Component Model isolation when #102–104 land; app-split).
+
 ## Open / next
-The two-mode design is **owner-gated** (a real build decision, not a park). If green-lit, the build order is Phase A
-(interim host-linker, first-party only) → Phase B (Component Model when #102–104 land) → Phase C (app-split) → the §7
-size/cost bench. See [[logicn-rd-corpus-closure-2026-06-18]] and the package/fuse docs
+The two-mode design is **owner-gated** — **Phase A Slice 1 is now built** (above). Remaining order: Phase A Slice 2
+(real cross-module wasm call) → Phase B (Component Model when #102–104 land) → Phase C (app-split) → the §7 size/cost
+bench. See [[logicn-rd-corpus-closure-2026-06-18]] and the package/fuse docs
 (`logicn-package-resolver-architecture.md`, `logicn-native-module-system.md`, `logicn-hybrid-wasm-architecture.md`).
