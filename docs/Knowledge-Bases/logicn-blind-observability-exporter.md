@@ -89,8 +89,28 @@ the name. "sidecar" → a deployment descriptor in the README/Helm chart, not th
    Datadog/Dynatrace). 2. **Pull vs Push → PULL-first** (K8s-native, inbound-only egress = smaller attack surface). 3.
    **`governanceSignature` → PLACEHOLDER (#34), never present as attested.**
 
+## Slice 1 SHIPPED 2026-06-20 — read-only exporter (owner green-lit)
+New package **`@logicn/governance-telemetry`** (`packages-logicn/logicn-governance-telemetry/`):
+- **`renderPrometheus(snapshot)`** — PURE serializer of a `GovernanceSnapshot` → Prometheus/OpenMetrics text. Emits the
+  governance-native metrics (`logicn_governance_flag` per mask bit, `logicn_effects_observed_total{effect_family}`,
+  `logicn_flow_execution_tier_total`, **`logicn_governance_indeterminate_total`** = the unknown→deny stream,
+  `logicn_audit_events_total{status}`, `logicn_surface_*`, `logicn_declared_*` budgets,
+  `logicn_behavioral_fingerprint_info`).
+- **The egress fence (the security heart, closed-by-construction):** every label value must pass a safe-token check
+  (charset + ≤80 len) or the series is **dropped and counted in `logicn_telemetry_dropped_series_total`**; effects are
+  reduced to their **family** (`network.outbound('https://customer-x/…')` → `network`); flag/status/tier labels outside
+  the closed vocab are dropped; non-finite numbers dropped. So a path/email/URL/effect-arg can never egress.
+- **`startExporter({port, snapshot, ready})`** — thin read-only HTTP shell: `GET /metrics` (fenced text),
+  `/healthz`, `/readyz` (503 → pod-level load shed); non-GET → 405; render error → 500 (fail-closed). Metrics port
+  (9090) isolated from the app ingress.
+- **+14 tests** (exposition fence + server smoke), all green. No deps (pure TS + node:http duck-typed).
+
+**Deferred (next slices):** the host-side **snapshot adapter** (real `RuntimeManifest`/`ExecutionAuditRecord`/
+`AntiAbuseReport` → `GovernanceSnapshot`); **OTLP** export; and the **`503 + X-LogicN-State` backpressure handshake**
+— which needs the net-new **kernel→runtime governance-deny bridge** (security-sensitive, intentionally held back).
+
 ## Forward line
 The structure-not-data egress rule IS the crypto-on-core fence (`LLN-SUBSTRATE-001`) projected onto the wire; the
 K3-INDETERMINATE counter is governance-as-T-MAC made observable — the blind seam a future photonic T-MAC offload would be
-observed through. **The whole exporter is OWNER-GATED (unbuilt)** — see [[feedback-owner-gated-means-ask]]. Pairs with
-[[logicn-social-ecosystem-cloud-native]], [[logicn-wasm-compilation-granularity]], [[logicn-rd-corpus-closure-2026-06-18]].
+observed through. Pairs with [[feedback-owner-gated-means-ask]], [[logicn-social-ecosystem-cloud-native]],
+[[logicn-wasm-compilation-granularity]], [[logicn-rd-corpus-closure-2026-06-18]].

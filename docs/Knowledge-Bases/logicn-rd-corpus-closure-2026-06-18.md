@@ -54,7 +54,10 @@ committed `tests/fixtures/compose/` (consumer.main→42 through provider; differ
 order-independent) + the fixtures-dist gitignore-negation so a fresh checkout passes; **CLI** `logicn fuse <dirs>
 [--invoke pkg:export]`. app-kernel **54/54**, SOT **3705**. **Phase B** (Component Model isolation for UNTRUSTED peers)
 = externally blocked on #102–104; **Phase C** (app-split) = speculative; §7 perf bench deferred ("no maths yet").
-**STILL PENDING AN OWNER ASK:** the 0050 `logicn-governance-telemetry` exporter build + the 0051 posture-derived import profile.
+**OWNER 2026-06-20: build BOTH (0050 then 0051).** **0050 exporter Slice 1 SHIPPED** — new package
+`@logicn/governance-telemetry` (`renderPrometheus` + closed egress fence [unsafe labels dropped+counted, effects→family,
+closed vocab] + `startExporter` read-only /metrics /healthz /readyz; +14 tests). DEFERRED: host snapshot adapter, OTLP,
+the `503 + X-LogicN-State` backpressure bridge (kernel→runtime, security-sensitive). **0051 posture-derived import profile = NEXT.**
 
 **▶ AOT #2 — branch-folding + dead-arm DCE — ✅ SHIPPED `056ac70`** (`foldToBool` folds a const `if`
 condition → emit only the taken arm; dead arm + locals dropped; nested=true → explicit returns valid
