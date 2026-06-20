@@ -109,6 +109,7 @@ Commands:
   logicn check --what-if <policy.lln>                 shadow policy analysis (dry run)
   logicn check --what-if <policy.lln> <file.lln>      what-if against single file
   logicn verify <file.lln>                            DRCM Phase 3 admission gate — verify manifest
+  logicn gen-tests <file.lln> [--tap]                 contract-driven test obligations (0016) — 5 dimensions; --tap = TAP plan
   logicn manifest-to-dot <file.lln>                   export manifest as Graphviz DOT for DAG audit
   logicn init-env                                      validate capabilities against root policy
   logicn keygen                                        generate Ed25519 signing keypair for manifests
@@ -970,6 +971,34 @@ Baseline comparison (governance-cost):
     }
 
     process.exit(errors.length > 0 ? 1 : 0);
+  }
+
+  // ── logicn gen-tests <file.lln> [--tap] — contract-driven test obligations (0016) ──
+  // Derives the fail-closed test obligations a flow's contract implies, across all five
+  // generator dimensions (fault-injection / effect-egress / capability-denial / boundary /
+  // substrate-violation), from the flow GIR. --tap prints a TAP plan for the fault dimension.
+  if (command === "gen-tests") {
+    const fx = m.checkEffects(parsed.flows, parsed.ast);
+    const gir = m.emitGIR(parsed.ast, parsed.flows, fx).gir;
+    const suite = m.generateContractTestSuite(gir.flows);
+    const dims = [
+      ["fault-injection",     suite.faultInjection],
+      ["effect-egress",       suite.effectEgress],
+      ["capability-denial",   suite.capabilityDenial],
+      ["boundary/fuzz",       suite.boundary],
+      ["substrate-violation", suite.substrateViolation],
+    ];
+    const total = dims.reduce((n, [, c]) => n + c.length, 0);
+    console.log(`\n🧪 Contract-driven test obligations — ${llnFile}`);
+    console.log(`   ${total} obligation(s) across ${gir.flows.length} flow(s) · 5 dimensions`);
+    for (const [name, cases] of dims) {
+      console.log(`\n── ${name} (${cases.length}) ──`);
+      for (const c of cases) console.log(`  • ${c.id}\n      ${c.assertion}`);
+    }
+    if (rest.includes("--tap")) {
+      console.log("\n" + m.renderFaultInjectionTAP(suite.faultInjection));
+    }
+    process.exit(0);
   }
 
   // ── logicn manifest-to-dot — export manifest DAG as Graphviz DOT ────────────
