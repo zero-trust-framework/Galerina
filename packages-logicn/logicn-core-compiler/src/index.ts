@@ -436,11 +436,15 @@ export {
   generateFaultInjectionSuite,
   generateEffectEgressTests,
   generateCapabilityDenialTests,
+  generateBoundaryTests,
+  generateSubstrateViolationTests,
   generateContractTestSuite,
   renderFaultInjectionTAP,
   type FaultInjectionTestCase,
   type EffectEgressTestCase,
   type CapabilityDenialTestCase,
+  type BoundaryTestCase,
+  type SubstrateViolationTestCase,
   type ContractTestSuite,
 } from "./test-generator.js";
 export {

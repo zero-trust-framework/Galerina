@@ -6,6 +6,7 @@ import {
   parseProgram, checkEffects, emitGIR,
   generateFaultInjectionTests, generateFaultInjectionSuite, renderFaultInjectionTAP,
   generateEffectEgressTests, generateContractTestSuite, generateCapabilityDenialTests,
+  generateBoundaryTests, generateSubstrateViolationTests,
 } from "../dist/index.js";
 
 function girFlows(source) {
@@ -144,8 +145,64 @@ describe("0016: effect-egress test generation from governed sinks", () => {
     const suite = generateContractTestSuite(flows);
     assert.equal(suite.effectEgress.length, 2, "two governed sinks → two egress obligations");
     assert.equal(suite.capabilityDenial.length, 2, "two effects → two capability-denial obligations");
+    assert.equal(suite.boundary.length, 3, "one String param → three boundary obligations");
+    assert.equal(suite.substrateViolation.length, 0, "no crypto effect → no substrate obligations");
     // saveOrder declares no resilience handlers → no fault-injection cases
     assert.equal(suite.faultInjection.length, 0);
+  });
+});
+
+const intFlow = `pure flow incInt(n: Int) -> Int
+contract { intent { "Increment an Int." } }
+{
+  return n + 1
+}`;
+
+const cryptoFlow = `flow signDoc(doc: String) -> Result<String, String>
+contract {
+  intent { "Sign a document." }
+  effects { crypto.sign }
+}
+{
+  let s = Crypto.sign(doc)?
+  return Ok(s)
+}`;
+
+describe("0016: boundary/fuzz test generation", () => {
+  it("emits the i32 edge set for an Int parameter, asserting fail-closed overflow traps", () => {
+    const flow = girFlows(intFlow)[0];
+    const cases = generateBoundaryTests(flow);
+    const values = cases.map((c) => c.value).sort();
+    assert.deepEqual(values, ["-1", "-2147483648", "0", "2147483647"].sort());
+    for (const c of cases) {
+      assert.equal(c.paramType, "Int");
+      assert.match(c.id, /^incInt::boundary::p0::/);
+    }
+    const maxCase = cases.find((c) => c.value === "2147483647");
+    assert.match(maxCase.assertion, /TRAPS fail-closed.*never wraps|no UB/);
+  });
+
+  it("emits String edge values (empty / NUL / oversized)", () => {
+    const flow = girFlows(twoSinks)[0]; // saveOrder(id: String)
+    const labels = generateBoundaryTests(flow).map((c) => c.value);
+    assert.ok(labels.includes('""'), "empty string edge present");
+    assert.ok(labels.includes('"\\u0000"'), "NUL edge present");
+  });
+});
+
+describe("0016: substrate-violation test generation", () => {
+  it("emits a crypto-on-core obligation per crypto effect (LLN-SUBSTRATE-001)", () => {
+    const flow = girFlows(cryptoFlow)[0];
+    const cases = generateSubstrateViolationTests(flow);
+    assert.equal(cases.length, 1);
+    assert.equal(cases[0].cryptoEffect, "crypto.sign");
+    assert.equal(cases[0].id, "signDoc::substrate::crypto.sign");
+    assert.match(cases[0].assertion, /noisy\/photonic substrate lane.*LLN-SUBSTRATE-001.*fail-closed/);
+  });
+
+  it("a flow with no crypto effect generates no substrate obligations", () => {
+    const flow = girFlows(twoSinks)[0];
+    assert.deepEqual(generateSubstrateViolationTests(flow), []);
   });
 });
 
