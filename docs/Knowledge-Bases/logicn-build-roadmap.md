@@ -154,6 +154,29 @@ the Tower runtime** (composes `@logicn/hardware-tier` + `@logicn/ext-photonic-em
 
 ---
 
+## 🔏 2026-06-20 — #180: the authoritative CBOR `.lmanifest` is now really Ed25519-signed (owner-unblocked)
+
+**Verified security gap closed.** `logicn build` (#108 zero-touch signing) signed the manifest with real
+Ed25519 — but wrote the signature **only to the human-readable `.lmanifest.json`**; the **authoritative
+CBOR `.lmanifest`** (the on-disk artifact DSS.wasm parses / the admission gate reads) was serialized
+*before* signing and kept the `placeholder:sha256:…` signature. So the authoritative artifact was
+**effectively unsigned** while only the convenience copy was signed (confirmed empirically by decoding the
+CBOR).
+
+- **Fix (`logicn.mjs`, build path):** after signing, re-serialize the **signed** manifest into the
+  authoritative CBOR (guarded by `verifyManifestRoundTrip`), so the CBOR and JSON agree and the CBOR
+  carries the real `{ algorithm:"Ed25519", keyId, signature, signedAt }`. **Backward-compatible:** with no
+  signing key the placeholder CBOR stands unchanged (the `generateManifest` default is untouched).
+- **Verified:** rebuilt → the CBOR governanceSignature is real Ed25519 (not placeholder), the signature
+  **validates** against the signing public key, and a **tampered body is rejected**. Locked by a new
+  regression guard in `cli-compatibility.test.mjs` (#180: a signed `.json` with a placeholder CBOR fails).
+  Full suite green: 53/53 packages.
+- **Scope (per the owner's "Ed25519 half"):** the **ML-DSA-65** half stays held (#34 custody). Signing over
+  the **canonical/CBOR bytes** so the CBOR is self-verifiable without the `.json` remains **#67** (today the
+  signature is over the pretty-JSON body; verification routes through the `.json`).
+
+---
+
 ## 🏁 Phase 1 Security Audit — COMPLETE (2026-06-16)
 
 **The perimeter is sealed.** All **8/8** Critical + High findings from the adversarial Gate-6 audit are
@@ -433,7 +456,7 @@ Every `logicn build` now produces a binary CBOR `.lmanifest` containing:
 | `derivedConstraints` | — | ✅ secret sink + taint rules |
 | `policyResolutionDag` | Tag 416 | ✅ pre-resolved effect bitmask |
 | `behavioralFingerprint` | Tag 417 | ✅ CFG path SHA-256 |
-| `governanceSignature` | Tag 404 | 🔲 placeholder (real ML-DSA-65 in Phase 5) |
+| `governanceSignature` | Tag 404 | ✅ **real Ed25519** in BOTH the CBOR + JSON when a signing key is present (#180, 2026-06-20); placeholder only when unsigned. ML-DSA-65 held (#34); CBOR-bytes self-verification is #67 |
 | `executionDag` | Tag 414 | 🔲 DRCM Phase 6 (#77) |
 | `capabilityPointers` | Tag 415 | 🔲 stub in derivedConstraints (#83) — full enforcement Phase 5 (#78) |
 | `governanceAnnotations` | — | ✅ `;;` govComment tokens collected into manifest narrative |

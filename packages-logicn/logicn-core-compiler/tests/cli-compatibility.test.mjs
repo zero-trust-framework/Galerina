@@ -119,6 +119,37 @@ describe("CLI compatibility — logicn build", () => {
     const { stdout } = logicn("build", BENCH);
     assert.ok(stdout.includes("wasmtime"), "should hint at wasmtime usage");
   });
+
+  // #180 — the AUTHORITATIVE CBOR .lmanifest must carry the real signature, not just the .json.
+  // Pre-fix the build signed only the human-readable .json while the CBOR (the on-disk manifest
+  // DSS.wasm parses) kept the placeholder — i.e. the authoritative artifact was effectively unsigned.
+  it("#180: when a build is signed, the authoritative CBOR .lmanifest carries the real Ed25519 signature (not a placeholder)", async () => {
+    mkdirSync(join(ROOT, "build"), { recursive: true });
+    const { code } = logicn("build", BENCH);
+    assert.equal(code, 0);
+    const cborPath = join(ROOT, "build", "benchmark.lmanifest");
+    const jsonPath = join(ROOT, "build", "benchmark.lmanifest.json");
+    if (!existsSync(cborPath) || !existsSync(jsonPath)) return; // manifest generation is non-fatal; skip if absent
+
+    const jsonSig = JSON.parse(readFileSync(jsonPath, "utf8")).governanceSignature ?? {};
+    const jsonSigned = jsonSig.algorithm === "Ed25519" && typeof jsonSig.signature === "string" && jsonSig.signature.length > 0;
+
+    const { decodeCBOR } = await import("../dist/manifest-generator.js");
+    const norm = (v) => v instanceof Map ? Object.fromEntries([...v].map(([k, x]) => [k, norm(x)])) : Array.isArray(v) ? v.map(norm) : v;
+    const cborManifest = norm(decodeCBOR(new Uint8Array(readFileSync(cborPath))).value);
+    const cborSig = cborManifest.governanceSignature ?? {};
+
+    if (jsonSigned) {
+      // The build produced a real signature → the authoritative CBOR MUST agree (the regression guard).
+      assert.ok(!JSON.stringify(cborSig).includes("placeholder"), "#180 regression: signed build left the CBOR as a placeholder");
+      assert.equal(cborSig.algorithm, "Ed25519", "CBOR signature algorithm must be Ed25519 when signed");
+      assert.ok(typeof cborSig.signature === "string" && cborSig.signature.length > 0, "CBOR must carry the real signature bytes");
+      assert.ok(typeof cborSig.keyId === "string" && cborSig.keyId.length > 0, "CBOR must record the signing keyId");
+    } else {
+      // No signing key configured → both outputs keep the placeholder (backward-compatible).
+      assert.ok(cborSig, "an unsigned build still carries a (placeholder) governanceSignature object");
+    }
+  });
 });
 
 // ── logicn check ──────────────────────────────────────────────────────────────

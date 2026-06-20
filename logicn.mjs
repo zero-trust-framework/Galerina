@@ -1495,7 +1495,22 @@ Baseline comparison (governance-cost):
           };
 
           writeFileSync(manifestJsonPath, JSON.stringify(signedManifest, null, 2));
-          console.log(`   🔐 Manifest signed (Ed25519, keyId: ${signingKeyId.slice(0, 8)}...)`);
+
+          // #180: re-serialize the AUTHORITATIVE CBOR .lmanifest with the REAL Ed25519 signature.
+          // Until now only the .json carried the signature; the CBOR (the on-disk manifest DSS.wasm
+          // parses, the admission-gate artifact) kept the placeholder — i.e. the authoritative
+          // artifact was effectively UNSIGNED while only the human-readable copy was signed. Write the
+          // signed manifest to BOTH outputs so they agree and the CBOR is genuinely signed.
+          try {
+            if (verifyManifestRoundTrip(signedManifest)) {
+              writeFileSync(`${outDir}/${name}.lmanifest`, Buffer.from(serializeManifestCBOR(signedManifest)));
+            } else {
+              writeFileSync(`${outDir}/${name}.lmanifest`, serializeManifest(signedManifest));
+            }
+            console.log(`   🔐 Manifest signed (Ed25519, keyId: ${signingKeyId.slice(0, 8)}...) — CBOR + JSON authoritative`);
+          } catch (cborErr) {
+            console.warn(`   ⚠️  Signed CBOR re-serialize failed (.json is signed; CBOR kept prior bytes): ${cborErr.message}`);
+          }
         } catch (err) {
           console.warn(`   ⚠️  Signing failed (continuing unsigned): ${err.message}`);
         }
