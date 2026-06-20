@@ -37,3 +37,9 @@ export {
   PhotonicEmulatorBridge,
 } from "./photonic-bridge.js";
 export { type PhotonicRunResult, PhotonicRuntime, type PhotonicRouteHit, createPhotonicRouterPort } from "./runner.js";
+
+// ── the Bifurcated Execution Invariant — semantic-parity conformance gate ────────────
+export {
+  type ParityOptions, type ParityResult, type ParityReport,
+  checkParity, proveBifurcatedParity,
+} from "./parity-conformance.js";

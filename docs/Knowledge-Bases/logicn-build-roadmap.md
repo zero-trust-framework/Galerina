@@ -160,6 +160,15 @@ net-win router says photonic; everything else (binary tier / non-ternary / crypt
 fail-closed. +7 node:test incl. a property sweep proving the conjunction. (There was no component literally
 named "Execution Router" before; routing was spread across three packages — this is the single front door.)
 
+**Added 2026-06-20 — the Bifurcated Execution Invariant, made checkable** (`logicn-ext-photonic-emulator/src/parity-conformance.ts`):
+`checkParity(op)` / `proveBifurcatedParity(corpus)` enforce semantic parity between a `-binary` and a
+`-photonic` impl as TWO relations — (1) DECISION parity (discrete, must be identical: both tiers admit or
+both fail-closed — never admit what the other rejects) + (2) NUMERIC parity (continuous: photonic within
+the declared `substrate{tolerance}` of the exact binary value). The conformance gate: a `-photonic` package
+is admissible iff `allConformant`; the max residual is the band to record in the manifest `ToleranceWitness`.
++6 node:test (valid→conformant, corrupt→both-reject, NOISY-lane→inadmissible, corpus gate pass/fail). This is
+the build-time half of the parity enforcement (the runtime half is the per-call Freivalds/tolerance re-verify).
+
 ---
 
 ## 🔏 2026-06-20 — #180: the authoritative CBOR `.lmanifest` is now really Ed25519-signed (owner-unblocked)
