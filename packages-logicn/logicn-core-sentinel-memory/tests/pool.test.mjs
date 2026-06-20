@@ -116,3 +116,22 @@ test("use-after-free: a stale Block after free+REALLOC traps LSM-UAF-001 (ABA / 
   pool.i32(fresh); // the fresh handle works
   assert.equal(caught(() => pool.i32(stale)).code, "LSM-UAF-001", "the STALE handle must trap, not alias the new owner");
 });
+
+// 0033 REJECT-fill on free — a recycled slot must NOT leak the prior tenant's value. After free, every
+// i32 slot reads back as -1 (TritState.REJECT) so a K3 gate over governance memory collapses to DENY
+// (fail-closed by construction) instead of reading a stale COMMIT/ALLOW (the prior fail-OPEN behaviour).
+test("free scrubs the block to REJECT(-1): a recycled slot never exposes the prior tenant's COMMIT", () => {
+  const pool = new StaticMemoryPool({ totalBytes: 64, blockBytes: 16, computeRatio: 1 });
+  const a = pool.allocate(16);
+  pool.i32(a).fill(0x5ec0ffee); // prior tenant writes a "COMMIT"-like value into every slot
+  assert.equal(pool.i32(a)[0], 0x5ec0ffee, "precondition: the tenant value is present while live");
+  pool.free(a.ptr);             // REJECT-fill on free scrubs the bytes to 0xFF
+  const b = pool.allocate(16);  // reuses the same slot, fresh generation
+  assert.equal(b.ptr, a.ptr, "precondition: realloc reused the same slot");
+  const ib = pool.i32(b);       // legitimately-live fresh handle reads the recycled bytes
+  for (let k = 0; k < ib.length; k++) {
+    assert.equal(ib[k], -1, `recycled i32 slot ${k} must read REJECT(-1), not the prior tenant's COMMIT`);
+  }
+  const ub = pool.u8(b);
+  for (let k = 0; k < ub.length; k++) assert.equal(ub[k], 0xff, `recycled byte ${k} must be scrubbed to 0xFF`);
+});

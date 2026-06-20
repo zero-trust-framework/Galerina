@@ -7,6 +7,7 @@
 // Spec (frozen): LogicN-R-AND-D/tmf/spec/tmf-container-v0.md. Verified byte-for-byte against its
 // golden container vector (tests/container.test.mjs) — writeTmf reproduces the exact 203 bytes, and
 // the §6 fail-closed reader round-trips + rejects every tamper/bounds case.
+import { timingSafeEqual } from "node:crypto";
 import { leafHash, tmxRoot } from "./tmx256.js";
 
 export const MAGIC = Uint8Array.from([0x89, 0x54, 0x4d, 0x46, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -55,12 +56,13 @@ function concat(parts: readonly Uint8Array[]): Uint8Array {
   return o;
 }
 
-/** Constant-time-ish digest comparison (length-checked, no early-out within equal lengths). */
+/** Constant-time digest comparison. 0033(c): routed through the VETTED `crypto.timingSafeEqual` (C++,
+ *  guaranteed constant-time, immune to JIT de-opt) instead of a hand-rolled XOR loop — matching
+ *  `kemdem.ts`. Used for integrity-root / leaf-hash verification (timing-sensitive) and the non-secret
+ *  magic check. `timingSafeEqual` throws on unequal lengths, so the length pre-check (lengths are
+ *  public for fixed-size digests) gates it. */
 function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
-  if (a.length !== b.length) return false;
-  let d = 0;
-  for (let i = 0; i < a.length; i++) d |= a[i]! ^ b[i]!;
-  return d === 0;
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 /** The 24-byte header_core that the root binds (magic ∥ ver_major ∥ ver_minor ∥ profile ∥ flags ∥ count). */

@@ -644,67 +644,124 @@ function extractResponseDeniedFields(flowNode: AstNode): Set<string> {
   return denied;
 }
 
+/** Extract the bare binding name from a letDecl/mutDecl/readonlyDecl value string
+ *  ("[unsafe|safe] name[: type]" — protected/redacted live in the TYPE, per parseBindingValue),
+ *  so it matches the bare identifier a later `return name` produces. */
+function bindingNameOf(raw: string): string {
+  const withoutPrefix = raw.trim().replace(/^(?:unsafe|safe)\s+/, "");
+  const colonIdx = withoutPrefix.indexOf(":");
+  return (colonIdx === -1 ? withoutPrefix : withoutPrefix.slice(0, colonIdx)).trim();
+}
+
 /**
- * Collects named argument field names from callExpr nodes in RETURN statements
- * of the flow body. This is used to detect denied fields leaking into the response.
+ * Collects field names that appear in RETURN statements of the flow body, used to detect denied
+ * fields leaking into the response. Honours redact()/seal() discharge and matches three leak forms:
+ * a named-argument label, a bare member access (`return user.email`), and a positional/bare value.
  *
- * Only examines return statement expressions (not intermediate calls like AuditLog.write)
- * to avoid false positives where denied field names appear in intermediate operations
- * such as redact(amount) or audit logging.
+ * GOV-003 residual fix (2026-06-20): a denied field can also be laundered through an intermediate
+ * binding RENAME — `let e = user.email; return e` (or `let f = e; return f`). A first pass builds an
+ * alias map (binding name → the field names its initializer carries, alias-of-alias resolved
+ * transitively in source order); the return walk then ADDS the carried fields whenever a returned
+ * identifier is a known alias — purely additive to the existing name-based match, so no prior case
+ * regresses. redact()/seal() discharge while building the map too, so `let e = redact(user.email);
+ * return e` stays clean (no false positive).
  */
 function collectBodyFieldNames(flowNode: AstNode): Set<string> {
   const fields = new Set<string>();
+  const aliasCarries = new Map<string, Set<string>>();
 
-  function walkReturnExpr(node: AstNode): void {
-    // Discharge: redact(...) / seal(...) sanitise their contents — do not collect inside them
-    // (GOV-003: seal() recognised alongside redact()).
+  // Shared collector: gather denied-relevant field names from an expression into `out`. A bare
+  // identifier contributes its own name (the existing name-based rule) AND, if it is a known alias,
+  // the fields that alias carries.
+  function collectFields(node: AstNode, out: Set<string>): void {
+    // Discharge: redact(...) / seal(...) sanitise their contents — do not collect inside them.
     if (node.kind === "callExpr" && (node.value === "redact" || node.value === "seal")) {
       return;
     }
     if (node.kind === "callExpr") {
       for (const child of node.children ?? []) {
-        // Named argument labels are identifier nodes with a value child
+        // Named-argument labels are identifier nodes with a value child.
         if (child.kind === "identifier" && child.value !== undefined && (child.children ?? []).length > 0) {
           const valueChild = child.children![0];
           const isDischarged = valueChild !== undefined &&
             valueChild.kind === "callExpr" &&
             (valueChild.value === "redact" || valueChild.value === "seal");
-          if (!isDischarged) {
-            fields.add(child.value);
-          }
+          if (!isDischarged) out.add(child.value);
         }
       }
     }
-    // GOV-003 broadening (audit 2026-06-16): a denied field can leak via a bare member access
-    // (`return user.email`) or a positional value (`return Ok(email)`), not only a named-argument
-    // label. Collect those forms too — exact field-name match against response.denies; redact()/
-    // seal() above discharge anything they wrap. memberExpr stores the field name in `value`.
     if (node.kind === "memberExpr" && node.value !== undefined) {
-      fields.add(node.value);
+      out.add(node.value); // `user.email` → "email"
     }
     if (node.kind === "identifier" && node.value !== undefined && (node.children ?? []).length === 0) {
-      fields.add(node.value);
+      out.add(node.value); // the identifier's own name (exact match against response.denies)
+      const carried = aliasCarries.get(node.value);
+      if (carried !== undefined) for (const f of carried) out.add(f); // + fields a renamed alias carries
     }
-    for (const child of node.children ?? []) walkReturnExpr(child);
+    for (const child of node.children ?? []) collectFields(child, out);
   }
 
+  // Precise alias-carry: only a DIRECT field-access or identifier rename propagates a denied field.
+  // A function-call result is opaque — it does NOT inherit the call's argument labels (otherwise
+  // `let payment = PaymentService.initiate({ amount: amount })` would wrongly make `payment` carry
+  // `amount`, and `return payment.id` would false-positive). redact()/seal() are calls → carry nothing.
+  function carryOf(node: AstNode): Set<string> {
+    if (node.kind === "memberExpr" && node.value !== undefined) {
+      return new Set([node.value]); // `user.email` → {email}
+    }
+    if (node.kind === "identifier" && node.value !== undefined && (node.children ?? []).length === 0) {
+      const carried = aliasCarries.get(node.value);
+      return carried !== undefined ? new Set(carried) : new Set([node.value]); // alias-of-alias or bare param
+    }
+    if (node.kind === "callExpr") {
+      return new Set(); // opaque result (covers redact()/seal() discharge and any other call)
+    }
+    const kids = node.children ?? [];
+    const only = kids[0];
+    if (kids.length === 1 && only !== undefined) return carryOf(only); // unwrap try `?` / single-child wrappers
+    return new Set(); // record/binary/literal initialisers carry nothing on their own
+  }
+
+  // Pass 1 — build the alias map from local bindings/assignments in source (pre-order) order so an
+  // alias-of-an-alias resolves transitively. A `mut` rebinding unions (fail-closed) into its carry set.
+  function buildAliases(node: AstNode): void {
+    if (
+      (node.kind === "letDecl" || node.kind === "mutDecl" || node.kind === "readonlyDecl") &&
+      node.children?.[0] !== undefined
+    ) {
+      const name = bindingNameOf(node.value ?? "");
+      if (name.length > 0) {
+        const carried = aliasCarries.get(name) ?? new Set<string>();
+        for (const f of carryOf(node.children[0])) carried.add(f);
+        aliasCarries.set(name, carried);
+      }
+    } else if (
+      node.kind === "assignStmt" && node.value !== undefined && node.value.length > 0 &&
+      node.children?.[0] !== undefined
+    ) {
+      const carried = aliasCarries.get(node.value) ?? new Set<string>();
+      for (const f of carryOf(node.children[0])) carried.add(f);
+      aliasCarries.set(node.value, carried);
+    }
+    for (const child of node.children ?? []) buildAliases(child);
+  }
+
+  // Pass 2 — collect the (alias-aware) field names appearing in RETURN expressions.
   function findReturnStmts(node: AstNode): void {
     if (node.kind === "returnStmt") {
-      for (const child of node.children ?? []) {
-        walkReturnExpr(child);
-      }
+      for (const child of node.children ?? []) collectFields(child, fields);
       return; // don't recurse further into return
     }
     for (const child of node.children ?? []) findReturnStmts(child);
   }
 
-  // Walk the flow body block — it's the last child of the flow node
-  // (after params, typeRef, effectsDecl, contractDecl, intentDecl, etc.)
+  // The flow body block is the last child of the flow node (after params, contractDecl, etc.).
   const blockChildren = (flowNode.children ?? []).filter((c) => c.kind === "block");
   const bodyBlock = blockChildren[blockChildren.length - 1];
 
   if (bodyBlock !== undefined) {
-    findReturnStmts(bodyBlock);
+    buildAliases(bodyBlock);   // pre-pass: resolve intermediate-binding renames
+    findReturnStmts(bodyBlock); // collect (alias-aware) returned field names
   }
 
   return fields;

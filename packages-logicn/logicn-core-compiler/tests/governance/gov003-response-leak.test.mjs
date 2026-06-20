@@ -46,4 +46,25 @@ describe("GOV-003: a denied response field cannot leak via member/positional ret
     const g = gov(flow("  let user = UsersDB.read(id)?\n  return Ok(user.name)"));
     assert.ok(!has(g, "LLN-GOV-003"), codes(g));
   });
+
+  // GOV-003 residual fix (2026-06-20): a denied field laundered through an intermediate binding RENAME.
+  it("denied field via an intermediate binding rename (let e = user.email; return e) emits LLN-GOV-003", () => {
+    const g = gov(flow("  let user = UsersDB.read(id)?\n  let e = user.email\n  return Ok(e)"));
+    assert.ok(has(g, "LLN-GOV-003"), codes(g));
+  });
+
+  it("rename of a redacted denied field (let e = redact(user.email); return e) — no LLN-GOV-003", () => {
+    const g = gov(flow("  let user = UsersDB.read(id)?\n  let e = redact(user.email)\n  return Ok(e)"));
+    assert.ok(!has(g, "LLN-GOV-003"), codes(g));
+  });
+
+  it("alias-of-alias rename (let e = user.email; let f = e; return f) emits LLN-GOV-003", () => {
+    const g = gov(flow("  let user = UsersDB.read(id)?\n  let e = user.email\n  let f = e\n  return Ok(f)"));
+    assert.ok(has(g, "LLN-GOV-003"), codes(g));
+  });
+
+  it("rename of a non-denied field (let n = user.name; return n) stays clean — no false positive", () => {
+    const g = gov(flow("  let user = UsersDB.read(id)?\n  let n = user.name\n  return Ok(n)"));
+    assert.ok(!has(g, "LLN-GOV-003"), codes(g));
+  });
 });
