@@ -119,7 +119,7 @@ Zero-trust: the OS/host is treated as potentially compromised.
 |---|---|---|---|
 | 1 | Is the logic treated as a **border** (inbound AND outbound)? | outbound ✅ / inbound ❌ | Both directions hardened; the listener is a governed boundary, not a bare server. |
 | 2 | Are there **declared** details of what info IS / ISN'T provided? | ❌ (allowlist is TS code) | A **declared egress schema / data-dictionary** in a `contract`, not hand-coded TS. |
-| 3 | Is the API written in **`.lln`** (governed), not TS? | ❌ (TS) | `.lln` governed flow. **NB: blocked on #145** (heavy Prometheus string-building needs type-aware String semantics). |
+| 3 | Is the API written in **`.lln`** (governed), not TS? | ❌ (TS) | `.lln` governed flow. **CORRECTION 2026-06-20: NOT blocked on #145** — type-aware String semantics (`+`→`__str_concat`, `Char.toString`) is SHIPPED (verified: `wat-p9-tokenize-parity` 21/21, `wat-emitter.ts:881`). So Prometheus string-building compiles to WASM today. The real open question is **HTTP-I/O as a governed flow** (host socket via the `network.inbound` capability — the fuse demo already uses it), not strings. |
 | 4 | `/src` + build → a **fusable signed `.wasm`** so apps can require it? | ❌ (TS `/src`, JS `/dist`, no wasm) | `logicn build --package` → signed `.wasm` + `.lmanifest`, **fusable via the 0052 multi-module system** (`network.inbound` cap, deny-by-default). |
 | 5 | `secure flow` border? | ❌ | Request handler = a `secure flow`. |
 | 6 | `contract {}`? | ❌ | Declared `effects` (`network.inbound`), `intent`, `limits {}`, egress schema (#2). |
@@ -130,10 +130,12 @@ Zero-trust: the OS/host is treated as potentially compromised.
 | 11 | **Auth / mTLS** on `/metrics`? | ❌ | **OWNER DECISION needed** — mTLS/bearer on the metrics port, or rely on K8s network-policy isolation. |
 | 12 | Zero-trust host posture? | ❌ | Honor `SecurityPosture` (`distrustHostTime`/`sealEgress`/`zeroizeAfterUse`) for the border. |
 
-**Why Slice 1 skipped these (honest):** R&D 0050 scoped it sidecar-first/TS; the egress fence was the priority; a
-full `.lln` exporter is partly blocked by #145. The inbound-hardening omission (9/10) has **no** such excuse and is the
-do-now fix. **Buildable now (no #145 dep):** items 1/9/10/12 (inbound hardening + run-under-kernel + posture).
-**Blocked on #145:** items 3/4/5/6 (the `.lln` rewrite → fusable wasm). Item 11 is an owner decision.
+**Why Slice 1 skipped these (honest):** R&D 0050 scoped it sidecar-first/TS; the egress fence was the priority. The
+inbound-hardening omission (9/10) has **no** excuse and is the do-now fix. **Buildable now:** items 1/9/10/12 (inbound
+hardening + run-under-kernel + posture). **The `.lln` rewrite (3/4/5/6) is NOT blocked on #145** (strings are shipped —
+correction above); its real open piece is expressing the **HTTP-I/O border as a governed `secure flow`** with a
+`network.inbound` capability (conceptually unblocked — the fuse demo uses `network.inbound` — but non-trivial: the host
+must provide the socket + scrape-request bridge). Item 11 is an owner decision.
 
 ## Forward line
 The structure-not-data egress rule IS the crypto-on-core fence (`LLN-SUBSTRATE-001`) projected onto the wire; the
