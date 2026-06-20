@@ -101,6 +101,18 @@ describe("#105 WASM admission gate", () => {
     assert.equal(verifyWasm(wasm, certAtt, { requireSigned: true, publicKeyPem, requireCertifiedProfile: true }).ok, true);
   });
 
+  it("#173 REFUSES a dev attestation re-labeled 'certified' — profile is bound into the signature", async () => {
+    const wasm = await compileToWasm(HOST_FLOW);
+    const { publicKeyPem, privateKeyPem } = generateRunnerKeypair();
+    const devAtt = signWasm(wasm, privateKeyPem, "dev");
+    // Attacker flips ONLY the profile label — bytes + signature unchanged. Pre-#173 this passed (the
+    // signature was over the raw bytes); now the pre-image (domain ∥ hash ∥ profile) no longer matches.
+    const forged = { ...devAtt, profile: "certified" };
+    const v = verifyWasm(wasm, forged, { requireSigned: true, publicKeyPem, requireCertifiedProfile: true });
+    assert.equal(v.ok, false, "re-labeled certified attestation must be rejected (privilege escalation closed)");
+    assert.match(v.reason, /signature/i);
+  });
+
   it("hash pinning: only the pinned binary hash is admitted", async () => {
     const wasm = await compileToWasm(HOST_FLOW);
     const { privateKeyPem } = generateRunnerKeypair();
