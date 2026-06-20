@@ -201,8 +201,10 @@ export function logicNTypeToWAT(typeName: string): WATValType {
   switch (typeName) {
     case "Bool": case "Int": case "Int8": case "Int16": case "Int32": case "Byte": return "i32";
     case "Int64": case "UInt64": return "i64";
-    case "Float16": case "Float32": case "Float": return "f32";
-    case "Float64": case "Double": case "Decimal": return "f64";
+    case "Float16": case "Float32": return "f32";
+    // #165: scalar `Float` is f64 (double) — matches the f64.const literal emission; the old
+    // Float→f32 mapping was the inconsistency that made every float scalar flow an invalid module.
+    case "Float64": case "Double": case "Decimal": case "Float": return "f64";
     // P9.2: String and all complex types (Array, Record, Option, Result, Char, Tensor)
     // are represented as opaque i32 handles in the Stage B self-hosted compiler.
     // String parameters in flows like scanWord/scanOperator are passed as integer indices
@@ -556,6 +558,13 @@ const BINARY_OP_TO_WAT: ReadonlyMap<string, string> = new Map([
   ["||", "i32.or"],
 ]);
 
+// #165: native f64 lowering for float operands. All floats are treated as f64 (matching the f64.const
+// literal emission, wat-emitter §numberLiteral). Without these, a float `+ - * /`/comparison emitted an
+// i32 checked helper over f64 operands → an invalid module (WASM tier declined → walker fallback).
+const FLOAT_WAT_TYPES = new Set<string>(["Float", "Float64", "Double", "Decimal"]);
+const FLOAT_ARITH_WAT: Readonly<Record<string, string>> = { "+": "f64.add", "-": "f64.sub", "*": "f64.mul", "/": "f64.div" };
+const FLOAT_CMP_WAT: Readonly<Record<string, string>> = { "==": "f64.eq", "!=": "f64.ne", "<": "f64.lt", ">": "f64.gt", "<=": "f64.le", ">=": "f64.ge" };
+
 /**
  * i32 strict-trapping arithmetic helpers (owner Fork A=TRAP, 2026-06-18). Native WASM i32.add/sub/mul
  * wrap mod 2^32 — a lying abstraction in a governed system. These harden the WASM-i32 reference so
@@ -885,6 +894,21 @@ export function emitWATExpr(
       }
       if (op === "!=" && stringOperand) {
         return `(i32.eqz (call $host___str_eq ${left} ${right}))`;
+      }
+      // #165: native f64 lowering for float operands. Float literals already emit f64.const, but the
+      // binary-op map is i32-only — so without this a float `+ - * /` or comparison emitted an i32
+      // checked helper over f64 operands → an INVALID module (the WASM tier then declined → walker).
+      // A mixed int operand is promoted to f64 (f64.convert_i32_s); all floats are treated as f64
+      // (matching the f64.const literal emission). Comparisons yield i32 0/1 (the bool), as in WASM.
+      const lFloat165 = FLOAT_WAT_TYPES.has(lty ?? "");
+      const rFloat165 = FLOAT_WAT_TYPES.has(rty ?? "");
+      if (lFloat165 || rFloat165) {
+        const fOp = FLOAT_ARITH_WAT[op] ?? FLOAT_CMP_WAT[op];
+        if (fOp !== undefined) {
+          const L = lFloat165 ? left : `(f64.convert_i32_s ${left})`;
+          const R = rFloat165 ? right : `(f64.convert_i32_s ${right})`;
+          return `(${fOp} ${L} ${R})`;
+        }
       }
       if (watOp !== undefined) {
         return `(${watOp} ${left} ${right})`;
