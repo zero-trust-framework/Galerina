@@ -86,6 +86,65 @@ export const KNOWN_CAPABILITIES = new Set<string>([
   "network.*", "storage.*", "database.*",
 ]);
 
+// ── Unified admission-border vocabulary (B2: one schema, both gates) ──────────
+/**
+ * The COMPILER ontology above (KNOWN_CAPABILITIES, bit-wired to V_DPM) is the
+ * CANONICAL source of truth. Two admission gates historically validated against
+ * DIFFERENT spellings: `logicn border-check` used a coarse plugin allow-list
+ * (db.* / filesystem.* / state.* / crypto.* / time.read / memory.alloc), and the
+ * fusion host exposes a few host-I/O capabilities (clock/log) that are not
+ * compiler effects. To make BOTH gates deny against ONE vocabulary we (a) map the
+ * alternate spellings onto the canonical names with an ALIAS table, and (b)
+ * publish ADMISSION_CAPABILITIES = canonical effect names ∪ host-I/O ∪ border-only
+ * capabilities — a SUPERSET of the ontology that never renames or drops one.
+ *
+ * Purely additive: this does NOT touch KNOWN_CAPABILITIES, the V_DPM bit map, or
+ * effect recognition in .lln source. It only gives the border + fusion gates a
+ * single, alias-aware allow-list to deny against.
+ */
+
+/** Alternate admission spellings → their canonical capability name. */
+export const CAPABILITY_ALIASES: Readonly<Record<string, string>> = Object.freeze({
+  "db.read": "database.read",
+  "db.write": "database.write",
+  "filesystem.read": "storage.read",
+  "filesystem.write": "storage.write",
+  "time.read": "clock.read",
+});
+
+/**
+ * Host-I/O + border-only capabilities admissible at the fusion / plugin border
+ * but which are NOT compiler effects (no V_DPM bit). Kept so the unified
+ * allow-list drops nothing the border historically permitted.
+ */
+export const ADMISSION_EXTRA_CAPABILITIES: readonly string[] = Object.freeze([
+  // Fusion-host I/O shims (logicn-framework-app-kernel BUILTIN_CAPABILITY_REGISTRY).
+  "clock.read", "log.write",
+  // Read-side + border-only capabilities (no V_DPM bit; recognised, not bit-enforced).
+  "storage.read", "audit.read", "state.read", "state.write",
+  "crypto.sign", "crypto.verify", "memory.alloc",
+]);
+
+/**
+ * The UNIFIED admission allow-list both gates deny against: canonical effect
+ * names (sans wildcard roots) ∪ host-I/O + border-only capabilities. The single
+ * source of truth for `logicn border-check` and the fusion gate.
+ */
+export const ADMISSION_CAPABILITIES: ReadonlySet<string> = new Set<string>([
+  ...[...KNOWN_CAPABILITIES].filter((c) => !c.includes("*")),
+  ...ADMISSION_EXTRA_CAPABILITIES,
+]);
+
+/** Normalise an admission capability spelling to its canonical name. */
+export function normalizeCapability(name: string): string {
+  return CAPABILITY_ALIASES[name] ?? name;
+}
+
+/** True iff `name` (after alias normalisation) is on the unified admission allow-list. */
+export function isAdmissibleCapability(name: string): boolean {
+  return ADMISSION_CAPABILITIES.has(normalizeCapability(name));
+}
+
 /** Emergency signal types — what can trigger an emergency {} transition. */
 export const enum EmergencySignalType {
   InvariantFailure   = "invariant_failure",   // LLN-INV-000 trap fired

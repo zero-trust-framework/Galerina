@@ -488,13 +488,13 @@ Baseline comparison (governance-cost):
       console.log("  No plugins directory found at governance/plugins/");
       process.exit(0);
     }
-    // Capability allow-list (deny anything not on it). High-authority caps demand a
-    // real, signed, non-pending source hash.
-    const KNOWN_CAPS = new Set([
-      "ai.inference", "network.outbound", "network.inbound", "audit.write", "audit.read",
-      "db.read", "db.write", "filesystem.read", "filesystem.write", "time.read",
-      "crypto.sign", "crypto.verify", "state.read", "state.write", "memory.alloc",
-    ]);
+    // Capability allow-list (deny anything not on it). B2: the canonical,
+    // alias-aware admission vocabulary lives in the compiler (capability-types) —
+    // the SAME schema the fusion gate is drift-checked against — so the two
+    // admission gates validate against ONE list and can't silently diverge.
+    const { isAdmissibleCapability } = await import(
+      new URL("packages-logicn/logicn-core-compiler/dist/capability-types.js", import.meta.url).href
+    );
     const CEILINGS = { maxMemoryMB: 4096, maxCpuCycles: 1e10, maxWallMs: 60000 };
     const SHA256 = /^sha256:[0-9a-f]{64}$/;
 
@@ -522,7 +522,9 @@ Baseline comparison (governance-cost):
         reasons.push("capabilities missing or empty");
       } else {
         for (const c of m.capabilities) {
-          if (!KNOWN_CAPS.has(c)) reasons.push(`unknown/unpermitted capability: ${JSON.stringify(c)}`);
+          if (typeof c !== "string" || !isAdmissibleCapability(c)) {
+            reasons.push(`unknown/unpermitted capability: ${JSON.stringify(c)}`);
+          }
         }
       }
       // Resource limits within ceilings.

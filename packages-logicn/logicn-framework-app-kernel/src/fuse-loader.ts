@@ -229,6 +229,16 @@ const BUILTIN_CAPABILITY_REGISTRY: Readonly<Record<string, CapabilityImportFacto
   }),
 });
 
+/**
+ * The capability NAMES the built-in fusion registry exposes. Published so the
+ * unified admission vocabulary (compiler `capability-types`, B2) can be
+ * drift-checked against the fusion gate: every name here MUST be admissible under
+ * the one canonical allow-list, so the two gates cannot silently diverge.
+ */
+export const BUILTIN_CAPABILITY_NAMES: readonly string[] = Object.freeze(
+  Object.keys(BUILTIN_CAPABILITY_REGISTRY),
+);
+
 /** Throw a fail-closed fusion error with a stable `LLN-FUSE-*` code prefix. */
 function fuseError(code: string, message: string): never {
   throw new Error(`${code}: ${message}`);

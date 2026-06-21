@@ -37,6 +37,10 @@ function base() {
 // key -> fixture spec. schema: object | "__OMIT__" | "__BADJSON__". manifestRaw overrides manifest.
 const FIXTURES = {
   valid:             { manifest: base() },
+  // B2: a coarse border spelling (db.read) is admitted via alias → database.read.
+  aliasCap:          { manifest: { ...base(), capabilities: ["db.read", "audit.write"] } },
+  // B2: a canonical compiler capability (shell.execute) is now recognised at the border.
+  canonicalCap:      { manifest: { ...base(), capabilities: ["shell.execute"] } },
   placeholderHash:   { manifest: { ...base(), sourceHash: "sha256:pending-logicn-promote" } },
   shortHash:         { manifest: { ...base(), sourceHash: "sha256:abc" } },
   blacklisted:       { manifest: { ...base(), blacklisted: true } },
@@ -97,6 +101,14 @@ function reasonsFor(key) {
 
 test("a fully-valid plugin is ADMITTED (per-plugin, even when siblings are denied)", () => {
   assert.equal(verdict("valid"), "ADMITTED", OUT);
+});
+
+test("B2: an aliased capability (db.read) is ADMITTED via the unified vocabulary", () => {
+  assert.equal(verdict("aliasCap"), "ADMITTED", OUT);
+});
+
+test("B2: a canonical compiler capability (shell.execute) is ADMITTED at the border", () => {
+  assert.equal(verdict("canonicalCap"), "ADMITTED", OUT);
 });
 
 for (const key of [
