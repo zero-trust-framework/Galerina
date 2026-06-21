@@ -396,6 +396,16 @@ export const LLN_PKG_005 = {
   suggestedFix: "Sign the package with 'logicn package sign' and add 'signature:' to the manifest.",
 } as const;
 
+/** LLN-PKG-006: Package is signed by a REVOKED key; trusted origin cannot be established. */
+export const LLN_PKG_006 = {
+  code: "LLN-PKG-006",
+  name: "RevokedSigner",
+  severity: "error" as const,
+  message: "Package is signed by a revoked key. A revoked signing key cannot establish trusted origin.",
+  why: "Revocation is the supply-chain kill switch: a leaked or compromised signing key keeps producing cryptographically valid signatures, so the gate must refuse a revoked signer even when the signature verifies — at resolution as well as admission.",
+  suggestedFix: "Re-sign the package with a current, non-revoked key and update 'signerKeyId:' in the manifest.",
+} as const;
+
 // Phase 17A — Naming Policy Checker
 export {
   checkNamingPolicy,

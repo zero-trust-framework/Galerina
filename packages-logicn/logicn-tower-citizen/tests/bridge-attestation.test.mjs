@@ -28,6 +28,35 @@ test("verifyAttestation: signed manifest verifies; tampered fails", () => {
   assert.equal(verifyAttestation(att, { requireSigned: true, publicKeyPem: other.publicKeyPem }).ok, false);
 });
 
+test("verifyAttestation: a validly-signed but REVOKED signing key is refused (fail-closed)", () => {
+  const { publicKeyPem, privateKeyPem } = generateAttestationKeypair();
+  const att = signManifest(new StubTernaryBridge(inMem()).manifest, privateKeyPem);
+  const REVOKED = "8eecf4187ebc9341";
+
+  // Valid signature, but the asserted signer keyId is revoked → DENY (mirrors the fuse gate).
+  const denied = verifyAttestation(att, {
+    requireSigned: true, publicKeyPem, signerKeyId: REVOKED, revocationCheck: (k) => k === REVOKED,
+  });
+  assert.equal(denied.ok, false);
+  assert.match(denied.reason, /REVOKED/);
+
+  // A non-revoked signer still verifies.
+  assert.equal(
+    verifyAttestation(att, { requireSigned: true, publicKeyPem, signerKeyId: "ab46f4c7e2797b9b", revocationCheck: (k) => k === REVOKED }).ok,
+    true,
+  );
+
+  // A THROWING revocation check (untrustworthy/tampered registry) is itself fail-closed.
+  const failClosed = verifyAttestation(att, {
+    requireSigned: true, publicKeyPem, signerKeyId: REVOKED, revocationCheck: () => { throw new Error("registry untrusted"); },
+  });
+  assert.equal(failClosed.ok, false);
+  assert.match(failClosed.reason, /could not be determined/);
+
+  // Absent revocation fields ⇒ no revocation gate (backward-compatible).
+  assert.equal(verifyAttestation(att, { requireSigned: true, publicKeyPem }).ok, true);
+});
+
 test("hash pinning: only a pinned manifest hash passes", () => {
   const bridge = new StubTernaryBridge(inMem());
   const att = { manifest: bridge.manifest };

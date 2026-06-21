@@ -624,7 +624,36 @@ Baseline comparison (governance-cost):
       console.log(JSON.stringify(attestation, null, 2));
       process.exit(0);
     }
-    console.error("Usage: logicn bridge-attest keygen | hash <manifest.json> | sign <manifest.json> <privkey.pem>");
+    if (sub === "verify" && rest[1] && rest[2]) {
+      // verify <attestation.json> <pubkey.pem> [--keyid <id>]
+      // attestation.json = the { manifest, signature } object produced by `sign`.
+      const attestation = JSON.parse(readFileSync(rest[1], "utf8"));
+      const publicKeyPem = readFileSync(rest[2], "utf8");
+      const kidIdx = rest.indexOf("--keyid");
+      const signerKeyId = kidIdx !== -1 ? rest[kidIdx + 1] : undefined;
+      const policy = { requireSigned: true, publicKeyPem };
+      // Revocation (fail-closed): when a signer keyId is given, refuse a revoked signer.
+      // An untrustworthy/tampered revocation registry fails the whole verify closed.
+      if (signerKeyId) {
+        try {
+          const { isKeyRevoked, assertRegistryTrustworthy } = await import("./governance/revocation-registry.mjs");
+          assertRegistryTrustworthy("."); // throws if the registry is unsigned-under-pin / signed by a revoked key
+          policy.signerKeyId = signerKeyId;
+          policy.revocationCheck = (k) => isKeyRevoked(k, ".");
+        } catch (e) {
+          console.error(`❌ bridge-attest verify: revocation registry untrusted (${e.message}) — refusing (fail-closed)`);
+          process.exit(1);
+        }
+      }
+      const result = tc.verifyAttestation(attestation, policy);
+      if (result.ok) {
+        console.log(`✅ attestation OK (hash ${result.hash})`);
+        process.exit(0);
+      }
+      console.error(`❌ attestation DENIED: ${result.reason}`);
+      process.exit(1);
+    }
+    console.error("Usage: logicn bridge-attest keygen | hash <manifest.json> | sign <manifest.json> <privkey.pem> | verify <attestation.json> <pubkey.pem> [--keyid <id>]");
     process.exit(2);
   }
 

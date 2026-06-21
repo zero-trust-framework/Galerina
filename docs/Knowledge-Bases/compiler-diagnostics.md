@@ -989,6 +989,7 @@ LLN-PKG-002   Package from an unregistered/unverified registry
 LLN-PKG-003   Package has no content-addressable hash (no tamper detection / reproducible build)
 LLN-PKG-004   Package declares an install script (denied by default)
 LLN-PKG-005   Package has no signature (origin cannot be cryptographically verified)
+LLN-PKG-006   Package is signed by a REVOKED key (revocation refused at resolution time, defense-in-depth)
 ```
 
 ### Border (plugin input validation) / economics / misc

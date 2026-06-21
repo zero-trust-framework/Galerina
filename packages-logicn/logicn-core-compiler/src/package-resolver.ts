@@ -45,6 +45,9 @@ export interface PackageManifest {
   readonly hash?: string;
   /** Ed25519 or similar package signature — proves origin, prevents tampering. */
   readonly signature?: string;
+  /** The keyId of the signing key — paired with a revocation predicate so a package
+   *  signed by a REVOKED key is refused at resolution time (LLN-PKG-006). */
+  readonly signerKeyId?: string;
   /** Source registry URL — auditable origin for every resolved package. */
   readonly registry?: string;
   /**
@@ -156,7 +159,20 @@ export function checkInstallScript(manifest: PackageManifest): readonly PackageR
  * Checks that a package manifest has both a content hash and a signature.
  * Missing hash → LLN-PKG-003. Missing signature → LLN-PKG-005.
  */
-export function checkPackageProvenance(manifest: PackageManifest): readonly PackageResolverDiagnostic[] {
+/** Options for provenance checking — lets the host inject a revocation predicate. */
+export interface ProvenanceCheckOptions {
+  /**
+   * Fail-closed signing-key revocation predicate (registry-backed). Returns true if a
+   * keyId is revoked. The host injects this from `governance/revocation-registry.mjs`;
+   * a throwing check (untrustworthy/tampered registry) is itself treated as revoked.
+   */
+  readonly isRevoked?: (keyId: string) => boolean;
+}
+
+export function checkPackageProvenance(
+  manifest: PackageManifest,
+  opts?: ProvenanceCheckOptions,
+): readonly PackageResolverDiagnostic[] {
   const diags: PackageResolverDiagnostic[] = [];
 
   if (!manifest.hash || !manifest.hash.startsWith("sha256:")) {
@@ -179,6 +195,28 @@ export function checkPackageProvenance(manifest: PackageManifest): readonly Pack
       message: `Package '${manifest.name}@${manifest.version}' has no signature. Origin cannot be cryptographically verified.`,
       suggestedFix: "Sign the package with 'logicn package sign' and add 'signature:' to the manifest.",
     });
+  }
+
+  // Revocation (defense-in-depth, mirrors the fuse admission gate): a package signed by a
+  // REVOKED key is refused at RESOLUTION time — before it ever reaches admission. Fail-closed:
+  // a throwing revocation check (untrustworthy/tampered registry) is treated as revoked.
+  if (manifest.signerKeyId && opts?.isRevoked) {
+    let revoked: boolean;
+    try {
+      revoked = opts.isRevoked(manifest.signerKeyId) === true;
+    } catch {
+      revoked = true; // fail-closed
+    }
+    if (revoked) {
+      diags.push({
+        code: "LLN-PKG-006",
+        name: "RevokedSigner",
+        severity: "error",
+        packageName: manifest.name,
+        message: `Package '${manifest.name}@${manifest.version}' is signed by REVOKED key '${manifest.signerKeyId}'. A revoked signing key cannot establish trusted origin.`,
+        suggestedFix: "Re-sign the package with a current, non-revoked key and update 'signerKeyId:' in the manifest.",
+      });
+    }
   }
 
   return diags;
@@ -221,6 +259,7 @@ export interface ResolvedPackageEntry {
 export function getResolverReport(
   manifests: readonly PackageManifest[],
   generatedAt: string,
+  opts?: ProvenanceCheckOptions,
 ): ResolverReport {
   const allCapabilities = new Set<string>();
   const allTargets = new Set<string>();
@@ -243,8 +282,8 @@ export function getResolverReport(
       allTargets.add("cpu");
     }
 
-    // Run provenance and install script checks
-    allDiagnostics.push(...checkPackageProvenance(m));
+    // Run provenance (incl. fail-closed revocation when a predicate is injected) and install script checks
+    allDiagnostics.push(...checkPackageProvenance(m, opts));
     allDiagnostics.push(...checkInstallScript(m));
 
     return {
@@ -484,6 +523,7 @@ function parseManifest(yaml: ParsedYaml): PackageManifest | undefined {
   // Provenance fields
   const hash = typeof yaml["hash"] === "string" ? yaml["hash"] : undefined;
   const signature = typeof yaml["signature"] === "string" ? yaml["signature"] : undefined;
+  const signerKeyId = typeof yaml["signerKeyId"] === "string" ? yaml["signerKeyId"] : undefined;
   const registry = typeof yaml["registry"] === "string" ? yaml["registry"] : undefined;
 
   // Install script policy — explicit "allow" only; everything else is deny
@@ -531,6 +571,7 @@ function parseManifest(yaml: ParsedYaml): PackageManifest | undefined {
     capabilities,
     ...(hash !== undefined ? { hash } : {}),
     ...(signature !== undefined ? { signature } : {}),
+    ...(signerKeyId !== undefined ? { signerKeyId } : {}),
     ...(registry !== undefined ? { registry } : {}),
     ...(installScript !== undefined ? { installScript } : {}),
     ...(targets !== undefined ? { targets } : {}),

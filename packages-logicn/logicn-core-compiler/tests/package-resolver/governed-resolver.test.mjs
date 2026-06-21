@@ -29,6 +29,7 @@ import {
   LLN_PKG_003,
   LLN_PKG_004,
   LLN_PKG_005,
+  LLN_PKG_006,
   KNOWN_PACKAGE_TYPES,
   resolveImportedTypes,
   parseProgram,
@@ -201,6 +202,49 @@ describe("checkPackageProvenance: LLN-PKG-003 and LLN-PKG-005", () => {
     const result = checkPackageProvenance(bare);
     assert.ok(result.some((d) => d.code === "LLN-PKG-003"), "LLN-PKG-003 must fire");
     assert.ok(result.some((d) => d.code === "LLN-PKG-005"), "LLN-PKG-005 must fire");
+  });
+});
+
+describe("checkPackageProvenance: LLN-PKG-006 signing-key revocation (defense-in-depth)", () => {
+  const REVOKED = "8eecf4187ebc9341";
+  const signed = (overrides) => ({
+    name: "@logicn/pkg", version: "1.0.0", exports: { types: [], flows: [], events: [] },
+    hash: "sha256:" + "a".repeat(8), signature: "sig:ed25519:abc", ...overrides,
+  });
+
+  it("a package signed by a REVOKED key → LLN-PKG-006 error", () => {
+    const result = checkPackageProvenance(signed({ signerKeyId: REVOKED }), { isRevoked: (k) => k === REVOKED });
+    const d = result.find((x) => x.code === "LLN-PKG-006");
+    assert.ok(d, "LLN-PKG-006 must fire for a revoked signer");
+    assert.equal(d.severity, "error");
+  });
+
+  it("a non-revoked signer → no revocation diagnostic", () => {
+    const result = checkPackageProvenance(signed({ signerKeyId: "ab46f4c7e2797b9b" }), { isRevoked: (k) => k === REVOKED });
+    assert.ok(!result.some((x) => x.code === "LLN-PKG-006"));
+  });
+
+  it("a THROWING revocation check is fail-closed (treated as revoked → LLN-PKG-006)", () => {
+    const result = checkPackageProvenance(signed({ signerKeyId: "x" }), { isRevoked: () => { throw new Error("untrusted"); } });
+    assert.ok(result.some((x) => x.code === "LLN-PKG-006"), "a throwing check must fail closed");
+  });
+
+  it("no revocation predicate ⇒ no revocation diagnostic (backward-compatible)", () => {
+    const result = checkPackageProvenance(signed({ signerKeyId: REVOKED }));
+    assert.ok(!result.some((x) => x.code === "LLN-PKG-006"));
+  });
+
+  it("getResolverReport threads the revocation predicate", () => {
+    const report = getResolverReport([signed({ signerKeyId: REVOKED })], "2026-06-21T00:00:00Z", { isRevoked: () => true });
+    assert.ok(report.diagnostics.some((x) => x.code === "LLN-PKG-006"));
+  });
+
+  it("LLN_PKG_006 constant has the correct shape", () => {
+    assert.equal(LLN_PKG_006.code, "LLN-PKG-006");
+    assert.equal(LLN_PKG_006.name, "RevokedSigner");
+    assert.equal(LLN_PKG_006.severity, "error");
+    assert.ok(typeof LLN_PKG_006.why === "string");
+    assert.ok(typeof LLN_PKG_006.suggestedFix === "string");
   });
 });
 

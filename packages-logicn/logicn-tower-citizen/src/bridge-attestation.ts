@@ -52,6 +52,18 @@ export interface AttestationPolicy {
    * ffsim quantum bridge) defaults this ON. Default off elsewhere (backward-compatible).
    */
   readonly requireHybrid?: boolean;
+  /**
+   * The keyId of the pinned `publicKeyPem` — paired with `revocationCheck` so a
+   * cryptographically VALID signature from a REVOKED key is refused. Absent ⇒ no
+   * revocation gate (backward-compatible).
+   */
+  readonly signerKeyId?: string;
+  /**
+   * Fail-closed signing-key revocation predicate (registry-backed). Returns true if a
+   * keyId is revoked. The host injects this from `governance/revocation-registry.mjs`;
+   * a throwing check (untrustworthy/tampered registry) is itself treated as a denial.
+   */
+  readonly revocationCheck?: (keyId: string) => boolean;
 }
 
 export interface AttestationResult {
@@ -111,6 +123,19 @@ export function verifyAttestation(
     } catch (e) {
       return { ok: false, reason: `signature check error: ${(e as Error).message}`, hash };
     }
+  }
+
+  // Revocation (defense-in-depth, mirrors the fuse admission gate): a validly-signed
+  // attestation from a REVOKED signing key is refused. Fail-closed: a throwing check
+  // (untrustworthy/tampered registry) is itself a denial. Absent fields ⇒ no gate.
+  if (policy.signerKeyId !== undefined && policy.revocationCheck !== undefined) {
+    let revoked: boolean;
+    try {
+      revoked = policy.revocationCheck(policy.signerKeyId) === true;
+    } catch (e) {
+      return { ok: false, reason: `revocation status for keyId '${policy.signerKeyId}' could not be determined (${(e as Error).message}) — fail-closed`, hash };
+    }
+    if (revoked) return { ok: false, reason: `signing key '${policy.signerKeyId}' is REVOKED`, hash };
   }
 
   return { ok: true, hash };
