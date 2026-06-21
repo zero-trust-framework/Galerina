@@ -466,6 +466,17 @@ export class HybridInferenceEngine {
           return this.buildReceipt(request, plan, "", latencyMs, "sha256:0", dispatch.bridgesUsed, dispatch.executedNatively, dispatch.ternaryChecksum, true, "ERR_HOST_NATIVE_DENIED");
         }
 
+        // A bridge fault / ternary-drift trap caught mid-dispatch fails CLOSED as a
+        // governed trap receipt — it must NEVER escape infer() as an ungoverned exception
+        // (fail-safe-to-Binary / no system crash, Goal C).
+        if (dispatch.trap) {
+          audit.trap(correlationId, HYBRID_METADATA.artifactHash, HYBRID_METADATA.engineId,
+            dispatch.trap.code, dispatch.trap.details);
+          const latencyMs = Date.now() - t0;
+          await this.tower.erase(sandbox, correlationId, execResult);
+          return this.buildReceipt(request, plan, "", latencyMs, "sha256:0", dispatch.bridgesUsed, dispatch.executedNatively, dispatch.ternaryChecksum, true, dispatch.trap.code);
+        }
+
         bridgesUsed = dispatch.bridgesUsed;
         executedNatively = dispatch.executedNatively;
         ternaryChecksum = dispatch.ternaryChecksum;
@@ -549,6 +560,9 @@ export class HybridInferenceEngine {
     ternaryChecksum: number;
     byOp: Map<InferenceOpClass, BridgeResult>;
     deniedTechniques: string[];
+    /** A bridge fault / ternary-drift trap caught mid-dispatch — fail-closed, governed
+     *  by infer() into a trapFired receipt rather than an escaping exception. */
+    trap: { code: string; details: Record<string, unknown> } | null;
   } {
     if (!this.bridgesInitialized) {
       for (const bridge of this.bridges.values()) bridge.initialize();
@@ -559,6 +573,7 @@ export class HybridInferenceEngine {
     const denied = new Set<string>();
     let executedNatively = false;
     let ternaryChecksum = 0;
+    let trap: { code: string; details: Record<string, unknown> } | null = null;
 
     for (const decision of plan.decisions) {
       const op = buildDemoTernaryOp(decision.opClass, decision.precision, correlationId);
@@ -573,8 +588,16 @@ export class HybridInferenceEngine {
       // Certified mode normally bars the photonic lane (the dev emulator is unattested). It is admitted in
       // certified mode ONLY when a verified certified attestation was supplied (photonicCertifiedAdmissible).
       if (this.photonic && (!this.certified || this.photonicCertifiedAdmissible) && decision.precision === "ternary") {
-        const kernel = (this.photonic.kernelFor ?? defaultPhotonicKernelFor)(op);
-        const ph = this.photonic.router.route(op, kernel);
+        // Fail-SAFE to Binary: the whole duck-typed photonic-port interaction (kernel
+        // build + route) is guarded — a port that THROWS (corrupt trit / native-handle
+        // fault) DECLINES to the digital floor below, never escaping as an ungoverned
+        // exception. A throw is treated exactly like a null/decline.
+        const ph = (() => {
+          try {
+            const kernel = (this.photonic.kernelFor ?? defaultPhotonicKernelFor)(op);
+            return this.photonic.router.route(op, kernel);
+          } catch { return null; }
+        })();
         // Engine-side defense-in-depth: the injected port is duck-typed and NOT attestation-gated
         // (checkBridgeAttestation only iterates this.bridges). So do not trust it blindly:
         //   • reject a non-finite value (fail-closed → fall through to the digital dispatch); and
@@ -600,8 +623,17 @@ export class HybridInferenceEngine {
         denied.add(decision.precision);
         continue;
       }
-      const result = bridge.execute(op);
-      assertDeterminism(result); // Citizen Standard 1 — abort on ternary drift
+      let result: BridgeResult;
+      try {
+        result = bridge.execute(op);
+        assertDeterminism(result); // Citizen Standard 1 — abort on ternary drift
+      } catch (e) {
+        // A bridge fault or a ternary-drift trap (Citizen Standard 1) must fail CLOSED as
+        // a GOVERNED trap, never escape infer() as an ungoverned exception. Stop dispatch;
+        // infer() turns this into a trapFired receipt (no-crash / fail-safe-to-Binary).
+        trap = { code: "ERR_BRIDGE_DISPATCH_FAULT", details: { opClass: decision.opClass, precision: decision.precision, error: e instanceof Error ? e.message : String(e) } };
+        break;
+      }
       used.add(result.bridgeId);
       byOp.set(decision.opClass, result);
       if (result.executedNatively) executedNatively = true;
@@ -610,7 +642,7 @@ export class HybridInferenceEngine {
         ternaryChecksum = (ternaryChecksum + (result.value | 0)) | 0;
       }
     }
-    return { bridgesUsed: [...used], executedNatively, ternaryChecksum, byOp, deniedTechniques: [...denied] };
+    return { bridgesUsed: [...used], executedNatively, ternaryChecksum, byOp, deniedTechniques: [...denied], trap };
   }
 
   /** Release native bridge resources. Call once at engine teardown (NOT per-infer —
