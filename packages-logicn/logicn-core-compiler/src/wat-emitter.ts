@@ -156,6 +156,9 @@ export interface WATFunction {
    * reclaimed-but-unzeroed arena is host-readable remanence — a secret-containing module zeroes on reset.
    */
   readonly handlesSecrets?: boolean;
+  /** The flow's LogicN return type name (e.g. "Int", "Bool", "String", a record name). Used by the B2b
+   *  zero-on-EXIT path to apply eager secret-zeroing ONLY to flows that return a non-heap PRIMITIVE. */
+  readonly returnType?: string;
   /**
    * Named parameters for this function.
    * Phase 22: present for pure flows; enables emitWATBody to reference locals.
@@ -527,6 +530,9 @@ export function renderWAT(module: WATModule): string {
   // secret-handling flow (privacy/secrets block). Any prior top-level invocation could have been that flow,
   // and the module EXPORTS its linear memory, so otherwise the reclaimed secret bytes are host-readable.
   const moduleHasSecret = module.functions.some((f) => f.handlesSecrets === true);
+  // B2b zero-on-EXIT: LogicN return types that lower to a non-heap i32 VALUE (not an opaque heap handle).
+  // Only these are safe to zero-on-exit — the result is a value on the stack, unaffected by zeroing the heap.
+  const PRIMITIVE_RETURN_TYPES = new Set(["Int", "Int8", "Int16", "Int32", "Byte", "Bool"]);
 
   // Function definitions.
   // Pure flows with a real body (fn.body !== "unreachable") emit actual instructions.
@@ -548,6 +554,54 @@ export function renderWAT(module: WATModule): string {
       // all locals first), for leaf entry-points only, when the module uses the heap. Before any allocation.
       const emitArenaReset = usesHeap && fn.isEntryPoint && !flowReferenced.has(fn.name);
       const emitZeroing = emitArenaReset && moduleHasSecret;
+
+      // B2b zero-on-EXIT (owner-chosen, audit): eagerly destroy THIS call's secret records BEFORE returning,
+      // closing the host-readable remanence window. SAFE SUBSET ONLY — a secret leaf that returns a non-heap
+      // PRIMITIVE i32 (the result is a value, not a heap pointer) and has NO early `(return …)` (a single
+      // tail-expression body, so a result-capturing block cannot be bypassed). Early-return flows need the #70
+      // single-exit transform and stay on the lazy on-entry path until that lands.
+      const bodyArr = fn.body.split("\n").filter((l) => l.trim().length > 0);
+      let locEnd = 0;
+      // NB `(local ` (a DECLARATION) only — `\s` after "local" excludes `(local.set …)` (a statement),
+      // which `\b` would wrongly match (boundary before the dot) and split the body mid-statement.
+      while (locEnd < bodyArr.length && /^\s*\(local\s/.test(bodyArr[locEnd]!)) locEnd++;
+      const isPrimI32Return = fn.returnType !== undefined && PRIMITIVE_RETURN_TYPES.has(fn.returnType)
+        && (fn.type.results[0] ?? "i32") === "i32";
+      const bodyHasEarlyReturn = bodyArr.some((l) => /\(return\b/.test(l));
+      const emitZeroOnExit = emitArenaReset && fn.handlesSecrets === true && isPrimI32Return
+        && !bodyHasEarlyReturn && (bodyArr.length - locEnd) > 0;
+
+      if (emitZeroOnExit) {
+        // Distinct block/loop labels for the entry vs exit zeroing (both live in this one function); the
+        // entry-zero reuses the standard $__lln_zd/$__lln_zl naming + the $__lln_zero_i counter so the
+        // existing "$__lln_zl emitted" checks still recognise a secret-zeroing module.
+        const zloop = (zd: string, zl: string) => [
+          `    (local.set $__lln_zero_i (i32.const ${WAT_HEAP_BASE}))`,
+          `    (block ${zd} (loop ${zl}`,
+          `      (br_if ${zd} (i32.ge_u (local.get $__lln_zero_i) (global.get $__lln_heap)))`,
+          `      (i32.store (local.get $__lln_zero_i) (i32.const 0))`,
+          `      (local.set $__lln_zero_i (i32.add (local.get $__lln_zero_i) (i32.const 4)))`,
+          `      (br ${zl})))`,
+        ];
+        for (const l of bodyArr.slice(0, locEnd)) lines.push(`    ${l}`);            // the body's own locals
+        lines.push(`    (local $__lln_ret i32)`);
+        lines.push(`    (local $__lln_zero_i i32)`);
+        if (emitZeroing) { lines.push(`    ;; B2b on-entry: zero the reclaimed previous arena`); for (const z of zloop("$__lln_zd", "$__lln_zl")) lines.push(z); }
+        lines.push(`    ;; B2 per-flow arena reset (rebase the bump pointer before this call allocates)`);
+        lines.push(`    (global.set $__lln_heap (i32.const ${WAT_HEAP_BASE}))`);
+        lines.push(`    ;; capture the PRIMITIVE result, then DESTROY this call's secret records before returning`);
+        lines.push(`    (local.set $__lln_ret (block (result i32)`);
+        for (const l of bodyArr.slice(locEnd)) lines.push(`      ${l}`);
+        lines.push(`    ))`);
+        lines.push(`    ;; B2b on-EXIT (owner-chosen): no host-readable secret remanence window after return`);
+        for (const z of zloop("$__lln_xd", "$__lln_xl")) lines.push(z);
+        lines.push(`    (local.get $__lln_ret)`);
+        lines.push(`  )`);
+        if (fn.isEntryPoint) lines.push(`  (export "${fn.name}" (func $${fn.name}))`);
+        lines.push("");
+        continue; // this flow is fully emitted via the zero-on-exit path
+      }
+
       // B2b: the zeroing loop needs a counter local — declare it first so all locals precede instructions.
       if (emitZeroing) lines.push(`    (local $__lln_zero_i i32)`);
       const resetBlock: string[] = [];
@@ -569,7 +623,7 @@ export function renderWAT(module: WATModule): string {
       // Indent each instruction line with 4 spaces inside the function.
       for (const bodyLine of fn.body.split("\n")) {
         if (bodyLine.trim().length === 0) continue;
-        if (emitArenaReset && !resetInjected && !/^\s*\(local\b/.test(bodyLine)) {
+        if (emitArenaReset && !resetInjected && !/^\s*\(local\s/.test(bodyLine)) {
           for (const rl of resetBlock) lines.push(rl);
           resetInjected = true;
         }
@@ -2858,6 +2912,7 @@ export function buildWATModule(
       isPure: flow.qualifier === "pure",
       isEntryPoint: entrySet.has(flow.name),
       handlesSecrets: gir.ast !== undefined ? flowHandlesSecrets(findFlowNodeInAST(gir.ast, flow.name)) : false,
+      ...((() => { const rt = flowReturnTypes?.get(flow.name); return rt !== undefined ? { returnType: rt } : {}; })()),
       type: { params: paramValTypes, results: ["i32"] },
       body,
       ...(namedParams.length > 0 ? { namedParams } : {}),

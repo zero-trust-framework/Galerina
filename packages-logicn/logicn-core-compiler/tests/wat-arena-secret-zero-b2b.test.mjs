@@ -72,6 +72,44 @@ test("B2b: zeroing clears HOST-READABLE secret remanence — A/B vs the identica
     "control: without B2b, wide's secret remains host-readable (proves B2b is what clears it)");
 });
 
+// B2b ZERO-ON-EXIT (owner-chosen): a secret leaf returning a non-heap PRIMITIVE i32 with no early `(return …)`
+// destroys its secret records BEFORE returning — so even a ONE-SHOT/last call leaves no host-readable
+// remanence. Early-return and heap-returning secret flows stay on the lazy on-entry path (pending #70).
+test("B2b zero-on-exit: a ONE-SHOT primitive secret flow has its secret cleared AFTER return (no next call)", async () => {
+  const src = `record Sec { a: Int, b: Int }
+pure flow leak(s: Int) -> Int
+contract { intent { "primitive secret return" } privacy { contains PII } }
+{ let w: Sec = Sec { a: s, b: s } return w.a + w.b }
+`;
+  const { wat, instance } = await build(src);
+  assert.ok(wat.includes("$__lln_xl"), "a primitive-returning secret leaf must emit the on-EXIT zeroing loop");
+  const mem = new Int32Array(instance.exports.memory.buffer);
+  const r = instance.exports.leak(0xBEEF);            // a SINGLE call
+  assert.equal(r, 0xBEEF * 2, "the primitive result must be correct (captured before zeroing)");
+  assert.equal(mem[256], 0, "the secret record must be ZEROED after the single call (no next-call needed)");
+  assert.equal(mem[257], 0, "…all of it");
+});
+
+test("B2b zero-on-exit: an EARLY-return secret flow falls back to lazy (no on-exit zeroing) — correct, no bypass", async () => {
+  const src = `record Sec { a: Int }
+pure flow g(s: Int) -> Int
+contract { intent { "early return" } privacy { contains PII } }
+{ let w: Sec = Sec { a: s } if s > 10 { return 1 } return w.a }
+`;
+  const { wat } = await build(src);
+  assert.ok(!wat.includes("$__lln_xl"), "an early-return flow must NOT zero-on-exit (a block-wrap can't catch (return …))");
+});
+
+test("B2b zero-on-exit: a HEAP-returning secret flow does NOT zero-on-exit (the return IS in the heap)", async () => {
+  const src = `record Sec { a: Int }
+pure flow h(s: Int) -> Sec
+contract { intent { "heap return" } privacy { contains PII } }
+{ return Sec { a: s } }
+`;
+  const { wat } = await build(src);
+  assert.ok(!wat.includes("$__lln_xl"), "a record/heap return must stay on the lazy path (can't zero the returned object)");
+});
+
 test("B2b: the secret module still executes correctly under the zeroing loop", async () => {
   const { instance } = await build(mk(true));
   let r = 0;
