@@ -14,8 +14,21 @@
  * CLOSED if the registry is signed-but-invalid (someone edited it without
  * re-signing) or is signed by a revoked key. An UNSIGNED registry is still
  * enforced but flagged (graceful v0→v1 transition until the owner runs
- * governance/sign-revocations.mjs). HARDENING TODO (v2): pin a specific
- * trust-anchor key id rather than accepting any present non-revoked signer.
+ * governance/sign-revocations.mjs).
+ *
+ * v2 adds TRUST-ANCHOR PINNING (IMPLEMENTED): loadTrustAnchor() reads a pinned
+ * registry-signing root key id OUT OF BAND from governance/trust-anchor.json
+ * (never from the registry itself), and assertRegistryTrustworthy() enforces it.
+ * Under a pin it REQUIRES a signed registry, rejects any signer that is not the
+ * pinned root (defeating the rogue not-yet-revoked-signer attack), rejects a
+ * revoked signer, and rejects a tampered/invalid signature — all fail closed via
+ * throw. Absent trust-anchor.json → legacy v1 behaviour (any present non-revoked
+ * signer).
+ *
+ * HARDENING TODO (v3): the pin is a SINGLE static root key id — no rotation, and a
+ * single point of failure. Add trust-anchor key ROTATION (overlapping old+new root
+ * during cutover) and MULTI-ROOT / THRESHOLD (k-of-n) registry signing, so one
+ * compromised or lost root key can neither strand nor forge the registry.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
