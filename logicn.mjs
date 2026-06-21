@@ -157,14 +157,21 @@ Baseline comparison (governance-cost):
   // Runs: governance check → build WASM → verify manifest → health check
   // Prints OCI packaging instructions for Dockerfile.logicn + deploy-linux.sh
   if (command === "deploy") {
-    const llnFile = rest[0];
+    // Flag-order-robust: the deploy target is the .lln arg, wherever it sits among the flags.
+    const llnFile = rest.find((a) => /^[A-Za-z0-9_./\\-]+\.lln$/.test(a)) ?? rest[0];
     if (!llnFile) {
-      console.error("Usage: logicn deploy <file.lln> [--tag <image-tag>]");
+      console.error("Usage: logicn deploy <file.lln> [--tag <image-tag>] [--dev]");
       process.exit(1);
     }
 
     const tagIdx = rest.indexOf("--tag");
     const imageTag = tagIdx >= 0 ? rest[tagIdx + 1] : "logicn-app:latest";
+    // A deploy is inherently a PRODUCTION action, so the pipeline runs under LOGICN_PROFILE=production by
+    // default — build must sign, and `verify` enforces the signature + revocation (fail-closed). This closes
+    // the fail-open where `logicn deploy` inherited the ambient (dev) profile and shipped UNSIGNED code.
+    // `--dev` opts into a non-production deploy (auto-provisioned dev key, lenient verify) for local testing.
+    const devDeploy = rest.includes("--dev");
+    const deployProfile = devDeploy ? "dev" : "production";
 
     // SECURITY (2026-06-06): validate the user-supplied path and NEVER interpolate it
     // into a shell string. A `.lln` path containing shell metacharacters (backticks,
@@ -180,8 +187,14 @@ Baseline comparison (governance-cost):
     }
 
     console.log(`\n🏰 LogicN Deploy — ${llnFile}`);
-    console.log(`   Image tag: ${imageTag}\n`);
+    console.log(`   Image tag: ${imageTag}`);
+    console.log(devDeploy
+      ? `   Profile:   dev  ⚠️  --dev: NON-PRODUCTION deploy — signing/admission NOT enforced (local testing only)`
+      : `   Profile:   production  (build signs · verify enforces signature + revocation, fail-closed)`);
+    console.log("");
 
+    // Run every step under the deploy profile so build signs and verify enforces (or stays lenient in --dev).
+    const stepEnv = { ...process.env, LOGICN_PROFILE: deployProfile };
     const self = "logicn.mjs";
     // argv arrays — NOT shell strings. spawnSync(shell:false) passes each arg verbatim,
     // so path contents can never be interpreted as shell syntax.
@@ -189,12 +202,14 @@ Baseline comparison (governance-cost):
       { name: "Governance check", argv: [self, "check", llnFile] },
       { name: "Build WASM",       argv: [self, "build", llnFile] },
       { name: "Verify manifest",  argv: [self, "verify", llnFile] },
-      { name: "Health check",     argv: [self, "run", "examples/deployment/health-check.lln", "--invoke", "getHealthStatus"] },
+      // --governed: the health-check module has a secure flow (audit.write), so the plain WASM --invoke
+      // instantiation can't satisfy the host imports. Run it through the governed interpreter instead.
+      { name: "Health check",     argv: [self, "run", "examples/deployment/health-check.lln", "--invoke", "getHealthStatus", "--governed"] },
     ];
 
     for (const step of steps) {
       process.stdout.write(`  ⏳ ${step.name}...`);
-      const r = spawnSync(process.execPath, step.argv, { cwd: process.cwd(), encoding: "utf-8", timeout: 60000, shell: false });
+      const r = spawnSync(process.execPath, step.argv, { cwd: process.cwd(), encoding: "utf-8", timeout: 60000, shell: false, env: stepEnv });
       if (r.status !== 0) {
         console.log(`  ❌ ${step.name} FAILED`);
         console.error((r.stderr || r.stdout || r.error?.message || "").toString());

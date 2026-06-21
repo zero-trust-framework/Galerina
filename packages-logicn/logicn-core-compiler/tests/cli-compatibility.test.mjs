@@ -227,6 +227,35 @@ describe("CLI compatibility — logicn build", () => {
   });
 });
 
+// ── logicn deploy — enforces the production posture by default ──────────────────────────────────
+describe("CLI compatibility — logicn deploy", () => {
+  // The deploy pipeline (check → build → verify → governed health-check) runs under
+  // LOGICN_PROFILE=production BY DEFAULT — a deploy is a production action, so build signs and verify
+  // enforces the signature + revocation (closing the fail-open where deploy inherited the ambient dev
+  // profile and shipped unsigned). --dev opts into a non-production deploy. Heavy — generous timeout.
+  // NB deploy's path guard rejects ':' so the target must be a RELATIVE path.
+  const BENCH_REL = "packages-logicn/logicn-devtools-benchmarks/benchmarks/governance-cost/benchmark.lln";
+  function deploy(...args) {
+    const r = spawnSync(process.execPath, [LOGICN, "deploy", ...args], { cwd: ROOT, encoding: "utf8", timeout: 120000 });
+    return { stdout: r.stdout ?? "", stderr: r.stderr ?? "", code: r.status };
+  }
+
+  it("logicn deploy --dev completes the full pipeline and labels it a NON-PRODUCTION deploy", () => {
+    const { stdout, code } = deploy(BENCH_REL, "--dev");
+    assert.ok(stdout.includes("Profile:   dev"), `expected the dev profile label: ${stdout}`);
+    assert.ok(stdout.includes("NON-PRODUCTION"), "must warn that --dev is a non-production deploy");
+    assert.equal(code, 0, `dev deploy should complete the pipeline (incl. the governed health-check): ${stdout}`);
+    assert.ok(stdout.includes("Deploy pipeline complete"), "the pipeline must reach completion");
+    assert.ok(stdout.includes("✅ Health check"), "the health-check step (via --governed) must pass");
+  });
+
+  it("logicn deploy (default) enforces the PRODUCTION profile (build signs, verify enforces)", () => {
+    const { stdout } = deploy(BENCH_REL); // exit code is key-config-dependent; assert the posture is enforced
+    assert.ok(stdout.includes("Profile:   production"), `deploy must DEFAULT to production: ${stdout}`);
+    assert.ok(stdout.includes("verify enforces signature"), "must state that production enforces the signature");
+  });
+});
+
 // ── logicn verify — signature-required policy (audit, profile-gated) ───────────
 describe("CLI compatibility — verify signature-required policy", () => {
   // AUDIT: an unsigned (placeholder) manifest is fine for dev but must fail-closed under
