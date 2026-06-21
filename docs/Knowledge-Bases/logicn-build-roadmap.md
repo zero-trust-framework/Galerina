@@ -24,7 +24,7 @@ backend (crypto/K3/control stay on the digital core). The runtime seam for the P
 
 **Ranked-priority status reconciliation (2026-06-21, verified against source — roadmap was stale):**
 **#165** f64 WAT lowering ✅ DONE · **#180** manifest signing ✅ DONE (this session's signing-format hardening +
-RFC-8785/#67/fail-secure profile) · **#194** GateCache ✅ DONE (`gate-cache.ts`) · **#128(b)** for-in WASM
+RFC-8785/#67/fail-secure profile) · **#194** GateCache ✅ DONE (`gate-cache.ts`) — **deliberately UNWIRED** (re-verified 2026-06-21): `compilePolicy` is ~56ns branchless, so a content-hash cache is net-NEGATIVE; it stays an opt-in utility for future *expensive* evaluators (`hybrid-engine.ts:310-312`). NOT dead code — do **not** re-flag it as the "GateCache anti-pattern"; that earlier framing was inaccurate. · **#128(b)** for-in WASM
 lowering ✅ DONE (`forEachStmt` lowers to a counted `__array_length`/`__array_get` loop; `wat-forin-execution`
 test green) · **core-network guards** ✅ (egress SSRF/DNS-rebind + inbound guard) · **CLI build/verify/deploy** ✅
 (build signing #180 · verify fail-closed + unsigned-policy · run signature+revocation · **deploy `ec3d610`** now
