@@ -59,18 +59,18 @@ Provides:
 LogicN core network I/O policy, profile, permission and report contracts.
 
 Provides:
-- NetworkDirection
-- NetworkProtocol
-- NetworkEffect
-- TlsVersion
-- NetworkBackend
-- NetworkDiagnosticSeverity
-- NetworkDiagnostic
-- TlsPolicy
-- NetworkEndpointRule
-- RateLimitRule
-- NetworkPrivacyPolicy
-- NetworkPolicy
+- HostCategory
+- HostKind
+- HostClassification
+- classifyHost
+- EgressPolicy
+- EgressDecision
+- guardOutboundHost
+- guardOutboundUrl
+- validateWebhookTarget
+- guardResolvedAddresses
+- InboundProtocol
+- InboundGuardPolicy
 
 ## logicn-core-security
 
