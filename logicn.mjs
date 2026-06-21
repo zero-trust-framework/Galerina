@@ -121,6 +121,7 @@ Commands:
   logicn kb-graph [--all]                              scan docs/Knowledge-Bases/ cross-reference graph
   logicn ledger <egress-dir> [--json]                  build hash-linked compliance report from audit-egress
   logicn new <target-dir> [--name <pkg>]               scaffold an opinionated secure governed package
+  logicn new app <target-dir> [--name <app>]           scaffold a governed app (App.lln + App.manifest + flows/ deps/ proofs/)
   logicn infer <file.lln> [--invoke F] [--prompt P] [--model M]   run governed AI inference from a flow's ai {} contract
 
 Examples:
@@ -586,7 +587,7 @@ Baseline comparison (governance-cost):
     // #174-safe: argv array + shell:false. Delegates to the standalone scaffolder.
     const { spawnSync } = await import("node:child_process");
     if (!rest[0]) {
-      process.stderr.write("Usage: logicn new <target-dir> [--name <pkg>]\n");
+      process.stderr.write("Usage: logicn new [package|app] <target-dir> [--name <pkg>]\n");
       process.exit(1);
     }
     const r = spawnSync(
