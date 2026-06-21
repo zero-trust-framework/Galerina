@@ -208,11 +208,11 @@ seam only as tensor kernels, a separate path).
 | 168 | Resolve enum-variant match arms (`match tok.kind {…}`) via `enumVariants` | high | M |
 | 169 | Add host Char classifiers (isUpper/isLower/isWhitespace/toUpper/toLower) | low | S |
 | 170 | Code-point-correct host string indexing + reconcile interpreter charCount | medium | S |
-| 171 | Replace in-band `-1` None sentinel with boxed Option/Result handle | high | M |
+| 171 | Replace in-band `-1` None sentinel with boxed Option/Result handle. **🔍 root-caused 2026-06-21:** an `Option<T>` match lowers to a SIGN check (`wat-emitter.ts:1766-1793`: `i32.lt_s subject 0` ⇒ None, else Some), with None=`-1` and `Some(v)`=bare `v`, so **any `Some(x<0)` is silently dispatched as `None`**. The `:1768` comment bakes in the `Some ≥ 0` assumption — **latent, not active** (the corpus only produces `Option<Char>` from `charAt`, codepoints ≥ 0). Fix = boxed `{tag,value}` handle (or separate present-bit, cf. for/where mask); a `Some(-5)` repro needs the `Some(Int)` construction path lowered to WASM first (same work item). **DEFERRED — wide blast radius, owner-supervised.** | high | M |
 | 172 | Stop i32-truncating `__int_to_str` | low | S |
 | 173 | Bind certified-profile + sha256 into WASM admission signature pre-image | high | M |
-| 174 | Fix command injection in `logicn kb-graph` / `diagnostic` | medium | S |
-| 175 | Write keygen private-key file with 0o600 | medium | S |
+| ~~174~~ ✅ | Fix command injection in `logicn kb-graph` / `diagnostic` — **DONE** (verified 2026-06-21: `spawnSync` + argv arrays, `shell:false`; no shell-string concat; `logicn.mjs:556-592`). | — | S |
+| ~~175~~ ✅ | Write keygen private-key file with 0o600 — **DONE** (verified 2026-06-21: `logicn.mjs:320` + `governance/key-lifecycle.mjs:145-146` write `.env.logicn-signing` at `mode: 0o600` + `chmodSync` best-effort). | — | S |
 | 176 | Import-closure validation + attestation freshness/revocation in #105 gate | medium | M |
 | 177 | Deprecated `policy {}` alias → `accessDecl` (or hard-reject) | low | M |
 | 178 | Cross-module `assuming()` proof-borrowing fail-closed in `--release` | medium | M |
