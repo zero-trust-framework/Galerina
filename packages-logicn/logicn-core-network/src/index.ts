@@ -463,3 +463,17 @@ export {
   validateWebhookTarget,
   guardResolvedAddresses,
 } from "./egress-guard.js";
+
+// Inbound admission + rate limiting — the runtime counterpart for the inbound half of NetworkPolicy.
+export {
+  type InboundProtocol,
+  type InboundGuardPolicy,
+  type InboundRequest,
+  type InboundDecision,
+  type RateLimitRuleLike,
+  type RateLimitResult,
+  parseRateLimit,
+  guardInboundRequest,
+  rateLimitKey,
+  RateLimiter,
+} from "./inbound-guard.js";
