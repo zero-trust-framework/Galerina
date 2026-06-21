@@ -266,8 +266,13 @@ function arenaMbOfFlow(flowNode: AstNode): number | undefined {
 function flowHandlesSecrets(flowNode: AstNode | undefined): boolean {
   if (flowNode === undefined) return false;
   const contractDecl = (flowNode.children ?? []).find((c) => c.kind === "contractDecl");
+  // AUDIT FIX (fail-open): use startsWith — mirroring the parser's own hasPrivacyFlag — so BOTH the braced
+  // `privacy { … }` (value "privacy:block") AND the body-less `privacy` shorthand (value "privacy:") trigger
+  // zeroing. Exact-equality on "…:block" missed the body-less form, silently disabling B2b secret-zeroing
+  // while the flow still bump-allocated secret records into the EXPORTED linear memory (host-readable remanence).
   return (contractDecl?.children ?? []).some(
-    (c) => c.kind === "identifier" && (c.value === "privacy:block" || c.value === "secrets:block"),
+    (c) => c.kind === "identifier" &&
+      (c.value?.startsWith("privacy:") === true || c.value?.startsWith("secrets:") === true),
   );
 }
 
@@ -298,7 +303,12 @@ export function deriveArenaWATMemory(
     if (pages > maxPages) maxPages = pages;
   }
   if (maxPages <= 0 || maxPages >= defaultMax) return DEFAULT_WAT_MEMORY;
-  return { minPages: Math.min(DEFAULT_WAT_MEMORY.minPages, maxPages), maxPages };
+  // AUDIT FIX (governed == ENFORCED): commit the declared arena up front by setting minPages = maxPages.
+  // LogicN emits NO memory.grow, so a WASM memory only ever has its COMMITTED (minPages) pages usable; with
+  // minPages left at the default 2 (128 KB) a flow would trap at 128 KB regardless of an 8 MB declared arena —
+  // the arena ceiling would not be the enforced runtime bound. Committing the arena makes a store past the
+  // declared budget trap at the arena boundary (the governed ceiling), not at an unrelated 128 KB default.
+  return { minPages: maxPages, maxPages };
 }
 
 // ---------------------------------------------------------------------------

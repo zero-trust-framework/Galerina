@@ -50,7 +50,12 @@ export function parseRateLimit(limit: string): { count: number; windowMs: number
   const windowMs = UNIT_MS[(m[3] ?? "").toLowerCase()];
   if (!Number.isFinite(count) || count <= 0) return null;
   if (windowMs === undefined || !Number.isFinite(unitCount) || unitCount <= 0) return null;
-  return { count, windowMs: windowMs * unitCount };
+  const totalWindowMs = windowMs * unitCount;
+  // AUDIT FIX: reject parseable-but-absurd limits. A gigantic count silently NEUTERS the throttle (a no-op
+  // limiter that looks configured-and-valid); a window past ~1 year is almost certainly a misconfig. Treat
+  // both as unparseable so the caller fails CLOSED rather than shipping an ineffective limit.
+  if (count > 1_000_000_000 || totalWindowMs > 366 * 86_400_000) return null;
+  return { count, windowMs: totalWindowMs };
 }
 
 /**
@@ -108,7 +113,10 @@ export function rateLimitKey(
     rule.scope === "route" ? (ctx.route ?? "?") :
     rule.scope === "tenant" ? (ctx.tenant ?? "?") :
     "*"; // global
-  return `${rule.name}::${rule.scope}::${dim}`;
+  // AUDIT FIX (delimiter injection): a raw `::` join lets an untrusted ctx field (e.g. ip "x::ip::y") span
+  // fields and collide/fan-out counter buckets, evading the throttle. JSON-encode the components so the
+  // separator can never be forged across parts.
+  return JSON.stringify([rule.name, rule.scope, dim]);
 }
 
 /**

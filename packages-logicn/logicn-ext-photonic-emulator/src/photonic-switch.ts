@@ -26,7 +26,13 @@ export interface PhotonicHardwareBackend extends PhotonicBackend {
   readonly nativeAvailable: boolean;
   /** Stable identity of the silicon (e.g. "lightmatter-mars-v2"). */
   readonly hardwareIdentity: string;
-  /** A VERIFIED attestation of the backend artifact. The switch refuses an unattested backend. */
+  /**
+   * Admission flag: true asserts the backend artifact has been verified. HONEST SCOPE (audit): this selector
+   * does NOT itself perform the cryptographic verification — `attested` is CALLER-ASSERTED, and the
+   * verification that sets it is the deployment's responsibility (e.g. bridge-attestation / a signed manifest).
+   * The switch refuses a backend whose caller did not assert it; a real verifyAttestation result gates it when
+   * a Rung-3+ silicon backend lands.
+   */
   readonly attested: boolean;
 }
 

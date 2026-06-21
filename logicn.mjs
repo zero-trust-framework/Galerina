@@ -21,7 +21,7 @@
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, appendFileSync } from "node:fs";
-import { join, basename, dirname } from "node:path";
+import { join, basename, dirname, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { execSync, spawnSync } from "node:child_process";
@@ -157,20 +157,30 @@ Baseline comparison (governance-cost):
   // Runs: governance check → build WASM → verify manifest → health check
   // Prints OCI packaging instructions for Dockerfile.logicn + deploy-linux.sh
   if (command === "deploy") {
-    // Flag-order-robust: the deploy target is the .lln arg, wherever it sits among the flags.
-    const llnFile = rest.find((a) => /^[A-Za-z0-9_./\\-]+\.lln$/.test(a)) ?? rest[0];
+    const tagIdx = rest.indexOf("--tag");
+    const imageTag = tagIdx >= 0 ? rest[tagIdx + 1] : "logicn-app:latest";
+    // Flag-order-robust target = the .lln arg, EXCLUDING flag-consumed tokens. AUDIT FIX: a `.lln` value
+    // passed to `--tag` must not be mistaken for the deploy target (`--tag evil.lln real.lln` shadowing).
+    const consumed = new Set(tagIdx >= 0 ? [tagIdx, tagIdx + 1] : []);
+    const llnFile = rest.find((a, i) => !consumed.has(i) && !a.startsWith("--") && /^[A-Za-z0-9_./\\-]+\.lln$/.test(a));
     if (!llnFile) {
       console.error("Usage: logicn deploy <file.lln> [--tag <image-tag>] [--dev]");
       process.exit(1);
     }
-
-    const tagIdx = rest.indexOf("--tag");
-    const imageTag = tagIdx >= 0 ? rest[tagIdx + 1] : "logicn-app:latest";
     // A deploy is inherently a PRODUCTION action, so the pipeline runs under LOGICN_PROFILE=production by
     // default — build must sign, and `verify` enforces the signature + revocation (fail-closed). This closes
     // the fail-open where `logicn deploy` inherited the ambient (dev) profile and shipped UNSIGNED code.
     // `--dev` opts into a non-production deploy (auto-provisioned dev key, lenient verify) for local testing.
+    // AUDIT FIX: --dev must NOT silently defeat an ops-enforced production posture. If the inherited
+    // environment resolves to production, refuse the downgrade unless --force-dev is given explicitly.
     const devDeploy = rest.includes("--dev");
+    if (devDeploy && !rest.includes("--force-dev")) {
+      const { resolveSigningProfile } = await import("./governance/profile.mjs");
+      if (resolveSigningProfile(process.env.LOGICN_PROFILE).profile === "production") {
+        console.error("❌ Refusing --dev: the environment set LOGICN_PROFILE=production. A dev deploy would sign with a throwaway key and skip the production admission gate. Pass --force-dev to override (you are deliberately deploying unsigned).");
+        process.exit(2);
+      }
+    }
     const deployProfile = devDeploy ? "dev" : "production";
 
     // SECURITY (2026-06-06): validate the user-supplied path and NEVER interpolate it
@@ -179,6 +189,16 @@ Baseline comparison (governance-cost):
     // hostile input and dispatch via argv-based spawnSync with shell:false.
     if (!/^[A-Za-z0-9_./\\-]+\.lln$/.test(llnFile)) {
       console.error(`❌ Refusing to deploy: '${llnFile}' is not a safe .lln path (alphanumerics, _ . / \\ - only, must end in .lln).`);
+      process.exit(2);
+    }
+    // AUDIT FIX (path traversal): the safe-char regex still admits `../../../x.lln`. Confine the target to
+    // the project root — a deploy must never compile/ship an out-of-tree file or clobber a build artifact by
+    // basename collision. Reject any `..` segment and any path that resolves outside cwd.
+    const root = resolve(process.cwd());
+    const absTarget = resolve(llnFile);
+    const hasDotDot = llnFile.split(/[\\/]/).includes("..");
+    if (hasDotDot || !(absTarget === root || absTarget.startsWith(root + sep))) {
+      console.error(`❌ Refusing to deploy: '${llnFile}' resolves outside the project root (no '..' / out-of-tree paths).`);
       process.exit(2);
     }
     if (!existsSync(llnFile)) {

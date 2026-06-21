@@ -31,6 +31,21 @@ async function build(src) {
   return { wat, instance };
 }
 
+// AUDIT REGRESSION: the BODY-LESS `privacy` / `secrets` shorthand (no braces) parses to value "privacy:" /
+// "secrets:" (no ":block" suffix). The emitter previously exact-matched "…:block" and so SILENTLY skipped
+// B2b zeroing for the body-less form — a fail-open. flowHandlesSecrets now uses startsWith, catching both.
+test("B2b (audit fix): a BODY-LESS privacy/secrets block also triggers the zeroing loop (no fail-open)", async () => {
+  for (const block of ["privacy", "secrets"]) {
+    const src = `record Wide { a: Int, b: Int, c: Int }
+pure flow wide(s: Int) -> Int
+contract { intent { "bodyless ${block}" } ${block} }
+{ let w: Wide = Wide { a: s, b: s, c: s } return w.a }
+`;
+    const { wat } = await build(src);
+    assert.ok(wat.includes("$__lln_zl"), `a body-less \`${block}\` must still emit the secret-zeroing loop (was a fail-open)`);
+  }
+});
+
 test("B2b: a privacy-marked module emits the secret-zeroing loop; a plain module does NOT", async () => {
   const secret = await build(mk(true));
   const plain = await build(mk(false));

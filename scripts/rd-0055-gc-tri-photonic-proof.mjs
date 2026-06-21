@@ -43,8 +43,10 @@ const approx = (a, b, rel = 1e-4) => Math.abs(a - b) <= rel * Math.max(1, Math.a
 const src = fs.existsSync(EMITTER) ? fs.readFileSync(EMITTER, "utf8") : "";
 const heapDecls = (src.match(/\(global \$__lln_heap \(mut i32\)/g) || []).length;
 const heapIncrements = (src.match(/global\.set \$__lln_heap \(i32\.add/g) || []).length;
-const heapResets = (src.match(/global\.set \$__lln_heap \(i32\.const/g) || []).length; // expect 0
-const allocMgmtOps = (src.match(/\b(memory\.grow|i32\.store\s+;;\s*free|__lln_free|__lln_collect|gc_collect)\b/g) || []).length;
+const heapResets = (src.match(/global\.set \$__lln_heap \(i32\.const/g) || []).length; // B2a: per-flow reset-to-base, expect >=1 (an arena rebase, NOT GC machinery)
+// Match only EMITTED allocator-management instructions (the WAT paren/call forms), not prose mentions of
+// "memory.grow" in comments — the grep is over the TS source, so it must not count documentation.
+const allocMgmtOps = (src.match(/\(memory\.grow|\(call \$__lln_free|\(call \$__lln_collect|\bgc_collect\(/g) || []).length;
 const recFieldSize = (() => {
   const m = src.match(/WAT_REC_FIELD_SIZE\s*=\s*(\d+)/);
   return m ? Number(m[1]) : NaN;
@@ -77,8 +79,8 @@ const defaultMaxPages = (() => {
   log(approx(digitRatio, 0.6667, 1e-3) && bits === 27 && trits === 18,
     "P1-radix.digit-vs-alloc", `128MB arena: ${trits} trits vs ${bits} bits = ${digitRatio.toFixed(4)} — DIGITS not ALLOCATIONS`);
   // The disqualifier: compiled target is binary i32, no GC, no ternary memory path.
-  log(recFieldSize === 4 && heapResets === 0 && allocMgmtOps === 0,
-    "P1-radix.no-gc-no-ternary", `WAT_REC_FIELD_SIZE=${recFieldSize} (binary i32), allocMgmtOps=${allocMgmtOps} — nothing for radix to act on => REFUTED-as-applied`);
+  log(recFieldSize === 4 && allocMgmtOps === 0,
+    "P1-radix.no-gc-no-ternary", `WAT_REC_FIELD_SIZE=${recFieldSize} (binary i32), allocMgmtOps=${allocMgmtOps} (no free/collect — the per-flow reset is an arena rebase, not GC) — nothing for radix to act on => REFUTED-as-applied`);
 }
 
 // =====================================================================
@@ -183,8 +185,9 @@ const defaultMaxPages = (() => {
 // P5-state2-tag (ADAPT): separate-channel generation tag, NOT a third logical state.
 // =====================================================================
 {
-  // (A) UAF surface: freed-then-reused address ranges within a run = 0 (monotone bump).
-  const freedReused = (heapResets === 0 && allocMgmtOps === 0) ? 0 : -1;
+  // (A) UAF surface: freed-then-reused address ranges WITHIN a run = 0 (monotone bump; the B2a reset is
+  //     between top-level invocations, not mid-run). Signal = no free/collect op (allocMgmtOps === 0).
+  const freedReused = (allocMgmtOps === 0) ? 0 : -1;
   // (B) trit-aliasing: overload State-2 onto verdict trit {-1,0,+1} reusing 0.
   // Enumerate (verdict)x(liveness) and count fail-open (freed read as ALLOW or
   // genuine INDETERMINATE misread as freed).
@@ -218,7 +221,7 @@ const defaultMaxPages = (() => {
 // P6-hybrid-zone (REFUTE): photonic GC/MMU coprocessor — null benefit + can't address.
 // =====================================================================
 {
-  const pauseEvents = (heapResets === 0 && allocMgmtOps === 0) ? 0 : -1;
+  const pauseEvents = (allocMgmtOps === 0) ? 0 : -1; // no GC ⇒ no stop-the-world pauses (the per-flow reset is not a collector)
   const netPauseSaved = pauseEvents === 0 ? 0 : NaN;
   const enob = 8;
   const coverage = Math.pow(2, enob) / Math.pow(2, 32);
@@ -257,20 +260,20 @@ const defaultMaxPages = (() => {
   const run = () => { let p = WAT_HEAP_BASE(); return sizes.map((s) => { const a = p; p += s; return a; }); };
   const r1 = run(), r2 = run();
   const hamming = r1.reduce((acc, a, i) => acc + (a === r2[i] ? 0 : 1), 0);
-  // (3) the reset-is-fiction gap (P7 objection): emitter has 0 heap resets.
+  // (3) B2a SHIPPED the per-flow reset (was the "fiction" objection — now CONFIRMED present in the emitter).
   const resetExists = heapResets > 0;
-  // (4) secret residue under plain (non-existent) reset vs zero-on-reset.
-  const secretBytesPlain = 64; // resident, never overwritten
-  const secretBytesZeroed = 0;
+  // (4) B2b SHIPPED the secret-zeroing loop — assert it from the emitter source (the $__lln_zl loop label),
+  //     a live-grep guard (the dedicated wat-arena-secret-zero-b2b test proves the runtime A/B behaviour).
+  const secretZeroingShipped = src.includes("$__lln_zl");
 
   log(overlap === 0,
     "P7.spatial-safe", `bump intervals overlap=${overlap} => CONFIRMED no-GC safe WITHIN a run (region model fits)`);
   log(hamming === 0,
     "P7.deterministic", `address-sequence Hamming(run1,run2)=${hamming} => CONFIRMED determinism`);
-  log(!resetExists,
-    "P7.reset-is-fiction", `emitted heap-resets=${heapResets} => REFUTED "per-flow reset" (process-lifetime monotone bump; traps at ${defaultMaxPages} pages)`);
-  log(secretBytesPlain > 0 && secretBytesZeroed === 0,
-    "P7.secret-zeroing-owed", `plain-reset secret residue=${secretBytesPlain}B (VIOLATION), zero-on-reset=${secretBytesZeroed}B => must EMIT secret-zeroing (no reset hook today)`);
+  log(resetExists,
+    "P7.reset-SHIPPED", `emitted heap-resets=${heapResets} => B2a per-flow arena reset CONFIRMED (the monotone-bump leak is fixed)`);
+  log(secretZeroingShipped,
+    "P7.secret-zeroing-SHIPPED", `emitter contains the $__lln_zl zeroing loop => B2b secret-zeroing CONFIRMED for privacy/secrets modules`);
 }
 
 // =====================================================================
@@ -288,7 +291,7 @@ const defaultMaxPages = (() => {
   const cost = elements /*DAC*/ + (N * N) /*route setup*/ + elements /*ADC*/;
   // CHECK C: P(bit-exact 32b store/readout at ENOB=8) ~ 2^-24; heap monotone.
   const pExact = Math.pow(2, -(32 - 8));
-  const heapMonotone = heapResets === 0 && heapDecls >= 1;
+  const heapMonotone = allocMgmtOps === 0 && heapDecls >= 1; // no GC + a real digital heap (monotone within a run; the B2a reset is between invocations)
 
   log(R > 0,
     "P8.alloc-exists", `reconfiguration events R=${R} (footprints exceed mesh capacity=${capacity}) => REFUTED "no dynamic allocation"`);

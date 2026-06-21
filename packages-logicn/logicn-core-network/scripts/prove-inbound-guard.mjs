@@ -98,6 +98,6 @@ let fails = 0;
 console.log("\n-- @logicn/core-network inbound guard — prove-own-maths (admission + rate limiter, fail-closed) --");
 for (const r of results) { if (!r.ok) fails++; console.log(`${r.ok ? "PASS" : "FAIL"} ${r.name.padEnd(72)} ${r.detail}`); }
 console.log(fails === 0
-  ? `\n${results.length}/${results.length} PASS — rate-limit parsing is exact, the fixed-window limiter never admits more than its limit per window (100k fuzzed requests), inbound admission is total + deny-by-default (20k fuzz, 0 admitted-without-rule), and an unparseable limit fails closed.`
+  ? `\n${results.length}/${results.length} PASS — rate-limit parsing is exact, the FIXED-window limiter never admits more than its limit per FIXED window (100k fuzzed requests; note a fixed window permits up to ~2*count across a window boundary by design — a sliding-window limiter would tighten that), inbound admission is total + deny-by-default (20k fuzz, 0 admitted-without-rule), and an unparseable limit fails closed.`
   : `\n${results.length - fails}/${results.length} PASS, ${fails} FAILED — review above.`);
 process.exit(fails === 0 ? 0 : 1);

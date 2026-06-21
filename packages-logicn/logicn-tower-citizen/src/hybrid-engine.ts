@@ -218,13 +218,18 @@ export interface PhotonicOffloadPort {
 }
 
 /**
- * Certified-mode admission for the photonic lane. In CERTIFIED mode the photonic offload is consulted
- * ONLY when a verified certified attestation is present — all three must hold (fail-closed):
- *   • attested: a VERIFIED attestation of the backend artifact (NOT the dev emulator's placeholder pins);
+ * Certified-mode admission for the photonic lane. In CERTIFIED mode the photonic offload is consulted ONLY
+ * when this admission DECLARATION is present, all three fields hold, AND the engine has an attestationPolicy
+ * (fail-closed):
+ *   • attested: asserts a verified attestation of the backend artifact exists;
  *   • certificationProfile === "certified" (the dev emulator declares "dev");
  *   • toleranceWitnessed: the declared band is bound to a measured-epsilon curve (the ToleranceWitness rail).
- * Absent or unverified ⇒ photonic stays OFF in certified mode (the existing safe default). A deployment
- * builds this from an attested certified-profile backend (e.g. selected via the photonic-hardware switch).
+ * HONEST SCOPE (audit): these are CALLER-ASSERTED fields, not yet cryptographically verified here. The
+ * deployment is responsible for setting them from a REAL attestation; the tracked follow-up binds them to a
+ * signed photonic BridgeManifest verified via verifyAttestationHybrid (the same path registry bridges use),
+ * landing with a real silicon certified backend. No production path enables certified photonic today, so the
+ * gate is latent. Absent/false ⇒ photonic stays OFF in certified mode (the safe default). A deployment builds
+ * this from an attested certified-profile backend (e.g. selected via the photonic-hardware switch).
  */
 export interface PhotonicCertifiedAttestation {
   readonly attested: boolean;
@@ -311,12 +316,18 @@ export class HybridInferenceEngine {
     this.grantedCapabilityMask = grantedCapabilityMask;
     this.photonic = photonic;
     // Certified-mode photonic admission, computed ONCE, fail-closed: all three attestation facts must hold.
+    // AUDIT HARDENING: additionally require the engine's attestation INFRASTRUCTURE to be present
+    // (attestationPolicy !== null) — certified photonic must never run in an engine with no attestation path.
+    // NB the three fields are a deployment-supplied admission DECLARATION; binding them to a verified signed
+    // photonic manifest (verifyAttestationHybrid, as registry bridges are checked) is the tracked follow-up
+    // that lands with a real silicon certified backend (no production path enables certified photonic today).
     const ca = photonic?.certifiedAttestation;
     this.photonicCertifiedAdmissible =
       ca !== undefined &&
       ca.attested === true &&
       ca.certificationProfile === "certified" &&
-      ca.toleranceWitnessed === true;
+      ca.toleranceWitnessed === true &&
+      attestationPolicy !== null;
   }
 
   /**

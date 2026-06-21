@@ -48,8 +48,11 @@ contract {
 
 test("B1: a declared 8mb arena tightens the emitted module to 128 pages (was a hardcoded 2048)", () => {
   const mem = emitMemory(WITH_ARENA);
-  assert.equal(mem.maxPages, 128, "8 MB × 16 pages/MB = 128 pages — the governed ceiling is now enforced");
-  assert.ok(mem.minPages <= mem.maxPages, "minPages must not exceed maxPages");
+  assert.equal(mem.maxPages, 128, "8 MB × 16 pages/MB = 128 pages — the governed ceiling");
+  // governed == ENFORCED: the arena is COMMITTED (minPages == maxPages). LogicN emits no memory.grow, so the
+  // usable memory == the committed pages; committing the arena makes a store past the budget trap AT the
+  // arena boundary, not at an unrelated 128 KB default min. (Audit fix — minPages was left at 2.)
+  assert.equal(mem.minPages, 128, "the declared arena must be COMMITTED (minPages == maxPages) so it is the enforced runtime bound");
 });
 
 test("B1: an UNDECLARED arena keeps the default ceiling (2048) — default path byte-unchanged", () => {
