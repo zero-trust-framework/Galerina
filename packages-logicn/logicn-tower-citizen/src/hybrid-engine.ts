@@ -217,10 +217,27 @@ export interface PhotonicOffloadPort {
   route(op: BridgeOp, kernel: PhotonicKernelCost): { value: number; bridgeId: string } | null;
 }
 
+/**
+ * Certified-mode admission for the photonic lane. In CERTIFIED mode the photonic offload is consulted
+ * ONLY when a verified certified attestation is present — all three must hold (fail-closed):
+ *   • attested: a VERIFIED attestation of the backend artifact (NOT the dev emulator's placeholder pins);
+ *   • certificationProfile === "certified" (the dev emulator declares "dev");
+ *   • toleranceWitnessed: the declared band is bound to a measured-epsilon curve (the ToleranceWitness rail).
+ * Absent or unverified ⇒ photonic stays OFF in certified mode (the existing safe default). A deployment
+ * builds this from an attested certified-profile backend (e.g. selected via the photonic-hardware switch).
+ */
+export interface PhotonicCertifiedAttestation {
+  readonly attested: boolean;
+  readonly certificationProfile: string;
+  readonly toleranceWitnessed: boolean;
+}
+
 export interface PhotonicConfig {
   readonly router: PhotonicOffloadPort;
   /** Map a routed op to its kernel cost. Default: `{ n: op.count, lane: "photonic", tolerance: 0.05 }`. */
   readonly kernelFor?: (op: BridgeOp) => PhotonicKernelCost;
+  /** When present + verified, admits the photonic lane in CERTIFIED mode (else it stays off). */
+  readonly certifiedAttestation?: PhotonicCertifiedAttestation;
 }
 
 const defaultPhotonicKernelFor = (op: BridgeOp): PhotonicKernelCost => ({ n: op.count, lane: "photonic", tolerance: 0.05 });
@@ -238,8 +255,10 @@ export class HybridInferenceEngine {
   /** V_DPM authority this engine actually holds. Inference requires AI_INFERENCE_CAP;
    *  a granted mask lacking that bit traps ERR_CAPABILITY_DENIED before any compute. */
   private readonly grantedCapabilityMask: number;
-  /** Optional photonic offload (opt-in; off by default; never used in certified mode). */
+  /** Optional photonic offload (opt-in; off by default; in certified mode only with a verified attestation). */
   private readonly photonic: PhotonicConfig | null;
+  /** True iff a VERIFIED certified attestation admits the photonic lane in certified mode (computed once). */
+  private readonly photonicCertifiedAdmissible: boolean;
   private bridgeAttestationDenial: string | null = null; // cached: first offending bridge id, if any
   private bridgeAttestationChecked = false;
   private bridgesInitialized = false;
@@ -291,6 +310,13 @@ export class HybridInferenceEngine {
     this.attestationPolicy = attestationPolicy;
     this.grantedCapabilityMask = grantedCapabilityMask;
     this.photonic = photonic;
+    // Certified-mode photonic admission, computed ONCE, fail-closed: all three attestation facts must hold.
+    const ca = photonic?.certifiedAttestation;
+    this.photonicCertifiedAdmissible =
+      ca !== undefined &&
+      ca.attested === true &&
+      ca.certificationProfile === "certified" &&
+      ca.toleranceWitnessed === true;
   }
 
   /**
@@ -533,7 +559,9 @@ export class HybridInferenceEngine {
       // result means the port declined (ineligible / no net win / out-of-tolerance / any
       // uncertainty) → fall through to the UNCHANGED digital dispatch. Default off (this.photonic
       // === null) ⇒ this whole block is skipped and the path below is byte-identical to before.
-      if (this.photonic && !this.certified && decision.precision === "ternary") {
+      // Certified mode normally bars the photonic lane (the dev emulator is unattested). It is admitted in
+      // certified mode ONLY when a verified certified attestation was supplied (photonicCertifiedAdmissible).
+      if (this.photonic && (!this.certified || this.photonicCertifiedAdmissible) && decision.precision === "ternary") {
         const kernel = (this.photonic.kernelFor ?? defaultPhotonicKernelFor)(op);
         const ph = this.photonic.router.route(op, kernel);
         // Engine-side defense-in-depth: the injected port is duck-typed and NOT attestation-gated
