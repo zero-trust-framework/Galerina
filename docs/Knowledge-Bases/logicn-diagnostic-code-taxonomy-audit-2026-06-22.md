@@ -227,6 +227,29 @@ the severity vocabulary, Prometheus metrics, and report fields. **The disease is
 inline-emitted diagnostic families (`LLN-*`, `ERR_*`) plus the severity-vocab inconsistency; every
 single-source-of-truth namespace (CBOR, HTTP, metrics) is clean** — which is the whole argument for #215.
 
+## 8. Stage 1 (#215) — machine baseline + regression guard (BUILT 2026-06-22)
+
+`scripts/audit-diagnostic-codes.mjs` is the re-runnable conformance scanner — it turns this manual audit into a
+machine-checked, CI-gateable artifact (exit code = #violations; run `node scripts/audit-diagnostic-codes.mjs`).
+This is the **structurally-sound foundation**: ad-hoc fixes re-rot (EFFECT-002 did), so the guard comes first
+and every later fix is verified by the baseline going down.
+
+**Baseline 2026-06-22:** V1 OVERLOAD **23** (one code, >1 name — incl. all P0 security overloads GOV-004,
+MONO-001, SECRET-002, PRIVACY-002, GOV-017, VALUESTATE-006) · V2 COLLISION **1** (INTENT_BEHAVIOR_MISMATCH under
+GOV-001+INTENT-001) · V3 SEVERITY-VOCAB **17** · V4 MULTI-SEVERITY **3**. The scanner **independently re-found**
+the manual findings AND surfaced extras the bucket-sampling missed (GATE-001, TYPE-008
+InvalidReturnType/SilentNullDenied, TYPE-023, GRAPH-001 `CycleDetected`/`CYCLE_DETECTED`, VALUESTATE-005
+case-dup) — why an automated guard beats a one-time read.
+
+**Coverage + honest limits:** catches STRUCTURED overloads (object-literal + `make*Diag`, incl. multi-line) and
+the severity vocab. Does NOT yet catch (a) **free-text "codes"** — `ERR_BRIDGE_UNATTESTED` /
+`ERR_BRIDGE_DISPATCH_FAULT` collapse modes in `reason` strings, invisible until they're made structured (itself
+a fix); (b) **dead/unregistered** codes (needs a constant↔emit cross-ref); (c) the **dead production-gate**
+(`MEMORY-*` in `production-check.ts`). Those are tracked from §2-6 as later hardening increments of this scanner.
+
+**How it becomes the gate:** each stage cleans a family, re-runs the scanner; when a category hits 0 it flips to
+enforcing (wire into `run-phase-close.mjs`). The baseline only goes down.
+
 ## See also
 [logicn-task-ledger.md](logicn-task-ledger.md) §9 (#213) · [logicn-security-invariants-matrix.md](logicn-security-invariants-matrix.md)
 (the registry several findings reference) · [logicn-diagnostics-spec.md](logicn-diagnostics-spec.md) ·

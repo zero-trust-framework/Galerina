@@ -398,10 +398,13 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   conflates bridge-crash vs determinism-integrity breach) + a 3rd unused naming scheme (`LogicN-ERR-*`). **CBOR
   tags + HTTP `KernelErrorCode` are CLEAN** (single-source helpers — the target shape). HTTP §6b: 2 minor
   consistency notes only (backpressure 429-vs-503; telemetry hand-rolls statuses).
-- **#215 — diagnostic-registry conformance lint** (NEW, the durable fix): a CI check that fails the build on
-  any code that is overloaded (>1 name/severity at emit sites), emitted-without-its-constant, defined-in-2+-
-  packages, dead/unregistered (unless RESERVED), or named in a production-blocking gate while non-live.
-  Without it the ~30 fixes re-rot. Do alongside the P0/P1 remediation. 🔲
+- **#215 — diagnostic-registry conformance lint** (the durable fix). **🔶 STAGE 1 BUILT 2026-06-22** —
+  `scripts/audit-diagnostic-codes.mjs`, a re-runnable, CI-gateable scanner (exit = #violations). Baseline:
+  V1 overload **23** (incl. all P0 security codes), V2 collision **1**, V3 severity-vocab **17**, V4
+  multi-severity **3**; it independently re-found the manual audit + surfaced extras (GATE-001, TYPE-008/023,
+  GRAPH-001/VALUESTATE-005 case-dups). **Pending hardening:** free-text `ERR_` modes, dead/unregistered
+  cross-ref, the `MEMORY-*` dead-production-gate check, then flip to CI-enforce. Remediation stages then clean
+  families until each category → 0. (Remediation being done in token-staged increments at owner's "next".)
 - **#214 — framework developer-tests folder** (owner-raised): the B1 scaffolder emits a `tests/` dir for
   developer-authored tests, kept SEPARATE from generated / contract-driven tests (R&D 0016) so a regen never
   clobbers hand-written ones. Folds into the framework B-series. 🔲
