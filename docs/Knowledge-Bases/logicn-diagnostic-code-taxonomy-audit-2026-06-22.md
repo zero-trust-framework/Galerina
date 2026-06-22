@@ -114,11 +114,37 @@ the 30 fixes below will re-rot.
 
 ---
 
-## 6. Non-`LLN-*` namespaces (companion audit `wdjnqlw27`)
+## 6. Non-`LLN-*` namespaces
 
+### 6a. `ERR_*` / `*_VIOLATION` / CBOR tags (companion audit `wdjnqlw27`)
 *(Pending — `ERR_*` runtime codes, bare `*_VIOLATION`/`*_DENIED` trap codes, CBOR tags, and cross-namespace
 collisions such as `EFFECT_BOUNDARY_VIOLATION` living as both an `LLN-EFFECT-003` `name:` and a bare code.
-This section will be filled when the workflow lands.)*
+Filled when the workflow lands.)*
+
+### 6b. HTTP status codes / `KernelErrorCode` — AUDITED 2026-06-22: HEALTHY ✅ (the exemplar)
+The framework's HTTP-status layer is the **opposite of the disease** — and the shape the `LLN-*` families
+should adopt. `logicn-framework-app-kernel/src/kernel.ts` maps each `KernelErrorCode` (a typed union, :186-195)
+**1:1 to a status through a single `errorResponse(status, code, message)` helper** (:202) — the single source
+of truth the `LLN-*` families lack. Mapping (fail-closed, standard): 404 `route_not_found` · 405
+`method_not_allowed` · 413 `payload_too_large` · 415 `unsupported_media_type` · 401 `unauthorized` · 422
+`unprocessable_entity` · 409 `conflict` · 429 `too_many_requests` · 500 `internal_error`. No overload (500
+covering internal faults is correct/standard; 422 for both bad-UTF-8 and bad-JSON is one mode).
+
+Two MINOR cross-surface consistency notes (NOT overloads):
+1. **Backpressure status divergence:** overload is **429** (kernel concurrency, `kernel.ts:351`) vs **503**
+   (telemetry `/readyz` pod-shed, `governance-telemetry/server.ts`) vs the proposed **503 + `X-LogicN-State`**
+   (#212 governance-deny bridge, unbuilt). 429 (client-slow-down) and 503 (server-unavailable) carry different
+   semantics — pick + document one convention per condition; confirm governance-deny → 503 when #212 lands.
+2. **Telemetry hand-rolls statuses** (`res.statusCode = 405/404/500`, `server.ts:58-80`) instead of the
+   kernel's typed `KernelErrorCode`/`errorResponse` layer. When #211 adds timeout/rate-limit, make rate-limit
+   **429** (match the kernel), not 503; ideally route the telemetry server through the same typed helper.
+
+*Minor anomaly:* `kernel.ts` trips grep's binary heuristic ("NUL byte ~offset 4039"), but the file reads as
+valid text and compiles clean (app-kernel 60/60) — it's a grep artifact (the `──` U+2500 box-drawing
+separators in the section comments), not a real corruption.
+
+**Net:** the HTTP namespace has NONE of the EFFECT-002 disease — it is well-factored (one helper = one source
+of truth). It is the **target shape** for the `LLN-*` remediation, not a problem to fix.
 
 ---
 
