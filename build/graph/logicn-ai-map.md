@@ -485,6 +485,7 @@ Provides:
 - FusedComponent
 - FusePackageOptions
 - CapabilityImportFactory
+- BUILTIN_CAPABILITY_NAMES
 - buildCapabilityImports
 - CompositionMember
 - CapabilitySource
@@ -492,7 +493,6 @@ Provides:
 - planComposition
 - makeProviderFactory
 - ImportClosureModule
-- ImportClosure
 
 ## logicn-framework-api-server
 
