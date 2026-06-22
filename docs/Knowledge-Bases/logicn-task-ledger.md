@@ -450,6 +450,19 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
 - **Greenlit this session:** #201 (build now), B5a signed registry index, #202 transitive mask-⊆. Ordering
   rule (owner): build the earliest-in-the-runtime-pipeline gated item first. Loop may attempt careful-code
   (#200 etc.) with full WASM-vs-walker verification, backing out + flagging if anything looks off.
+- **#201 STATUS 2026-06-22 (classified + decided; build checkpointed at green pending owner map):** the strict
+  EFFECT-006 build flagged 39 example flows; an 8-agent workflow classified them **A=24 inference-gap · B=11
+  pii/phi · C=13 true-over-decl** (full plan: [logicn-effect006-build-plan-2026-06-22.md](logicn-effect006-build-plan-2026-06-22.md)).
+  Surfaced findings: the EFFECT-006 observed-set skips local `fnDecl` bodies + has narrow receiver patterns +
+  no cross-flow callee propagation (→ category A is a real inference fix with global blast radius), and a
+  genuine rule conflict (EFFECT-006 vs negative-test/governance-mandated effects). **Owner decisions:** D1 =
+  **suppress EFFECT-006 when the effect is already invalid-named (EFFECT-004/005) or governance-mandated
+  (GOV-002/AUDIT-001)**; D2 = **owner will specify the pii/phi brand→family map** (BLOCKS category B / sub-step
+  ②). Build split: **Part 1** (A inference + C example fixes + D1 + ⑥ metadata + ④ tests + interim pii/phi
+  exemption) — unblocked but large/risky (cross-flow propagation + D1(b) governance-suppression are non-trivial);
+  **Part 2** (populate map → ② type-driven pii/phi inference → remove interim exemption → ⑤ Stage-B port). WIP
+  (① AI/payment patterns + EFFECT-006 emit) is in `git stash`; baseline re-greened (3684/0). **NEXT: owner
+  provides the pii/phi brand map, then execute Part 1 + Part 2 as one verified push.**
 
 ---
 
