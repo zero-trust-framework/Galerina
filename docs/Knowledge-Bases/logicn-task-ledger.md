@@ -393,7 +393,11 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   as production-BLOCKING gates (false enforcement). P0 security overloads: SECRET-002, PRIVACY-002, GOV-004,
   MONO-001, INV-002, ASSIMILATE-002, NET-001/002. The #201 `EFFECT-006` split aligns with the policy; devtools
   `effect-graph.ts` still has the old inverted EFFECT-002 (must re-sync). **Remediation 🔲 gated on owner.**
-  Non-`LLN-*` namespaces (ERR_*/violations/CBOR) = companion audit `wdjnqlw27` (§6, pending).
+  Non-`LLN-*` namespaces ✅ DONE (`wdjnqlw27`, §6): **`ERR_*` is diseased too — 2 security HIGHs**
+  (`ERR_BRIDGE_UNATTESTED` collapses ~5 attestation failures incl. misconfig-vs-forgery; `ERR_BRIDGE_DISPATCH_FAULT`
+  conflates bridge-crash vs determinism-integrity breach) + a 3rd unused naming scheme (`LogicN-ERR-*`). **CBOR
+  tags + HTTP `KernelErrorCode` are CLEAN** (single-source helpers — the target shape). HTTP §6b: 2 minor
+  consistency notes only (backpressure 429-vs-503; telemetry hand-rolls statuses).
 - **#215 — diagnostic-registry conformance lint** (NEW, the durable fix): a CI check that fails the build on
   any code that is overloaded (>1 name/severity at emit sites), emitted-without-its-constant, defined-in-2+-
   packages, dead/unregistered (unless RESERVED), or named in a production-blocking gate while non-live.

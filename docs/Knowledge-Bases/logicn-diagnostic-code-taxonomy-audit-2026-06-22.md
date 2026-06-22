@@ -6,9 +6,12 @@ families** (7 parallel auditors), with **every flag adversarially re-verified ag
 companion audit of the **non-`LLN-*` namespaces** (`ERR_*`, bare `*_VIOLATION`/`*_DENIED`, CBOR tags;
 `wdjnqlw27`) is appended in §6.
 
-**Bottom line:** ~30 `LLN-*` codes are diseased (confirmed). The same five structural root causes recur across
-families. The durable fix is a **registry-conformance CI lint** (proposed #215) that makes the disease
-impossible to reintroduce — without it, every future code is a coin-flip.
+**Bottom line (all namespaces audited):** ~30 `LLN-*` diagnostics + the `ERR_*` runtime family (2 security
+HIGHs) are diseased via the same five structural root causes. **The standard/structured namespaces are CLEAN —
+CBOR tags (400-417) and HTTP `KernelErrorCode` — precisely because they each have a single-source-of-truth
+helper.** That contrast IS the prescription: the durable fix is a **registry-conformance CI lint** (proposed
+#215) that gives the diagnostic families the discipline the clean namespaces already have. Without it, every
+future code is a coin-flip.
 
 > Build status: the #201 work is **paused** (uncommitted) pending this audit. The `LLN-EFFECT-006` split I did
 > for #201 is **correct and aligns with the policy below** — but it surfaced that `devtools-project-graph`
@@ -116,10 +119,44 @@ the 30 fixes below will re-rot.
 
 ## 6. Non-`LLN-*` namespaces
 
-### 6a. `ERR_*` / `*_VIOLATION` / CBOR tags (companion audit `wdjnqlw27`)
-*(Pending — `ERR_*` runtime codes, bare `*_VIOLATION`/`*_DENIED` trap codes, CBOR tags, and cross-namespace
-collisions such as `EFFECT_BOUNDARY_VIOLATION` living as both an `LLN-EFFECT-003` `name:` and a bare code.
-Filled when the workflow lands.)*
+### 6a. `ERR_*` / `*_VIOLATION` / CBOR tags (companion audit `wdjnqlw27`) — DONE 2026-06-22
+
+**`ERR_*` runtime codes — DISEASED (2 security HIGHs).** ~22 of ~30 are clean (quantum limit codes, `ERR_AI_*`,
+`ERR_CERTIFIED_*` are each one-mode). Flagged:
+- **`ERR_BRIDGE_UNATTESTED`** (HIGH, overloaded) — one code collapses ≥5 distinct attestation failures
+  (requireHybrid-without-key MISCONFIG · missing attestation · Ed25519 sig-fail · hash-pin mismatch · ML-DSA
+  sig-fail), split only by free-text. **A misconfiguration and a forged signature — operator-error vs
+  active-attack — are forensically opposite yet share one code** (`hybrid-engine.ts:444`, `checkBridgeAttestation`
+  :347-373). → 5 codes + `ERR_ATTESTATION_POLICY_MISCONFIGURED` (the misconfig isn't a bridge fault).
+- **`ERR_BRIDGE_DISPATCH_FAULT`** (HIGH, opposite-failure-modes) — one try/catch wraps both `bridge.execute()`
+  and `assertDeterminism()`, so a bridge **crash** and a **`CITIZEN_STANDARD_VIOLATION` determinism-integrity
+  breach** map to one code (`hybrid-engine.ts:643-651`; the fault-tolerance KB documents the collision). →
+  catch the determinism throw → `ERR_BRIDGE_DETERMINISM_DRIFT`.
+- **`ERR_QUANTUM_PQ_REQUIRED`** + **`ERR_ADDON_HASH_MISMATCH`** (MED, naming) — only embedded in free-text
+  `reason` strings, NOT structured `code` fields — they look like codes but nothing can branch on them.
+  `ERR_QUANTUM_PQ_REQUIRED` is also the 3rd spelling of "no ML-DSA key" (with `ERR_CERTIFIED_NO_PQ_KEY` + an
+  un-coded reason). → promote to structured codes; unify the PQ-key meaning.
+- **`ERR_LIMIT`** (LOW, dead) — unreachable `?? "ERR_LIMIT"` fallback (`ffsim-backend.ts:55`).
+- **`ERR_CAPABILITY_DENIED`** (cross-namespace) — "capability not held" spread across `ERR_CAPABILITY_DENIED`
+  (runtime) / `LLN-CAPABILITY-001` (devtools) / the confusingly near-named `LLN-CAP-001` (a *different*
+  network-wildcard concern). → cross-reference runtime+static halves; resolve CAP vs CAPABILITY.
+- **Family-level:** the runtime `ERR_*` set is undocumented vs the only error-code registry
+  (`logicn-core/docs/error-codes.md`), which itself defines a **3rd, unused naming scheme**
+  `LogicN-ERR-{DOMAIN}-NNN`. → pick one scheme; register the live `ERR_*` codes.
+
+**Bare `*_VIOLATION` trap codes — mostly CLEAN ✅.** `CRITICAL_SECURITY_VIOLATION`, `GOVERNANCE_DENIED`,
+`RUNTIME_VIOLATION`, `TPL_INTEGRITY_FAULT`, `INPUT_SIZE_EXCEEDED`, `VAULT_MUTATION_DENIED` each carry one
+meaning. Two minor: `EFFECT_BOUNDARY_VIOLATION` lives as BOTH an `LLN-EFFECT-003` `name:` AND a bare trap code
+(cross-namespace dual-life → prefix the trap form, e.g. `TRAP_…`); `CITIZEN_STANDARD_VIOLATION` is
+string-duplicated in two files (→ shared const).
+
+**CBOR tags (400-417) — CLEAN ✅.** No tag-number reuse, no schema split.
+
+> **Why the split (the lesson):** the **clean** namespaces (CBOR tags, HTTP/`KernelErrorCode`) each have a
+> **single source of truth** — a tag-constant set / the `errorResponse()` helper. The **diseased** namespaces
+> (`LLN-*`, `ERR_*`) emit inline with per-site names/severities and cross-package redefinitions. The
+> remediation policy (§5) + the #215 lint simply give the diagnostic families the discipline the clean
+> namespaces already have.
 
 ### 6b. HTTP status codes / `KernelErrorCode` — AUDITED 2026-06-22: HEALTHY ✅ (the exemplar)
 The framework's HTTP-status layer is the **opposite of the disease** — and the shape the `LLN-*` families
