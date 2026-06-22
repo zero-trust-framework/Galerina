@@ -12,10 +12,11 @@
 // (so it can later gate CI). Pragmatic regex extraction — flags candidates for review, not a proof.
 import { readdirSync, statSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { CODE_TEST } from "./lib/codes.mjs";
 
 const ROOT = join(process.cwd(), "packages-logicn");
 const CANON_SEV = new Set(["error", "warning", "info"]);
-const CODE_RE = /(LLN-[A-Z0-9]+-[A-Z0-9-]*[0-9]|ERR_[A-Z0-9_]+)/;
+// code-token validation comes from the SHARED module (scripts/lib/codes.mjs) — CODE_TEST (anchored).
 
 function walk(dir) {
   const out = [];
@@ -51,7 +52,7 @@ for (const file of walk(ROOT)) {
 
     // Pattern A — object literal: code: "X" then name: "Y" / severity: "Z" within 8 lines
     const codeM = line.match(/code:\s*"([^"]+)"/);
-    if (codeM && CODE_RE.test(codeM[1])) {
+    if (codeM && CODE_TEST.test(codeM[1])) {
       const code = codeM[1];
       let name, sevHere;
       for (let j = i; j < Math.min(i + 8, lines.length); j++) {
@@ -69,7 +70,7 @@ for (const file of walk(ROOT)) {
     if (mkIdx >= 0) {
       const win = line.slice(mkIdx) + " " + lines.slice(i + 1, Math.min(i + 4, lines.length)).join(" ");
       const args = [...win.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
-      if (args.length >= 2 && CODE_RE.test(args[0]) && /^[A-Za-z][A-Za-z0-9_]*$/.test(args[1])) {
+      if (args.length >= 2 && CODE_TEST.test(args[0]) && /^[A-Za-z][A-Za-z0-9_]*$/.test(args[1])) {
         add(codeToNames, args[0], args[1]); add(nameToCodes, args[1], args[0]);
         if (args[2] && CANON_SEV.has(args[2])) add(codeToSevs, args[0], args[2]);
       }

@@ -9,14 +9,14 @@
 //   emit (push/throw/code: site), test, doc (.md), lln (.lln), ref (any other mention).
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { extractCodes, CODE_TEST, familyOf, nsOf } from "./lib/codes.mjs";
 
 const ROOT = process.cwd();
 const SCAN = ["packages-logicn", "docs", "scripts"].map((d) => join(ROOT, d));
 const OUT = join(ROOT, "build", "code-index");
 const EXT = /\.(ts|mjs|cjs|lln|md)$/;
 const SKIP = new Set(["node_modules", "dist", ".git"]);
-const CODE_RE = /(LLN-[A-Z0-9]+-[A-Z0-9-]*[0-9]|ERR_[A-Z0-9_]+)/g;
-const CODE_TEST = /^(LLN-[A-Z0-9]+-[A-Z0-9-]*[0-9]|ERR_[A-Z0-9_]+)$/;
+// CODE_RE / CODE_TEST / familyOf / nsOf come from the SHARED module (scripts/lib/codes.mjs) — one regex.
 
 function walk(dir) {
   const out = [];
@@ -33,10 +33,25 @@ function walk(dir) {
 
 const idx = new Map(); // code -> { occ:[{file,line,role}], names:Set, sevs:Set }
 const get = (c) => { if (!idx.has(c)) idx.set(c, { occ: [], names: new Set(), sevs: new Set() }); return idx.get(c); };
-const familyOf = (c) => c.startsWith("ERR_") ? "ERR_*" : (c.match(/^LLN-([A-Z0-9]+)-/)?.[1] ?? "?");
-const nsOf = (c) => c.startsWith("ERR_") ? "ERR" : "LLN";
 
-for (const file of SCAN.flatMap(walk)) {
+const FILES = SCAN.flatMap(walk);
+
+// PASS 1 — constId -> code: `export const <ID> = { … code:"CODE" … }` or `export const <ID> = "CODE"`.
+// Lets PASS 2 resolve emits/uses that reference a code by its CONSTANT IDENTIFIER (e.g.
+// `code: LLN_BOOL_BOUNDARY_001_FAILED_CLOSED`), which the hyphenated code regex cannot see (id ≠ string).
+const constToCode = new Map();
+for (const file of FILES) {
+  let txt; try { txt = readFileSync(file, "utf8"); } catch { continue; }
+  const ls = txt.split(/\r?\n/);
+  for (let i = 0; i < ls.length; i++) {
+    const m = ls[i].match(/export const\s+([A-Za-z_]\w*)\s*=\s*[{"]/);
+    if (!m) continue;
+    const inWin = extractCodes(ls.slice(i, Math.min(i + 8, ls.length)).join(" "));
+    if (inWin.length) constToCode.set(m[1], inWin[0]);
+  }
+}
+
+for (const file of FILES) {
   const rel = relative(ROOT, file).replace(/\\/g, "/");
   const isTest = /\/tests?\//.test(rel) || /\.test\./.test(rel);
   const isDoc = rel.endsWith(".md");
@@ -68,11 +83,20 @@ for (const file of SCAN.flatMap(walk)) {
     if (!isComment && /\bnew\s+\w*(?:Error|Exception)\s*\(/.test(line)) {
       const win = line.slice(line.search(/\bnew\s+\w*(?:Error|Exception)/))
         + " " + lines.slice(i + 1, Math.min(i + 5, lines.length)).join(" ");
-      for (const code of new Set([...win.matchAll(CODE_RE)].map((m) => m[1]))) {
+      for (const code of extractCodes(win)) {
         get(code).occ.push({ file: rel, line: i + 1, role: isDoc ? "doc" : isTest ? "test" : "emit" });
       }
     }
-    const codes = [...new Set([...line.matchAll(CODE_RE)].map((m) => m[1]))];
+    // const-identifier emit/use: `code: LLN_FOO_001_BAR` / `errorCode: ERR_X` — id ≠ hyphenated code string,
+    // so extractCodes misses it; resolve via the PASS-1 map. Runs BEFORE the !codes short-circuit (the line
+    // has no literal code token). This is what makes 28 const-emitted diagnostics show as live, not dead.
+    if (!isComment && !isTypeDecl) {
+      for (const m of line.matchAll(/\b(?:code|errorCode):\s*([A-Za-z_]\w*)/g)) {
+        const cc = constToCode.get(m[1]);
+        if (cc) get(cc).occ.push({ file: rel, line: i + 1, role: isDoc ? "doc" : isTest ? "test" : "emit" });
+      }
+    }
+    const codes = extractCodes(line);
     if (!codes.length) continue;
     const hasNameSev = /name:\s*"[^"]+"/.test(line) && /severity:\s*"[^"]+"/.test(line);
     const isDef = !isComment && !isTypeDecl && (/export const\s+\w+/.test(line) || hasNameSev);
@@ -116,6 +140,7 @@ const codes = [...idx.entries()].map(([code, e]) => {
     defs: occ.filter((o) => o.role === "def").map((o) => `${o.file}:${o.line}`),
     emits: occ.filter((o) => o.role === "emit").map((o) => `${o.file}:${o.line}`),
     tests: occ.filter((o) => o.role === "test").length,
+    refs: occ.filter((o) => o.role === "ref").length,
     docs: occ.filter((o) => o.role === "doc").length,
     names: [...e.names], severities: [...e.sevs],
     allSites: occ.map((o) => `${o.role} ${o.file}:${o.line}`),

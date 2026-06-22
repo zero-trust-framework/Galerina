@@ -23,12 +23,14 @@ try {
 }
 
 const statusOf = (c) => {
-  const defs = (c.defs || []).length, emits = (c.emits || []).length;
-  if (c.docOnly) return "phantom";        // doc-only mention, never in source
-  if (defs > 0 && emits === 0) return "dead";   // defined, never emitted (RESERVED)
-  if (emits > 0 && defs === 0) return "inline"; // emitted, no exported constant (R4)
-  if (emits > 0) return "live";
-  return "ref";                           // referenced only
+  const defs = (c.defs || []).length, emits = (c.emits || []).length, tests = c.tests || 0, refs = c.refs || 0;
+  if (c.docOnly) return "phantom";              // doc-only mention, never in source
+  if (emits > 0) return defs > 0 ? "live" : "inline"; // inline = emitted, no exported constant (R4)
+  // no emit detected:
+  if (defs > 0) return (tests === 0 && refs === 0) ? "dead" : "referenced";
+  // dead = defined AND truly unreferenced (no emit/test/ref) → RESERVED. referenced = defined + used/tested
+  // but the emit is via a pattern the indexer can't see (e.g. a positional const arg) — NOT dead.
+  return "ref";                                 // referenced only, no def
 };
 
 const entries = arr.map((c) => ({
@@ -55,7 +57,8 @@ const md = [
   "| status | count | meaning |", "|---|---|---|",
   `| live | ${counts.live || 0} | emitted with an exported constant |`,
   `| inline | ${counts.inline || 0} | emitted, NO exported constant (R4 — Stage F) |`,
-  `| dead | ${counts.dead || 0} | defined, never emitted — RESERVED (wire or retire, std #1) |`,
+  `| referenced | ${counts.referenced || 0} | defined + used/tested, emit via a pattern the indexer can't see (NOT dead) |`,
+  `| dead | ${counts.dead || 0} | defined AND truly unreferenced — RESERVED (wire or retire, std #1) |`,
   `| phantom | ${counts.phantom || 0} | doc-only mention, not in source (drift — DOC-004) |`,
   `| ref | ${counts.ref || 0} | referenced only (no def/emit) |`, "",
   "## RESERVED — defined but not emitted (std #1: tag wire-or-retire)", "",

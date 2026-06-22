@@ -13,6 +13,7 @@
 // as their index + audit land (#217 capabilities, project graph, etc.).
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { extractCodes } from "./lib/codes.mjs";
 
 const ROOT = process.cwd();
 const asJson = process.argv.includes("--json");
@@ -38,7 +39,9 @@ let registryText = "";
 try {
   registryText = readFileSync(join(ROOT, "docs/Knowledge-Bases/logicn-governance-rules.md"), "utf8");
 } catch { /* registry optional — absence = total registry blind spot, reported below */ }
-const registryCodes = new Set((registryText.match(/LLN-[A-Z0-9]+-[0-9]+/g) ?? []));
+// Shared regex (scripts/lib/codes.mjs) — the old /LLN-…-[0-9]+/ dropped multi-segment + suffixed codes
+// (LLN-CRYPTO-PQ-001, LLN-GOV-3VL-001, LLN-PROFILE-005B), falsely flagging curated entries as phantom.
+const registryCodes = new Set(extractCodes(registryText).filter((c) => c.startsWith("LLN-")));
 
 // ── classify each code (from the graph) ──────────────────────────────────────
 const entry = (c) => ({
@@ -46,13 +49,17 @@ const entry = (c) => ({
   isLLN: String(c.code).startsWith("LLN-"),
   defs: (c.defs ?? []).length,
   emits: (c.emits ?? []).length,
+  tests: c.tests ?? 0,
+  refs: c.refs ?? 0,
   docOnly: c.docOnly === true,
 });
 const codes = index.map(entry);
 const codeSet = new Set(codes.map((c) => c.code));
 
 const docDrift = codes.filter((c) => c.docOnly);                       // documented, no src def/emit
-const dead = codes.filter((c) => !c.docOnly && c.defs > 0 && c.emits === 0); // defined, never emitted
+// dead = defined AND truly unreferenced (no emit/test/ref) → safe to RESERVE. A tested/referenced code with
+// no DETECTED emit is "referenced" (emit via an uncaught pattern), NOT dead — never put it on a retire list.
+const dead = codes.filter((c) => !c.docOnly && c.defs > 0 && c.emits === 0 && c.tests === 0 && c.refs === 0);
 const inline = codes.filter((c) => c.emits > 0 && c.defs === 0);       // emitted, no exported constant (R4)
 const srcRealLLN = codes.filter((c) => c.isLLN && !c.docOnly);
 // (1) index → audit: real LLN diagnostics the governance registry does NOT list (blind spots)

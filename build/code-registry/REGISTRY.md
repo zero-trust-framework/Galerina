@@ -8,55 +8,24 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | status | count | meaning |
 |---|---|---|
-| live | 13 | emitted with an exported constant |
-| inline | 288 | emitted, NO exported constant (R4 — Stage F) |
-| dead | 32 | defined, never emitted — RESERVED (wire or retire, std #1) |
-| phantom | 468 | doc-only mention, not in source (drift — DOC-004) |
-| ref | 129 | referenced only (no def/emit) |
+| live | 37 | emitted with an exported constant |
+| inline | 289 | emitted, NO exported constant (R4 — Stage F) |
+| referenced | 11 | defined + used/tested, emit via a pattern the indexer can't see (NOT dead) |
+| dead | 0 | defined AND truly unreferenced — RESERVED (wire or retire, std #1) |
+| phantom | 464 | doc-only mention, not in source (drift — DOC-004) |
+| ref | 131 | referenced only (no def/emit) |
 
 ## RESERVED — defined but not emitted (std #1: tag wire-or-retire)
 
-- `LLN-BOOL-BOUNDARY-001`
-- `LLN-BOOL-BOUNDARY-002`
-- `LLN-BOOL-BOUNDARY-003`
-- `LLN-BOOL-BOUNDARY-004`
-- `LLN-BOOL-BOUNDARY-005`
-- `LLN-DECISION-001`
-- `LLN-DECISION-002`
-- `LLN-DECISION-003`
-- `LLN-DECISION-004`
-- `LLN-DECISION-005`
-- `LLN-GOV-3VL-001`
-- `LLN-OMNI-001`
-- `LLN-OMNI-002`
-- `LLN-OMNI-003`
-- `LLN-OMNI-004`
-- `LLN-OMNI-005`
-- `LLN-TRI-001`
-- `LLN-TRI-002`
-- `LLN-TRI-003`
-- `LLN-TRI-004`
-- `LLN-TRI-005`
-- `LLN-TYPE-010`
-- `LLN-TYPE-012`
-- `LLN-TYPE-013`
-- `LLN-TYPE-015`
-- `LLN-TYPE-018`
-- `LLN-TYPE-019`
-- `LLN-VAULT-001`
-- `LLN-VAULT-002`
-- `LLN-VAULT-003`
-- `LLN-VAULT-004`
-- `LLN-VAULT-005`
+(none)
 
 ## Catalog (by family)
 
-### ACCESS (3)
+### ACCESS (2)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
 | LLN-ACCESS-001 | inline | ACCESS_UNKNOWN_CAPABILITY | — |
-| LLN-ACCESS-001-002 | phantom | — | — |
 | LLN-ACCESS-002 | inline | ACCESS_GRANT_WITHOUT_EFFECT | — |
 
 ### AI (1)
@@ -84,12 +53,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-ARCH-001 | inline | InvalidVolatility | — |
 | LLN-ARCH-002 | inline | StableDependencyViolation | — |
 
-### ASSIMILATE (4)
+### ASSIMILATE (3)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
 | LLN-ASSIMILATE-001 | inline | ASSIMILATE_OUTSIDE_BOOT | — |
-| LLN-ASSIMILATE-001-003 | phantom | — | — |
 | LLN-ASSIMILATE-002 | inline | — | — |
 | LLN-ASSIMILATE-003 | inline | ASSIMILATE_MISSING_CAPABILITY_GRANTS | — |
 
@@ -181,11 +149,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | code | status | name(s) | severity |
 |---|---|---|---|
-| LLN-BOOL-BOUNDARY-001 | dead | — | — |
-| LLN-BOOL-BOUNDARY-002 | dead | — | — |
-| LLN-BOOL-BOUNDARY-003 | dead | — | — |
-| LLN-BOOL-BOUNDARY-004 | dead | — | — |
-| LLN-BOOL-BOUNDARY-005 | dead | — | — |
+| LLN-BOOL-BOUNDARY-001 | live | — | — |
+| LLN-BOOL-BOUNDARY-002 | live | — | — |
+| LLN-BOOL-BOUNDARY-003 | live | — | — |
+| LLN-BOOL-BOUNDARY-004 | live | — | — |
+| LLN-BOOL-BOUNDARY-005 | live | — | — |
 
 ### BORDER (5)
 
@@ -427,11 +395,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | code | status | name(s) | severity |
 |---|---|---|---|
-| LLN-DECISION-001 | dead | — | — |
-| LLN-DECISION-002 | dead | — | — |
-| LLN-DECISION-003 | dead | — | — |
-| LLN-DECISION-004 | dead | — | — |
-| LLN-DECISION-005 | dead | — | — |
+| LLN-DECISION-001 | live | — | — |
+| LLN-DECISION-002 | live | — | — |
+| LLN-DECISION-003 | live | — | — |
+| LLN-DECISION-004 | live | — | — |
+| LLN-DECISION-005 | live | — | — |
 
 ### DENIAL (5)
 
@@ -531,12 +499,12 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 |---|---|---|---|
 | LLN-ERROR-001 | phantom | — | — |
 
-### ERR_* (98)
+### ERR_* (102)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
 | ERR_ADDON_HASH_MISMATCH | ref | — | — |
-| ERR_AI_ | phantom | — | — |
+| ERR_AI | ref | — | — |
 | ERR_AI_CALL_BUDGET | inline | — | — |
 | ERR_AI_MODEL_NOT_APPROVED | inline | — | — |
 | ERR_AI_MODEL_REQUIRED | inline | — | — |
@@ -550,7 +518,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | ERR_BRIDGE_UNATTESTED | inline | — | — |
 | ERR_CAPABILITY | phantom | — | — |
 | ERR_CAPABILITY_DENIED | inline | — | — |
-| ERR_CERTIFIED_ | ref | — | — |
+| ERR_CERTIFIED | ref | — | — |
 | ERR_CERTIFIED_HOST_NATIVE_OPEN | inline | — | — |
 | ERR_CERTIFIED_NO_ALLOWLIST | inline | — | — |
 | ERR_CERTIFIED_NO_ATTESTATION | inline | — | — |
@@ -604,16 +572,19 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | ERR_PAYLOAD_EXCEEDS_DWI_CEILING | ref | — | — |
 | ERR_PLAN_NOT_PREFLIGHTED | inline | — | — |
 | ERR_QUANTUM_PQ_REQUIRED | ref | — | — |
-| ERR_REGISTRY_ | ref | — | — |
+| ERR_REGISTRY | ref | — | — |
+| ERR_REGISTRY_DUPLICATE | live | — | — |
 | ERR_REGISTRY_HASH_MISMATCH | live | — | — |
 | ERR_REGISTRY_INDEX_BAD_SIGNATURE | live | — | — |
+| ERR_REGISTRY_INDEX_MALFORMED | live | — | — |
 | ERR_REGISTRY_INDEX_NO_KEY | live | — | — |
+| ERR_REGISTRY_INDEX_STALE | live | — | — |
 | ERR_REGISTRY_INDEX_UNSIGNED | live | — | — |
 | ERR_REGISTRY_KEYID_MISMATCH | live | — | — |
 | ERR_REGISTRY_PACKAGE_UNKNOWN | live | — | — |
 | ERR_REGISTRY_POLICY_DENIED | live | — | — |
 | ERR_REGISTRY_VERSION_UNKNOWN | live | — | — |
-| ERR_SCHEMA_ | ref | — | — |
+| ERR_SCHEMA | ref | — | — |
 | ERR_SHOTS_EXCEEDED | inline | — | — |
 | ERR_SIZE_EXCEEDED | ref | — | — |
 | ERR_SOME_CODE | ref | — | — |
@@ -628,6 +599,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | ERR_VALID_CODE | ref | — | — |
 | ERR_VALIDATION_FAILURE | ref | — | — |
 | ERR_X | ref | — | — |
+| ERR_X_Y | ref | — | — |
 | ERR_ZERO | ref | — | — |
 | ERR_ZERO_FUEL | ref | — | — |
 | ERR_ZERO_ITERATIONS | ref | — | — |
@@ -743,8 +715,8 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-GOV-018 | inline | ManualLiabilityDeclaration | — |
 | LLN-GOV-019 | inline | LIMITS_UNKNOWN_FIELD | warning |
 | LLN-GOV-020 | inline | AUTHORITY_OVERLY_BROAD | warning |
-| LLN-GOV-3 | phantom | — | — |
-| LLN-GOV-3VL-001 | dead | INDETERMINATE_COLLAPSED_TO_DENY | — |
+| LLN-GOV-3V | phantom | — | — |
+| LLN-GOV-3VL-001 | live | INDETERMINATE_COLLAPSED_TO_DENY | — |
 | LLN-GOV-ERROR-001 | phantom | — | — |
 | LLN-GOV-FEDERATED-001 | phantom | — | — |
 | LLN-GOV-FEDERATED-002 | phantom | — | — |
@@ -811,13 +783,12 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-ID-002 | phantom | — | — |
 | LLN-ID-003 | phantom | — | — |
 
-### IMPORT (6)
+### IMPORT (5)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
 | LLN-IMPORT-000 | ref | — | — |
 | LLN-IMPORT-001 | inline | — | error |
-| LLN-IMPORT-001-004 | phantom | — | — |
 | LLN-IMPORT-002 | inline | — | error |
 | LLN-IMPORT-003 | inline | — | error |
 | LLN-IMPORT-004 | inline | — | warning |
@@ -1064,11 +1035,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | code | status | name(s) | severity |
 |---|---|---|---|
-| LLN-OMNI-001 | dead | — | — |
-| LLN-OMNI-002 | dead | — | — |
-| LLN-OMNI-003 | dead | — | — |
-| LLN-OMNI-004 | dead | — | — |
-| LLN-OMNI-005 | dead | — | — |
+| LLN-OMNI-001 | live | — | — |
+| LLN-OMNI-002 | live | — | — |
+| LLN-OMNI-003 | live | — | — |
+| LLN-OMNI-004 | live | — | — |
+| LLN-OMNI-005 | live | — | — |
 
 ### OWN (6)
 
@@ -1246,7 +1217,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-PRIVACY-012 | phantom | — | — |
 | LLN-PRIVACY-013 | phantom | — | — |
 
-### PROFILE (7)
+### PROFILE (8)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
@@ -1254,7 +1225,8 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-PROFILE-002 | inline | UnboundedLoopInStrictProfile | error |
 | LLN-PROFILE-003 | inline | ExceptionControlFlowProhibited | error |
 | LLN-PROFILE-004 | inline | JitProhibitedInStrictProfile | error |
-| LLN-PROFILE-005 | inline | DynamicPackageLoadProhibited / DynamicRegexInStrictProfile | error |
+| LLN-PROFILE-005 | inline | DynamicPackageLoadProhibited | error |
+| LLN-PROFILE-005B | inline | DynamicRegexInStrictProfile | error |
 | LLN-PROFILE-006 | inline | MissingRuntimeBudget | warning |
 | LLN-PROFILE-007 | inline | DynamicRuntimeMutationProhibited | error |
 
@@ -1631,11 +1603,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | code | status | name(s) | severity |
 |---|---|---|---|
-| LLN-TRI-001 | dead | — | — |
-| LLN-TRI-002 | dead | — | — |
-| LLN-TRI-003 | dead | — | — |
-| LLN-TRI-004 | dead | — | — |
-| LLN-TRI-005 | dead | — | — |
+| LLN-TRI-001 | live | — | — |
+| LLN-TRI-002 | live | — | — |
+| LLN-TRI-003 | live | — | — |
+| LLN-TRI-004 | live | — | — |
+| LLN-TRI-005 | live | — | — |
 
 ### TYPE (34)
 
@@ -1651,16 +1623,16 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-TYPE-007 | inline | InvalidArgumentCount | — |
 | LLN-TYPE-008 | inline | InvalidReturnType / SilentNullDenied | — |
 | LLN-TYPE-009 | inline | InvalidGenericInstantiation | — |
-| LLN-TYPE-010 | dead | UnsatisfiedGenericConstraint / InvalidCollectionElement / InvalidResultType / InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation | error |
+| LLN-TYPE-010 | referenced | UnsatisfiedGenericConstraint / InvalidCollectionElement / InvalidResultType / InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation | error |
 | LLN-TYPE-011 | live | InvalidCollectionElement / InvalidResultType / InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch | error |
-| LLN-TYPE-012 | dead | InvalidResultType / InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch | error/warning |
-| LLN-TYPE-013 | dead | InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType | error/warning |
+| LLN-TYPE-012 | referenced | InvalidResultType / InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch | error/warning |
+| LLN-TYPE-013 | referenced | InvalidSecretOperation / MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType | error/warning |
 | LLN-TYPE-014 | live | MissingRequiredEffect / GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType / UnknownSymbol | error/warning |
-| LLN-TYPE-015 | dead | GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType / UnknownSymbol | error/warning |
+| LLN-TYPE-015 | referenced | GovernedSinkViolation / TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType / UnknownSymbol | error/warning |
 | LLN-TYPE-016 | live | TensorShapeMismatch / QuantizedPrecisionMismatch / InvalidRuntimeTargetType / UnknownSymbol | error/warning |
 | LLN-TYPE-017 | live | QuantizedPrecisionMismatch / InvalidRuntimeTargetType / UnknownSymbol | warning/error |
-| LLN-TYPE-018 | dead | InvalidRuntimeTargetType / UnknownSymbol | error |
-| LLN-TYPE-019 | dead | UnknownSymbol | error |
+| LLN-TYPE-018 | referenced | InvalidRuntimeTargetType / UnknownSymbol | error |
+| LLN-TYPE-019 | referenced | UnknownSymbol | error |
 | LLN-TYPE-020 | inline | ShadowedBinding | warning |
 | LLN-TYPE-021 | ref | — | — |
 | LLN-TYPE-022 | inline | UnreachablePattern | — |
@@ -1729,11 +1701,11 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 
 | code | status | name(s) | severity |
 |---|---|---|---|
-| LLN-VAULT-001 | dead | — | — |
-| LLN-VAULT-002 | dead | — | — |
-| LLN-VAULT-003 | dead | — | — |
-| LLN-VAULT-004 | dead | — | — |
-| LLN-VAULT-005 | dead | — | — |
+| LLN-VAULT-001 | referenced | — | — |
+| LLN-VAULT-002 | referenced | — | — |
+| LLN-VAULT-003 | referenced | — | — |
+| LLN-VAULT-004 | referenced | — | — |
+| LLN-VAULT-005 | referenced | — | — |
 
 ### VERIFY (3)
 
