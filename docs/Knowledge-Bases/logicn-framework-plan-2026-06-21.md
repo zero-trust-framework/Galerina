@@ -25,7 +25,10 @@ ready**; the framework / admission / crypto surface is **Binary-only by invarian
   Intra-app flows fuse to one wasm (`module-registry.ts`); cross-package = one signed wasm per
   package, host-linked at the fuse border (`planComposition`).
 - **Capability binding lives in the signed `.lmanifest fuse{}` block** — never in `.tmf`.
-- App layout (B1 scaffolder): `App.lln + App.manifest + flows/ + deps/ + proofs/`, deny-by-default.
+- App layout (B1 scaffolder): `App.lln + App.manifest + flows/ + deps/ + proofs/ + tests/`, deny-by-default.
+  **`tests/` = developer-authored tests** (hand-written, mirrors the monorepo `<pkg>/tests/` convention), kept
+  SEPARATE from generated / contract-driven tests (R&D 0016) so a regen never clobbers hand-written ones —
+  generated output lands under `proofs/` (or a clearly-marked `generated/`). Owner note 2026-06-22 (task #214).
 - Distribution: `package-logicn.json` + lock + the **governed resolver** (hash + Ed25519 signature +
   registry origin + `installScript:deny`, LLN-PKG-001..006). `.env` = runtime-only secrets, never
   compiled in (prod = vault/KMS).

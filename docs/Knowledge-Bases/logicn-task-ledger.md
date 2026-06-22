@@ -381,6 +381,35 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
 - **#212** kernel→runtime governance-deny bridge (security-sensitive) · **H2** inline `contract` `policy{}`
   allow/deny parsed but enforced by no checker (a deny-by-default fail-open).
 
+**Filed / decided 2026-06-22 (owner session):**
+- **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation
+  of the overloaded `LLN-EFFECT-002` (owner-directed de-overload). `002` now carries ONLY the transitive-missing
+  (soundness) case. Owner chose strict-all-profiles, so the build must also fix every over-declared fixture/example.
+- **#213 — LLN-* diagnostic taxonomy audit** (owner-raised): enumerate every `LLN-*` code; split any that
+  conflate distinct failure modes or mix severities (`EFFECT-002` is the exemplar); document a per-code
+  severity + suppression policy so the next escalation isn't surgery. 🔲
+- **#214 — framework developer-tests folder** (owner-raised): the B1 scaffolder emits a `tests/` dir for
+  developer-authored tests, kept SEPARATE from generated / contract-driven tests (R&D 0016) so a regen never
+  clobbers hand-written ones. Folds into the framework B-series. 🔲
+- **#201 SCOPE CORRECTED 2026-06-22 (the strict EFFECT-006 build revealed the real shape):** of 61 flagged
+  flows, MOST are NOT over-declarations. Three categories — (A) **effect-checker mapping gaps** (~35: the flow
+  DOES use the effect but the inference regex misses the call — `EmbeddingModel.embed`/`.classify`/`.forward`
+  not matched by `\w+Model\.(run|infer)`; `PaymentGateway.charge` not matched by `\w+Payment\.`; no
+  `process.spawn` pattern); (B) **pii/phi** (~10) which are TYPE-driven (writing a `protected`-PII-typed value),
+  not name-mapped — needs new type-aware inference; (C) **true over-declarations** (few — e.g. 152 declares
+  `database.write` but only parses a file; 151 declares `audit.write`, never audits). **Owner decisions:**
+  full principled fix + **ALL effects operation-inferred** (no declarative exemption — pii/phi must be inferred
+  from a protected-type write op). **Build sub-steps (held uncommitted until ALL 61 green):** ①extend
+  `EFFECT_CALL_PATTERNS` for A (AI `\w+Model\.\w+`, payment `\w*Payment\w*\.`, `process.spawn`); ②NEW type-driven
+  pii/phi inference (a write/read op on a protected PII/PHI-branded value → pii/phi.*; needs a brand→family map
+  — likely a micro owner-decision on which brands = pii vs phi); ③remove the genuine over-declarations (C);
+  ④update the 2 warning-asserting unit tests → EFFECT-006 error; ⑤port the over-declaration check to the
+  Stage-B `effect-checker.lln`; ⑥register `LLN_EFFECT_006` metadata + diagnostics-spec doc. EFFECT-002 keeps
+  ONLY the transitive-missing case. Convergent #1 of 0062∧0063; folds into the #213 LLN-* taxonomy audit.
+- **Greenlit this session:** #201 (build now), B5a signed registry index, #202 transitive mask-⊆. Ordering
+  rule (owner): build the earliest-in-the-runtime-pipeline gated item first. Loop may attempt careful-code
+  (#200 etc.) with full WASM-vs-walker verification, backing out + flagging if anything looks off.
+
 ---
 
 ## 7. R&D adoption — `.tmf` / tri-encryption (2026-06-16)
