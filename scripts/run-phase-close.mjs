@@ -192,6 +192,14 @@ try {
 run("graph:reindex", "node",
   ["packages-logicn/logicn-core-cli/dist/index.js", "graph", "--out", "build/graph"]);
 
+// ── 5b. Convention lint gate (TASK-ENV-001) ──
+// The umbrella that runs every registered convention enforcer (today: the #215 code scanner; later:
+// SEC-002 mutation gate, DOC-004 doc↔source drift, #218 coverage cross-check). Runs --soft = report-only
+// while the taxonomy-remediation baseline is non-zero; DROP --soft to make it an enforcing CI gate once
+// `node scripts/lint-conventions.mjs` reports 0 (then "no convention is binding until a tool enforces it"
+// becomes literally true at phase-close). PRINCIPLE: owner 2026-06-22 binding process.
+run("lint:conventions", "node", ["scripts/lint-conventions.mjs", "--soft"]);
+
 // ── 6. Standing Governance Sanity Check — diff HEAD~1 ──
 // Transforms governance diff from a passive human-review step into an active quality gate.
 // Enforces the Monotonicity Rule at CI level: expansion requires explicit sign-off.

@@ -436,6 +436,23 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   **Trigger: run as an end-of-roadmap pass over ALL items (finished + unfinished); gated to "once the current
   roadmap is finished."** #217 is a prerequisite (capabilities/syntax index). Full plan:
   [logicn-coverage-crosscheck-methodology.md](logicn-coverage-crosscheck-methodology.md). 🔲
+- **Binding engineering processes (owner 2026-06-22, "graph it, don't do it manually" — locked STRICT):**
+  All tool-based; the LLM builds/extends the detector and reads its output, never hand-audits.
+  - **TASK-ENV-001** — generalize the #215 scanner into an extensible pre-commit/CI **convention-linter gate**
+    for ALL codebase conventions (`scripts/lint-conventions.mjs`: a check-registry, aggregate report,
+    exit = total violations; wired into `run-phase-close`). PRINCIPLE: no convention is "binding" until a tool
+    enforces it (else it's advisory and rots). The umbrella the other gates register into.
+  - **TASK-SEC-002** — **mutation / red-team test per gate**: every fail-closed `contract {}` clause + admission
+    border ships a test that RE-INTRODUCES the hole and asserts the gate catches it (proves fail-closed, not
+    just passing-today). Systematizes the ad-hoc "detector flips RED" guards (i32 overflow, fail-closed-invariant).
+  - **TASK-BLD-003** — **artifact provenance + freshness** (folds in #216): stamp every generated artifact
+    (graph, code-index, `.wasm`, `.lmanifest`, reports) with git-commit + tool-version + build-time; CI fails if
+    an artifact is stale vs HEAD. Makes "is this current?" a check, not a guess.
+  - **TASK-DOC-004** — **doc↔source drift detector**: a markdown-AST tool that checks "living metrics" in the KB
+    (start: `logicn-fault-tolerance-and-stability.md`) against live runtime code / test counts / the runtime-status
+    SOT; flags stale "X shipped" claims + count-authority drift + the advisor re-derive problem.
+  Build sequence: **ENV-001 (umbrella) → DOC-004 + BLD-003 → SEC-002 (largest)**. All 🔲. Memory:
+  [[feedback-tooled-engineering-processes]]. Sit alongside #218 (coverage cross-check) as the QA-tooling program.
 - **RULE (binding, owner 2026-06-22):** if a task can be made cheaper by building/extending a dev tool, do
   that — and consider it at the START of every task. Memory: `feedback-build-tools-to-save-tokens`.
 - **#214 — framework developer-tests folder** (owner-raised): the B1 scaffolder emits a `tests/` dir for
