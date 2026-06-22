@@ -396,6 +396,14 @@ auto-start the api-server/transport adapter; confirm with owner before touching 
     13 owner decisions tabled; net-new-buildable lead = the **K3 cert-validation gate** (re-R&D 0002). B8 build
     decisions (WASI-vs-raw-bytes=raw per 0058; legacy=prefer-proxy; morphing=opt-in; SNI=ECH+OHTTP; downgrade=Noise
     pattern) all in the doc §"B8/HTTP guidance". Crypto stays Binary; photonics feed K3 verdict only. No code written.
+  - **Worker dones 0065/0066/0068 ABSORBED 2026-06-22** → `docs/Knowledge-Bases/rd-absorbed/rd-tlstp-transport-auth-cluster-2026-06-22.md`.
+    0065 = TLSTP digital-core spec (5 survivors S1-S5: K3 cert-gate · asymmetric KEM-rekey ratchet+PCS · digital-FEC-under-AEAD ·
+    Recovering-FSM-above-K3 · opt-in morphing). 0066 = B8 adapter design (request path wire→raw-byte-shim→verifyWasm→fuse→K3→flow;
+    first-3-to-build; tiered). 0068 = governance for REGULAR HTTP/SSL APIs (MITM/SSRF/token/response threat table; over-someone-else's-PKI).
+    **All 3 converge on the same BUILD-FIRST: the K3 cert/channel-validation gate (S1)** — revocation-unknown→DENY over a
+    library-validated chain, works for BOTH bespoke TLSTP and vanilla third-party HTTPS, zero new crypto. Owner-gated (B8-adjacent).
+    8 TLSTP clusters all have R&D numbers (1→0066,2→0065+#12,3→0069,4→0065,5→0065,6→0070,7→0066+0068,8→0052/0055/0058).
+    Still pending from worker: 0067 (boundary/prove-maths), 0069 (DTM→K3 telemetry), 0070 (photonic TamperTrust).
 
 **Filed / decided 2026-06-22 (owner session):**
 - **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation
