@@ -73,7 +73,7 @@ export function validatePluginInput(
           field: field.name,
           message: `Plugin '${pluginName}' input '${field.name}' is required but missing. ` +
                    `Treating as potential schema poisoning attack.`,
-          severity: "SECURITY_ALERT",
+          severity: "error",
         });
       }
       continue;
@@ -89,7 +89,7 @@ export function validatePluginInput(
         field: field.name,
         message: `Plugin '${pluginName}' input '${field.name}': expected ${field.type}, got ${actualType}. ` +
                  `Schema deviation treated as hostile input.`,
-        severity: "SECURITY_ALERT",
+        severity: "error",
       });
     }
 
@@ -104,7 +104,7 @@ export function validatePluginInput(
           field: field.name,
           message: `Plugin '${pluginName}' input '${field.name}': length ${str.length} exceeds max ${field.maxLength}. ` +
                    `Possible buffer overflow attempt.`,
-          severity: "SECURITY_ALERT",
+          severity: "error",
         });
       }
     }
@@ -112,11 +112,11 @@ export function validatePluginInput(
     if ((field.type === "Int" || field.type === "Float") && typeof value === "number") {
       if (field.minValue !== undefined && value < field.minValue) {
         violations.push({ code: "LLN-BORDER-004", name: "VALUE_BELOW_MINIMUM", plugin: pluginName,
-          field: field.name, message: `Value ${value} below minimum ${field.minValue}.`, severity: "SECURITY_ALERT" });
+          field: field.name, message: `Value ${value} below minimum ${field.minValue}.`, severity: "error" });
       }
       if (field.maxValue !== undefined && value > field.maxValue) {
         violations.push({ code: "LLN-BORDER-004", name: "VALUE_ABOVE_MAXIMUM", plugin: pluginName,
-          field: field.name, message: `Value ${value} above maximum ${field.maxValue}.`, severity: "SECURITY_ALERT" });
+          field: field.name, message: `Value ${value} above maximum ${field.maxValue}.`, severity: "error" });
       }
     }
   }
@@ -130,7 +130,7 @@ export interface PluginSchemaViolation {
   readonly plugin: string;
   readonly field: string;
   readonly message: string;
-  readonly severity: "SECURITY_ALERT" | "warning";
+  readonly severity: "error" | "warning";
 }
 
 function inferType(value: unknown): string {

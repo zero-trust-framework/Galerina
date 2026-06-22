@@ -50,6 +50,11 @@ A code answers exactly one question. If you need to report a second, distinct pr
   field with one fixed scale `"low" | "medium" | "high" | "critical"` (lowercase) — never mixed into a
   diagnostic's `severity`, and never two spellings (`Low|Medium|High|Critical` vs `critical|high|medium` must
   converge). *(Prevents: the §7 cross-scale inconsistency.)*
+- **Audit-event severity is also a separate axis.** Tower-citizen `AuditEvent.severity` is a runtime/audit
+  vocabulary (currently UPPERCASE `ERROR|WARNING|INFO`), distinct from compiler diagnostic severity. The #215
+  scanner's V3 therefore checks ONLY the diagnostic axis (severities attached to an `LLN-*`/`ERR_*` code).
+  Migrating the audit-event vocabulary to lowercase to match is a **versioning-sensitive format change** (it
+  alters signed audit records) — deferred to a deliberate, version-bumped change (Stage I), not forced here.
 
 ## 5. Single source of truth
 - **Every code has exactly one exported metadata constant** (`export const LLN_<FAMILY>_<NNN> = { code, name,

@@ -91,8 +91,12 @@ for (const [code, names] of overloaded.sort()) out.push(`  ${code}  ->  ${[...na
 out.push(`\n## V2 COLLISION — one name, >1 code (${collisions.length})`);
 for (const [name, codes] of collisions.sort()) out.push(`  ${name}  ->  ${[...codes].join(" | ")}`);
 
-out.push(`\n## V3 SEVERITY-VOCAB — outside {error,warning,info} (${sevOffenders.length})`);
-for (const s of [...new Set(sevOffenders)].sort()) out.push(`  ${s}`);
+// V3 — DIAGNOSTIC severity vocab only: a severity ATTACHED TO A CODE that is outside {error,warning,info}.
+// Audit-event severity (tower-citizen) and risk-rating (ai-agent/devtools-pci/-security) are SEPARATE axes
+// (conventions §4) and are NOT diagnostic severities, so they are excluded here.
+const badSevCodes = [...codeToSevs.entries()].filter(([, sevs]) => [...sevs].some((s) => !CANON_SEV.has(s))).sort();
+out.push(`\n## V3 SEVERITY-VOCAB — a code's severity outside {error,warning,info} (${badSevCodes.length})`);
+for (const [code, sevs] of badSevCodes) out.push(`  ${code}  ->  ${[...sevs].join(" | ")}`);
 
 out.push(`\n## V4 MULTI-SEVERITY — one code, >1 severity (${multiSev.length}; review for legit dev/prod toggles)`);
 for (const [code, sevs] of multiSev.sort()) out.push(`  ${code}  ->  ${[...sevs].join(" | ")}`);
@@ -104,7 +108,7 @@ const badCase = [...nameToCodes.entries()].filter(([n]) => isPascal(n)).sort();
 out.push(`\n## V5 NAME-CASE — PascalCase name, convention §3 requires UPPER_SNAKE (${badCase.length})`);
 for (const [name, codes] of badCase) out.push(`  ${name}  (${[...codes].join(",")})`);
 
-const v3n = new Set(sevOffenders.map((s) => s.split(/\s+/)[0])).size;
+const v3n = badSevCodes.length;
 const total = overloaded.length + collisions.length + v3n + multiSev.length + badCase.length;
 out.push(`\n## TOTAL flagged: V1 ${overloaded.length} + V2 ${collisions.length} + V3 ${v3n} + V4 ${multiSev.length} + V5 ${badCase.length}`);
 console.log(out.join("\n"));
