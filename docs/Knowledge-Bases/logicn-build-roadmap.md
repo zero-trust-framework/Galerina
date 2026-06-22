@@ -513,6 +513,15 @@ the HINT, not the feature.
 
 ## 🟡 Now Open — Phase 5 + Remaining Tasks
 
+> **⏩ RECONCILED 2026-06-22 (authoritative over the rows below until they're individually pruned):** several
+> rows in this section AND the "🟡 Open (Priority order)" table are STALE — DONE but still listed open (verified
+> vs live source; full detail in [logicn-task-ledger.md](logicn-task-ledger.md) §9). **Actually DONE:** #68
+> (CBOR secure parser), #72 (`parent_policy` ⊆), #76 (LLN-INV-000), #91 (`bitfield V_DPM`), #125
+> (`run --governed`), #126 (bitwise hint), #128 (for-in WASM). **Genuinely open:** #69, #70, #75/#77/#78
+> (declared-only — Phase-5 serialization), #90 (RESERVED/future — not built), #110, #147, #148, #171, #172,
+> #192, #193, #200, CF-4, CF-5. The framework-plan §6 Tri-Pipe fault-tolerance hardenings (items 1–4) are all
+> ✅ done as of 2026-06-22.
+
 ### CI/CD Enhancements
 | Task | What | Priority |
 |---|---|---|
