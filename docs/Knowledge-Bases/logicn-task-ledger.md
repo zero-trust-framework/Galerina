@@ -429,6 +429,17 @@ aspirational (#102-106). **#211 listener hardening is now in-scope too.** Memory
     (TLSTP=named RFCs); only future paper path = a MEASURED availability/false-deny negative (K3 hard- vs soft-fail).
     See [[logicn-ip-paper-strategy]]. **Awaiting owner go (build/IP, held):** build S1 cert-gate (B8 unlocked) · seed
     the 3 defensive-pub notes. New KB doc this phase: `logicn-transport-auth-research-explained-2026-06-22.md`.
+  - **✅ SHUTDOWN-CLOSE 2026-06-22 (owner: per-finding docs + graph/audit/benchmark + push, then pause).** Authored
+    **8 per-finding KB build-guides** (maths-in-detail + worked examples + the hard build path) via workflow
+    `weo2wrl1p` — `logicn-tlstp-{s1-cert-gate, s2-kem-ratchet, s3-digital-fec, s4-recovering-fsm, s5-morphing-frames,
+    0069-dtm-degrade-only, 0070-tampertrust}.md` + `logicn-b8-governed-transport.md` + the overarching
+    **`logicn-tlstp-build-guide-index.md`** (the ordered hard path, Phase 0→5 + B8). Maths spot-verified rigorous
+    (S1 K3-lattice soundness proof; S3 Reed–Solomon MDS over GF(2⁸)). **R&D coverage confirmed COMPLETE for TLSTP +
+    B8** (design/build R&D done; residuals are build-execution + substrate #102-106, not R&D gaps). **Full benchmark**
+    run (exit 0) → `logicn-benchmark-snapshot-2026-06-22.md` (honest scoreboard: governed interp ~10³–10⁵× slower than
+    native = expected; 14 comparable unit-aligned, 3 flagged-incomparable). Graph re-run (3796 nodes); audit sweep
+    clean (provenance green, coverage 0 holes, lint 178 `--soft` baseline). All committed + **pushed to origin/main**.
+    Then PAUSED for shutdown.
 
 **Filed / decided 2026-06-22 (owner session):**
 - **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation
