@@ -13,7 +13,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | referenced | 11 | defined + used/tested, emit via a pattern the indexer can't see (NOT dead) |
 | dead | 0 | defined AND truly unreferenced — RESERVED (wire or retire, std #1) |
 | phantom | 464 | doc-only mention, not in source (drift — DOC-004) |
-| ref | 131 | referenced only (no def/emit) |
+| ref | 140 | referenced only (no def/emit) |
 
 ## RESERVED — defined but not emitted (std #1: tag wire-or-retire)
 
@@ -499,7 +499,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 |---|---|---|---|
 | LLN-ERROR-001 | phantom | — | — |
 
-### ERR_* (102)
+### ERR_* (104)
 
 | code | status | name(s) | severity |
 |---|---|---|---|
@@ -545,6 +545,8 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | ERR_EMPTY_SOURCE_HASH | ref | — | — |
 | ERR_EMPTY_USER_ID | ref | — | — |
 | ERR_FORBIDDEN_OPERATION | ref | — | — |
+| ERR_FX_THING | ref | — | — |
+| ERR_FX_THROWN | ref | — | — |
 | ERR_GUEST_WRITE_DENIED | ref | — | — |
 | ERR_HOST_NATIVE_DENIED | ref | — | — |
 | ERR_INSUFFICIENT_FUNDS | ref | — | — |
@@ -661,6 +663,12 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 |---|---|---|---|
 | LLN-FG-001 | phantom | — | — |
 
+### FOO (1)
+
+| code | status | name(s) | severity |
+|---|---|---|---|
+| LLN-FOO-001 | ref | — | — |
+
 ### FUSE (6)
 
 | code | status | name(s) | severity |
@@ -671,6 +679,17 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-FUSE-004 | phantom | — | — |
 | LLN-FUSE-005 | phantom | — | — |
 | LLN-FUSE-006 | phantom | — | — |
+
+### FX (6)
+
+| code | status | name(s) | severity |
+|---|---|---|---|
+| LLN-FX-001 | ref | — | — |
+| LLN-FX-002 | ref | — | — |
+| LLN-FX-005 | ref | — | — |
+| LLN-FX-005B | ref | — | — |
+| LLN-FX-050 | ref | — | — |
+| LLN-FX-099 | ref | — | — |
 
 ### GATE (2)
 

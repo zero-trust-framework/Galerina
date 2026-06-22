@@ -440,6 +440,13 @@ aspirational (#102-106). **#211 listener hardening is now in-scope too.** Memory
     native = expected; 14 comparable unit-aligned, 3 flagged-incomparable). Graph re-run (3796 nodes); audit sweep
     clean (provenance green, coverage 0 holes, lint 178 `--soft` baseline). All committed + **pushed to origin/main**.
     Then PAUSED for shutdown.
+  - **Benchmark snapshot CORRECTED 2026-06-22 (`f60a0d9`):** the suite's `normThroughput` OVER-counts logicnPassive
+    on reduced-work benches (binary-trees count-only → shows LogicN 273× *faster* than Rust — not credible). Snapshot
+    now uses native `operationsPerSecond` (reliable) + LogicN raw rates separately; clean LogicN-vs-native ×slower
+    needs workload-equivalence (R&D 0039). See [[logicn-benchmark-suite]]. **All outstanding documents committed**
+    (generated reports CODE_INDEX/REGISTRY/coverage/graph + `results/latest.json` + owner edits to
+    `workspace.lindex`/`api-protocol-rest/index.lln`). Excluded by design: `_scratch-effect006.mjs` (WIP scratch),
+    nested `logicn-devtools-project-graph/` repo, generated build JSON + test temp dirs.
 
 **Filed / decided 2026-06-22 (owner session):**
 - **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation

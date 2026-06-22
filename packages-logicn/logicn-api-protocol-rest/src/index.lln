@@ -19,6 +19,9 @@
 // Path codes on the wire ABI:   1=/health, 2=/orders, 3=/orders/{id}.
 
 // routeHealth — /health liveness probe: GET only, everything else 405.
+//lln: USEDBY: (1) dispatch
+//lln: IMPACT: (2)
+//lln: COMPLEXITY: 3
 pure flow routeHealth(method: Int) -> Int
 contract {
   intent { "Resolve the status code for the /health route by HTTP method (GET only; other verbs are refused)." }
@@ -31,6 +34,9 @@ contract {
 }
 
 // routeOrders — /orders collection: GET lists, POST creates, others 405.
+//lln: USEDBY: (1) dispatch
+//lln: IMPACT: (2)
+//lln: COMPLEXITY: 4
 pure flow routeOrders(method: Int) -> Int
 contract {
   intent { "Resolve the status code for the /orders collection route by HTTP method (GET lists, POST creates)." }
@@ -44,6 +50,9 @@ contract {
 }
 
 // routeOrderItem — /orders/{id} item: GET reads, PUT replaces, DELETE removes.
+//lln: USEDBY: (1) dispatch
+//lln: IMPACT: (2)
+//lln: COMPLEXITY: 5
 pure flow routeOrderItem(method: Int) -> Int
 contract {
   intent { "Resolve the status code for the /orders/{id} item route by HTTP method (GET/PUT/DELETE)." }
@@ -60,6 +69,10 @@ contract {
 // dispatch — the pure routing core. Given a method code and a path code, return
 // the HTTP route/status code the host should answer with. Unknown method or path
 // is refused (deny-by-default → 400/404).
+//lln: USES: (3) routeHealth, routeOrderItem, routeOrders
+//lln: USEDBY: (1) main
+//lln: IMPACT: (1)
+//lln: COMPLEXITY: 6
 pure flow dispatch(method: Int, path: Int) -> Int
 contract {
   intent { "Map an (HTTP method, path) REST request to a route/status code; unmatched routes are refused (deny-by-default)." }
@@ -82,6 +95,8 @@ contract {
 // It runs one representative request through the dispatcher (POST /orders) to
 // prove the adapter is live end-to-end; a real host calls dispatch() per request
 // with the decoded method/path. Returns 201 Created for the demo request.
+//lln: USES: (1) dispatch
+//lln: IMPACT: (0) — safe to delete
 pure flow main() -> Int
 contract {
   intent { "Fusable entry point for the reference REST adapter: routes a representative POST /orders request and returns its status code." }
