@@ -42,6 +42,20 @@ For each dimension, the audit is "covered" only when ALL THREE hold:
 Output per dimension: a `coverage-<dimension>.md` report — `indexed N · audited M · uncovered [...] ·
 phantom [...] · sources ingested [...]`. Green = the three conditions hold with empty gap lists.
 
+## Graph the audit — it is a TOOL, never a manual pass (owner 2026-06-22, token economy)
+The cross-check — AND the audit itself, wherever possible — is **deterministic code**, not an LLM reading
+files. A manual audit costs tokens every run and inherits the reader's blind spots (the exact reason the
+codes audit nearly missed `LLN-BOUNDARY`). A script is cheap, repeatable, and CI-gateable. Concretely:
+- **`scripts/audit-coverage.mjs <dimension>`** reads the dimension's index (a JSON graph — `code-index.json`,
+  the #217 capability index, the project-graph JSON) and the audit's machine-readable coverage set, computes
+  the bidirectional set-difference, and emits `build/coverage/coverage-<dimension>.md` + exit code = gap count.
+- **Each audit must expose what it covers in machine-readable form.** The codes dimension already does — the
+  #215 scanner's rules ARE its coverage; the `code-index` ARE the entries. A prose audit doc that NO detector
+  backs is precisely the thing to REPLACE with a detector, because its coverage cannot be graphed (and so
+  cannot be trusted).
+- **The LLM's role shifts** from "perform the audit" to "build/extend the detector + read the gap report" —
+  `feedback-build-tools-to-save-tokens` applied to auditing itself. Do NOT hand-audit what a script can graph.
+
 ## Procedure (end-of-roadmap pass)
 1. Enumerate every roadmap item (finished + unfinished) and map each to the dimension(s) it touches.
 2. For each dimension: ensure its index exists (build #217 etc.), then run/author the cross-check report.
@@ -57,5 +71,6 @@ Builds on the existing token-saver tooling ([feedback-build-tools-to-save-tokens
 
 ## Trigger
 Owner gated this to "once [the current roadmap] is finished." Do NOT start the full pass until the in-flight
-work (#201 + the rest) lands. A single-dimension proof-of-concept (code-index ↔ taxonomy audit) can be run
-sooner on owner request to validate the methodology.
+work (#201 + the rest) lands. A single-dimension proof-of-concept is the FIRST RUN of
+`scripts/audit-coverage.mjs codes` (a TOOL to be written), NOT a manual cross-check — building that script is
+itself the token-saving move and can be done sooner on owner request to validate the methodology.
