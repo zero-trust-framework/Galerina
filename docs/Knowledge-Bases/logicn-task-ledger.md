@@ -447,6 +447,10 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   ④update the 2 warning-asserting unit tests → EFFECT-006 error; ⑤port the over-declaration check to the
   Stage-B `effect-checker.lln`; ⑥register `LLN_EFFECT_006` metadata + diagnostics-spec doc. EFFECT-002 keeps
   ONLY the transitive-missing case. Convergent #1 of 0062∧0063; folds into the #213 LLN-* taxonomy audit.
+- **B5a DONE 2026-06-22:** signed central registry index built + wired (kernel `registry-index.ts` +
+  `fusePackage` Gate 2c `registryCheck`; fail-closed; 8 `ERR_REGISTRY_*`; 80/80). Commits `65d8ac9` (module)
+  + `1ecef1f` (wiring). The supply-chain layer of the certified-package-registry vision. Remaining greenlit:
+  #201 (blocked on owner pii/phi map), #202 transitive mask-⊆ (effect-checker — after #201 to avoid stash conflict).
 - **Greenlit this session:** #201 (build now), B5a signed registry index, #202 transitive mask-⊆. Ordering
   rule (owner): build the earliest-in-the-runtime-pipeline gated item first. Loop may attempt careful-code
   (#200 etc.) with full WASM-vs-walker verification, backing out + flagging if anything looks off.

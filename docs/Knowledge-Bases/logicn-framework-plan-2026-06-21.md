@@ -113,8 +113,12 @@ fires a fault. A second, **live** weak link was concrete and is now fixed (item 
 - **Built this session:** B1 scaffolder · B2 admission unification · revocation into resolver +
   bridge-attest.
 - **Verified already shipped:** B3 linker · B4 revocation-at-fuse · B5 resolver core · B6 examples.
-- **Net-new to build (owner-directed):** B5a signed central registry index · B6 richer worked example
-  · the fault-tolerance hardenings from the in-flight re-R&D.
+- **Net-new to build (owner-directed):** ✅ **B5a signed central registry index — BUILT 2026-06-22**
+  (`logicn-framework-app-kernel/src/registry-index.ts`: build/sign/verify/lookup/policy/`admitFromRegistry`,
+  fail-closed at every step, RFC 8785 canonical signing, 8 structured `ERR_REGISTRY_*` codes; wired into
+  `fusePackage` as **Gate 2c** via an injected `registryCheck` hook — a central allow-list ON TOP of the
+  per-manifest signature gate; kernel 80/80, real-Ed25519 round-trip + every fail path tested) ·
+  B6 richer worked example · the fault-tolerance hardenings from the in-flight re-R&D.
 - **Gated:** DRCM Phase 5 (kernel → `DSS.wasm` on Wasmtime TCB) · untrusted-peer memory isolation
   (#102-104) · B8 SPSC ring-buffer transport.
 

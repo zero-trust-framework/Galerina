@@ -481,6 +481,7 @@ Provides:
 Optional LogicN secure App Kernel: the fixed, non-bypassable governed request pipeline + secure-default route policy resolver. The fusion host for protocol/capability packages.
 
 Provides:
+- canonicalJson
 - FuseDescriptor
 - FusedComponent
 - FusePackageOptions
@@ -492,7 +493,6 @@ Provides:
 - CompositionPlan
 - planComposition
 - makeProviderFactory
-- ImportClosureModule
 
 ## logicn-framework-api-server
 
