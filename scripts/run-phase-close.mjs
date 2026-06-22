@@ -192,6 +192,11 @@ try {
 run("graph:reindex", "node",
   ["packages-logicn/logicn-core-cli/dist/index.js", "graph", "--out", "build/graph"]);
 
+// ── 5a. Code index + derived registry — the graphs the audits read; regenerate from source first
+//        so the lint/coverage gates below see current state (std #10 derived-catalog, #219). ──
+run("code-index", "node", ["scripts/code-index.mjs"]);
+run("code-registry", "node", ["scripts/gen-code-registry.mjs"]);
+
 // ── 5b. Convention lint gate (TASK-ENV-001) ──
 // The umbrella that runs every registered convention enforcer (today: the #215 code scanner; later:
 // SEC-002 mutation gate, DOC-004 doc↔source drift, #218 coverage cross-check). Runs --soft = report-only

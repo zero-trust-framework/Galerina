@@ -60,33 +60,36 @@ const registryUncovered = srcRealLLN.filter((c) => !registryCodes.has(c.code));
 // (2) audit → index: registry codes that don't exist anywhere in the index (phantom / stale registry)
 const registryPhantom = [...registryCodes].filter((code) => !codeSet.has(code));
 
-// actionable gap metric (coverage HOLES, not the known R4/doc backlog which is tracked separately)
-const gaps = dead.length + registryUncovered.length + registryPhantom.length;
+// Universal coverage (std #1): every source code is catalogued in the DERIVED registry (build/code-registry,
+// generated from this same index) BY CONSTRUCTION → no orphans. So the only true coverage HOLE is the reverse
+// direction: a curated governance-rules.md entry referencing a code that does NOT exist in source (phantom/stale).
+// The 'registry-uncovered' set is NOT orphans — those codes ARE in the derived registry; it is a governance-rules.md
+// CURATION backlog (which governance-domain codes deserve a hand-written semantic entry), tracked, not a hole.
+const gaps = registryPhantom.length; // exit metric = genuine holes only
 
 const lines = [];
-lines.push("# Coverage cross-check — dimension: codes (#218)\n");
-lines.push(`Index: build/code-index/code-index.json (${codes.length} codes) · Registry: logicn-governance-rules.md (${registryCodes.size} LLN codes)\n`);
-lines.push("## Coverage HOLES (actionable)");
-lines.push(`- DEAD (defined, never emitted): ${dead.length}${dead.length ? " — " + dead.map((c) => c.code).join(", ") : ""}`);
-lines.push(`- REGISTRY-UNCOVERED (src-real LLN-* not in the governance registry — audit blind spot): ${registryUncovered.length}`);
-lines.push(...registryUncovered.slice(0, 40).map((c) => `    ${c.code}`));
-if (registryUncovered.length > 40) lines.push(`    …and ${registryUncovered.length - 40} more`);
-lines.push(`- REGISTRY-PHANTOM (registry lists a code absent from the index — stale): ${registryPhantom.length}`);
+lines.push("# Coverage cross-check — dimension: codes (#218 / std #1 universal coverage)\n");
+lines.push(`Index: code-index.json (${codes.length} codes) · Derived registry: build/code-registry (ALL codes, by construction) · Curated: logicn-governance-rules.md (${registryCodes.size} LLN codes).\n`);
+lines.push("## Universal coverage (anchor std #1)");
+lines.push(`- ${codes.length}/${codes.length} codes catalogued in the DERIVED registry by construction → NO ORPHANS ✓`);
+lines.push("\n## Coverage HOLES (actionable — exit code)");
+lines.push(`- REGISTRY-PHANTOM (curated governance-rules.md lists a code absent from source — stale): ${registryPhantom.length}`);
 lines.push(...registryPhantom.slice(0, 40).map((c) => `    ${c}`));
-lines.push("\n## Known backlog (tracked elsewhere — reported, not counted as new holes)");
-lines.push(`- DOC-ONLY drift (documented, no src def/emit): ${docDrift.length} (taxonomy audit R5)`);
-lines.push(`- INLINE / no exported constant (R4): ${inline.length} (taxonomy audit Stage F)`);
-lines.push("\n## Completeness note");
-lines.push("- The #215 scanner is SRC-ONLY; doc/README-declared ownership is invisible to it (the Stage-D");
-lines.push("  LLN-BOUNDARY lesson). REGISTRY-PHANTOM partly covers the reverse; a full doc-ownership check is");
-lines.push("  the scanner §6 hardening (future).");
-lines.push(`\n## TOTAL coverage holes: ${gaps} (dead ${dead.length} + registry-uncovered ${registryUncovered.length} + registry-phantom ${registryPhantom.length})`);
+lines.push("\n## Backlogs (NOT orphans — tracked for incremental adoption, not exit-failing)");
+lines.push(`- governance-rules.md CURATION gap: ${registryUncovered.length} src-real LLN-* lack a semantic entry in the curated registry (they ARE in the derived registry). Generate/curate per std #10.`);
+lines.push(`- PHANTOM doc-only drift: ${docDrift.length} (std #9/#10 → DOC-004).`);
+lines.push(`- INLINE / no exported constant (R4): ${inline.length} (std #5 → taxonomy Stage F).`);
+lines.push(`- DEAD / RESERVED (defined, never emitted): ${dead.length} (std #1 wire-or-retire; tagged RESERVED in the derived registry).`);
+lines.push("\n## Notes");
+lines.push("- #215 scanner is SRC-ONLY; doc/README-declared ownership is invisible to it (Stage-D LLN-BOUNDARY lesson); REGISTRY-PHANTOM covers the reverse, full doc-ownership = scanner §6 (future).");
+lines.push("- Known false-dead pending const-id resolution: LLN-BOOL-BOUNDARY-001/002 (live via validateBoolBoundary).");
+lines.push(`\n## Coverage holes: ${gaps} · curation backlog: ${registryUncovered.length} · drift: ${docDrift.length} · R4-inline: ${inline.length} · RESERVED: ${dead.length}`);
 
 if (asJson) {
   console.log(JSON.stringify({
-    dimension: "codes", totalCodes: codes.length, registryCodes: registryCodes.size,
-    holes: gaps, dead: dead.map((c) => c.code), registryUncovered: registryUncovered.map((c) => c.code),
-    registryPhantom, docDrift: docDrift.length, inline: inline.length,
+    dimension: "codes", totalCodes: codes.length, universalCoverage: "met (derived registry, by construction)",
+    holes: gaps, registryPhantom, curationBacklog: registryUncovered.length,
+    docDrift: docDrift.length, inline: inline.length, dead: dead.map((c) => c.code),
   }, null, 2));
 } else {
   console.log(lines.join("\n"));

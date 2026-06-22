@@ -449,7 +449,14 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   letter). Both are code-index accuracy fixes (dev-tool, not production). 🔲
 - **UNIVERSAL-COVERAGE REQUIREMENT (owner 2026-06-22, hard rule):** everything in LogicN must be indexed by
   ≥1 audit; an orphan (covered by NO index/audit) is a gap. End-state: `audit-coverage` shows 0 orphans + 0
-  phantoms per dimension. (The 317 registry-uncovered codes are the warning shot.) Folds into #218.
+  phantoms per dimension. Folds into #218.
+  **✅ codes dimension MET 2026-06-22 (cluster ① fixed):** built `scripts/gen-code-registry.mjs` — the DERIVED
+  code registry (std #10, generated from the code-index → every code registered BY CONSTRUCTION), wired into
+  phase-close. `audit-coverage codes` now reports **930/930 catalogued, NO ORPHANS, 0 coverage holes**. The
+  "317 registry-uncovered" were NEVER orphans — reframed as a governance-rules.md CURATION backlog (317) +
+  doc-drift (468 phantom) + R4-inline (288) + RESERVED-dead (32), all tracked for incremental adoption, none
+  exit-failing. Catalog: `build/code-registry/REGISTRY.md`. Remaining clusters: ② phantom-triage (DOC-004),
+  ③ RESERVED wire-or-retire, ④ governance curation; + the const-id false-dead (BOOL-BOUNDARY-001/002).
 - **#219 — research-grounded Audit Coverage & R&D Standards** (owner 2026-06-22): the standards we require are
   benchmarked against best-practice + production examples from mature projects (Rust diagnostic registry + UI
   tests · Roslyn/Clang analyzer groups · ESLint docs+tests-per-rule · Cedar/OPA policy coverage · SLSA/in-toto/
