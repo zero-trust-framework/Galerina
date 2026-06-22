@@ -459,6 +459,12 @@ aspirational (#102-106). **#211 listener hardening is now in-scope too.** Memory
     measured-negative bench done → **borderline-NO even reframed** (re-derives Web-PKI soft-fail consensus). **0077**
     Kleene-lattice unify → **ADOPT-WITH-CHANGES** (per-axis provenance; category-conflation real: ill-typed = structural
     reject ≠ policy DENY; INDETERMINATE must be ADDED). Bridge tasks 0001-0077 all done; R&D side fully closed.
+  - **Note-41 (TritMesh monolith/data-arch) dedicated build-guide authored 2026-06-22** (owner-requested parity with the
+    0065-0070 set) → `docs/Knowledge-Bases/logicn-tritmesh-monolith-data-architecture.md` (maths + examples + hard path;
+    honest tiering — mostly re-derive/refute/HW-gated: govern-don't-absorb content-addressing SHIPPED, arena/SoA SHIPPED
+    (0055), edge-client chunk→E2EE→CID data-plane + tree-walker-into-WASM (#125) = NET-NEW, in-sandbox isolation =
+    aspirational #102-106, key-in-.tmf + semantic-clustering-on-trits = REFUTED). **`LogicN-Patens` git-init'd**
+    (`3e69b23`, branch main, README + 3 defensive-pub notes now version-controlled; **no remote** configured yet).
 
 **Filed / decided 2026-06-22 (owner session):**
 - **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation
