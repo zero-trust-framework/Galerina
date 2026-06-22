@@ -420,6 +420,15 @@ aspirational (#102-106). **#211 listener hardening is now in-scope too.** Memory
     replacement), rest HW-gated.** Rule-audit `wd7f3ccri` = rules genuinely used (2 minor cite notes, one resolved:
     `build/dss-supervisor.wasm` really is 115 bytes; 0068 `verifyWasm`→`wasm-runtime.ts:99` fixed in the absorbed doc).
     NEW follow-up build items: **34B routeDecl auto-taint** (close fail-open), **0014-C3→Z3** (promote proof).
+  - **✅ TRANSPORT/AUTH R&D PHASE CLOSED 2026-06-22 (owner: "all R&D done").** Full closure: every open thread from
+    0065-0070 harvested (`wnqemkxny`) + dedup-clustered → **closure tasks 0071-0074 queued in the bridge** for the
+    owner's manual R&D session (0071 capsule signing-spec reconciliation · 0072 prove-maths closure incl. 0014-C3→Z3 ·
+    0073 R&D-record hygiene · 0074 = CLOSURE INDEX manifest). **Paper-worthiness** of 0065-0070 (`wuyrn9956`,
+    prior-art-verified) = **0 papers** (consistent with the standing 0-flagship strategy); 3 defensive-pub candidates
+    (no-coercion-K3, prove-maths-methodology, crypto-on-core-refutations — all known-results), 1 not-publishable
+    (TLSTP=named RFCs); only future paper path = a MEASURED availability/false-deny negative (K3 hard- vs soft-fail).
+    See [[logicn-ip-paper-strategy]]. **Awaiting owner go (build/IP, held):** build S1 cert-gate (B8 unlocked) · seed
+    the 3 defensive-pub notes. New KB doc this phase: `logicn-transport-auth-research-explained-2026-06-22.md`.
 
 **Filed / decided 2026-06-22 (owner session):**
 - **#201 → built as a NEW code `LLN-EFFECT-006 OVERDECLARED_EFFECT`** (error, ALL profiles), NOT an escalation
