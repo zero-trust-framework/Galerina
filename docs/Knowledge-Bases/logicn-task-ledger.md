@@ -437,6 +437,24 @@ open, only half-done): #177 (deprecation advisory not emitted), #119 (native Bit
   graph-the-audit, deterministic. First run: 930 indexed vs 67 registry → 317 src-real LLN-* registry-uncovered
   + 40 dead candidates (≥8 false-positive from a code-index result-object emit-detection gap) + 0 phantoms;
   report `build/coverage/coverage-codes.md`. Other dimensions (#217 capabilities, flows/deps) pending.
+- **code-index emit-fix (follow-up #1, 2026-06-22, adversarially verified `wwyui0w35`):** the indexer now
+  counts result-object/constant emits (`code: ERR_X`) + multi-line `throw new XError(\n CODE,…)` windows, and
+  EXCLUDES comments + TS type positions (`readonly code: "LLN-X"`, `"X"|"Y"` unions) — the verifier caught 7
+  over-match false-emits (type-decls/comments incl. the indexer's own) which are now fixed. Cleared all 8
+  ERR_REGISTRY_* false-"dead". **Two deferred follow-ups (verifier-specified):** (a) **const-id→code
+  resolution** — `code: LLN_BOOL_BOUNDARY_001_FAILED_CLOSED` (unquoted LLN *constant*, ≠ code string) is still
+  unrecognised, so `LLN-BOOL-BOUNDARY-001/002` show as false-"dead" despite live production callers
+  (`bool-enforce.ts validateBoolBoundary`); needs a two-pass const-identifier→code map. (b) **CODE_RE
+  truncation** — `LLN-PROFILE-005B` is truncated to `005` (the `[0-9]`-terminated pattern drops a trailing
+  letter). Both are code-index accuracy fixes (dev-tool, not production). 🔲
+- **UNIVERSAL-COVERAGE REQUIREMENT (owner 2026-06-22, hard rule):** everything in LogicN must be indexed by
+  ≥1 audit; an orphan (covered by NO index/audit) is a gap. End-state: `audit-coverage` shows 0 orphans + 0
+  phantoms per dimension. (The 317 registry-uncovered codes are the warning shot.) Folds into #218.
+- **#219 — research-grounded Audit Coverage & R&D Standards** (owner 2026-06-22): the standards we require are
+  benchmarked against best-practice + production examples from mature projects (Rust diagnostic registry + UI
+  tests · Roslyn/Clang analyzer groups · ESLint docs+tests-per-rule · Cedar/OPA policy coverage · SLSA/in-toto/
+  Sigstore provenance · proof-gated research). Output: a LogicN "Audit Coverage & R&D Standards" doc each
+  enforcer (#215/#218/ENV/SEC/BLD/DOC) is measured against. Research sweep launched 2026-06-22. 🔶
   **Trigger: run as an end-of-roadmap pass over ALL items (finished + unfinished); gated to "once the current
   roadmap is finished."** #217 is a prerequisite (capabilities/syntax index). Full plan:
   [logicn-coverage-crosscheck-methodology.md](logicn-coverage-crosscheck-methodology.md). 🔲

@@ -44,9 +44,14 @@ for (const file of SCAN.flatMap(walk)) {
   const lines = readFileSync(file, "utf8").split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const trimmed = line.trimStart();
+    // exclude COMMENT lines and TS TYPE positions from emit/def — they mention a code but produce none.
+    const isComment = trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*");
+    // type position (not a runtime emit): `readonly code: "LLN-X"`, a "X" | "Y" union, or a `type` alias.
+    const isTypeDecl = /\breadonly\b/.test(line) || /"\s*\|\s*"/.test(line) || /^(?:export\s+)?type\s+\w+/.test(trimmed);
     // multi-line make*Diag(code, name, ...): attribute the windowed (code, name) as an emit at the
     // make-line, even when the code/name args sit on the following lines (common in governance-verifier.ts).
-    if (/make\w*Diag\(/.test(line)) {
+    if (!isComment && /make\w*Diag\(/.test(line)) {
       const win = line.slice(line.search(/make\w*Diag\(/)) + " " + lines.slice(i + 1, Math.min(i + 5, lines.length)).join(" ");
       const margs = [...win.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
       const ci = margs.findIndex((a) => CODE_TEST.test(a));
@@ -57,12 +62,29 @@ for (const file of SCAN.flatMap(walk)) {
         if (nm && /^[A-Za-z][A-Za-z0-9_]*$/.test(nm) && !isDoc && !isTest) e.names.add(nm);
       }
     }
+    // multi-line Error/Exception construction: `throw new SomeError(<newline> ERR_x, msg)` — the code
+    // constant sits on a CONTINUATION line, so the same-line throw/emit check below misses it. Window the
+    // constructor call and attribute its code token(s) as emits (analogous to the make*Diag windowing above).
+    if (!isComment && /\bnew\s+\w*(?:Error|Exception)\s*\(/.test(line)) {
+      const win = line.slice(line.search(/\bnew\s+\w*(?:Error|Exception)/))
+        + " " + lines.slice(i + 1, Math.min(i + 5, lines.length)).join(" ");
+      for (const code of new Set([...win.matchAll(CODE_RE)].map((m) => m[1]))) {
+        get(code).occ.push({ file: rel, line: i + 1, role: isDoc ? "doc" : isTest ? "test" : "emit" });
+      }
+    }
     const codes = [...new Set([...line.matchAll(CODE_RE)].map((m) => m[1]))];
     if (!codes.length) continue;
     const hasNameSev = /name:\s*"[^"]+"/.test(line) && /severity:\s*"[^"]+"/.test(line);
-    const isDef = /export const\s+\w+/.test(line) || hasNameSev;
-    const isMake = /make\w*Diag\(/.test(line);
-    const isEmit = isMake || /code:\s*"/.test(line) || /\bthrow\b/.test(line) || /\.push\(/.test(line);
+    const isDef = !isComment && !isTypeDecl && (/export const\s+\w+/.test(line) || hasNameSev);
+    const isMake = !isComment && /make\w*Diag\(/.test(line);
+    // emit = make*Diag, a `code:`/`errorCode:` field set to a code (STRING literal OR an exported
+    // constant identifier — e.g. `code: ERR_xxx` in a `{ ok:false, code, reason }` result object;
+    // unquoted ERR_ consts were previously mis-classified `ref` → false "dead"), a throw, or a .push.
+    const isEmit = !isComment && !isTypeDecl && (isMake
+      || /code:\s*"/.test(line)
+      || /\b(?:code|errorCode):\s*(?:"?ERR_[A-Z0-9_]+|"LLN-)/.test(line)
+      || /\bthrow\b/.test(line)
+      || /\.push\(/.test(line));
     for (const code of codes) {
       const e = get(code);
       let role = isDoc ? "doc" : isTest ? "test" : isLln ? "lln" : (isDef ? "def" : isEmit ? "emit" : "ref");

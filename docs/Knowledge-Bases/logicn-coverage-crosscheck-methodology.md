@@ -25,6 +25,22 @@ An audit is only as complete as the index it is cross-checked against.
 Index the whole domain (every source) → prove the audit touched every entry → prove every finding maps back.
 ```
 
+## Universal-coverage REQUIREMENT (owner 2026-06-22, hard rule)
+**Everything in LogicN must be indexed by at least ONE audit.** An orphan — any construct (code, capability,
+syntax form, effect, governance rule, stdlib fn, CLI command, generated artifact) covered by NO index/audit —
+is a gap by definition. The first coverage run proved the risk: **317 src-real `LLN-*` codes are not in the
+governance registry** (the registry covered 67 of ~930). The end-state is: for each dimension, `audit-coverage`
+shows 0 orphans (every entry covered) and 0 phantoms (every audited thing exists).
+
+## Standards must be RESEARCH-GROUNDED (owner 2026-06-22)
+The audit / coverage / R&D standards we require are not to be invented in a vacuum — they are benchmarked
+against **best practice + real production examples from mature projects** (see ledger **#219**): how Rust
+(diagnostic registry + UI/`stderr` tests per diagnostic), Roslyn/Clang (analyzer/diagnostic groups, every
+diagnostic documented+tested), ESLint/analyzers (docs + tests REQUIRED per rule), Cedar/OPA (policy + coverage
+tests), SLSA/in-toto/Sigstore (build provenance/attestation), and proof-gated research projects do it. The
+output is a LogicN "Audit Coverage & R&D Standards" doc that each enforcer (#215 scanner, #218 coverage,
+TASK-ENV/SEC/BLD/DOC) is measured against.
+
 ## The dimensions to index (the "graph indexing for each")
 One index per governed dimension. Each pairs with its audit and its enforcing detector/scanner.
 
