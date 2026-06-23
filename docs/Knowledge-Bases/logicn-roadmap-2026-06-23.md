@@ -71,9 +71,14 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
    **multi-layered defense-in-depth** (sentinel-egress never-drop has TWO mechanisms + an unreachable re-push;
    `isNetworkSink` is redundant with the registry), so mutation testing must target the **authoritative layer**
    (the registry). Every fail-closed gate class is now mutation-regression-protected.
-6. **[MEDIUM] Flip the enforcers from report-only to CI-enforcing** — drive the scanner baseline 154→0 (+ doc-drift
-   24, provenance 2) across Stages F/G/H, then drop `--soft` on `lint-conventions` + the scanner (Stage J). Today
-   nothing can fail a build (the taxonomy/standards gap, dimension at 58%).
+6. **[MEDIUM] ◑ Flip the enforcers from report-only to CI-enforcing.** **Stage 1 DONE 2026-06-23** —
+   `.github/workflows/conventions.yml` now runs the enforcers in CI on every push/PR (they were local-Stop-only):
+   `lint-conventions --soft` **report-only** (full report → the Actions step summary) + a **hygiene-no-nul**
+   job that **ENFORCES** a green zero-baseline security invariant (a NUL byte = a grep/git-invisible source file,
+   audit-evasion class — fails the PR). Both pure-node/build-free. **Remaining:** drive the scanner baseline
+   154→0 (+ doc-drift 24, provenance 2), then **drop `--soft`** so `lint-conventions` enforces (the taxonomy/
+   standards dimension at 58%). *(Full test-suite CI is a separate task — the non-workspace monorepo needs
+   per-package `npm ci`.)*
 7. **[LOW / long-tail] Deferred audit residuals** — GOV-003 dataflow rename · VSC-004/005 · CRYPTO-004/005/006 ·
    Gate-6 mediums/lows. Closes the security posture's tail.
 8. **[GATED] Real DSS.wasm in-sandbox isolation** (DRCM Phase 5, #102–106) — the biggest *structural* security gap:
