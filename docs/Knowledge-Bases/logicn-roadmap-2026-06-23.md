@@ -33,12 +33,15 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
 4. **[MEDIUM] Tainted-by-default at entry boundaries** — the 34B bare-flow-param trust
    (`value-state-checker.ts:1162-1191`): an un-annotated param from a hostile caller is fail-open by default. Make
    boundary-entry flows tainted-by-default (posture-gated; non-breaking for internal flows). *(arch-rd #4.)*
-5. **[MEDIUM] ◑ Extend the SEC-002 mutant catalog** beyond the 3 B5a mutants. **cert-gate DONE 2026-06-23** — 5
-   TLSTP-S1 mutants registered (revocation-unknown→ALLOW · stale-good→ALLOW · throwing-check→ALLOW · pin-mismatch
-   soften · no-pin→ALLOW); full run **8/8 killed, 0 survived**; also fixed a harness gap (final rebuild now restores
-   *every* mutated package's dist, not just the first). The `audit-mutation.mjs:28` `--config`-absent CLI crash was
-   already fixed. **Remaining:** fuse-loader gates 1–3 / secret-egress / i32-overflow mutants — so **every**
-   fail-closed gate is mutation-regression-protected.
+5. **[MEDIUM] ◑ Extend the SEC-002 mutant catalog** beyond the 3 B5a mutants. **cert-gate + fuse-loader DONE
+   2026-06-23** — 5 TLSTP-S1 cert mutants (revocation-unknown/stale/throw→ALLOW · pin-mismatch soften · no-pin→ALLOW)
+   + 3 fuse-loader gate mutants (hash · signature · revocation). Full run **11/11 killed, 0 survived, all `[test]`**.
+   Two harness bugs fixed along the way: (a) the final rebuild only restored the *first* mutated package's dist;
+   (b) **the kernel `KERNEL_BUILD` ran `npm run build` = bare `tsc` (not on PATH) so it ALWAYS exited 1 — every
+   kernel mutant, including the 3 pre-existing B5a ones, was vacuously "killed by build" with its test never
+   running. Switched to the vendored tsc; the B5a adversarial coverage is genuine for the first time.** The
+   `audit-mutation.mjs:28` `--config`-absent CLI crash was already fixed. **Remaining:** secret-egress /
+   i32-overflow mutants — so **every** fail-closed gate is mutation-regression-protected.
 6. **[MEDIUM] Flip the enforcers from report-only to CI-enforcing** — drive the scanner baseline 154→0 (+ doc-drift
    24, provenance 2) across Stages F/G/H, then drop `--soft` on `lint-conventions` + the scanner (Stage J). Today
    nothing can fail a build (the taxonomy/standards gap, dimension at 58%).
