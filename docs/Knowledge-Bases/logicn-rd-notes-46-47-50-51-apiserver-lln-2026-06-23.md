@@ -3,10 +3,15 @@
 > **Reconciliation (post-synthesis):** the api-server thread was analysed BEFORE commit `d33b0d5`. The
 > channelVerdict-**supply seam** is now SHIPPED — `createApiServer` takes a `resolveChannelVerdict(req)` hook
 > that computes the K3 verdict and threads it to the kernel, fail-closed (+6 e2e, 5→11 green). So where this
-> doc says the api-server's TLS→certGate→channelVerdict path is "open", read it as **half-closed**: the
-> generic seam is live; the residual is only the concrete **TLS peer-cert → `CertGateInput` mapper + https
-> example** (re-scoped bridge job **0089**). Net-new buildables are dispatched as bridge jobs **0087**
-> (compiler-enforced affine/type-state authority) and **0088** (signed flow-graph + GIR compile-cache).
+> doc says the api-server's TLS→certGate→channelVerdict path is "open", it is **now CLOSED** — bridge job
+> **0089 was BUILT in-session 2026-06-23**: an opt-in `tls` mode in `createApiServer` stands up HTTPS, reads
+> `getPeerCertificate(true)` → `CertGateInput` → `certGate()` → sets `channelVerdict` on the kernel request,
+> fail-closed (unreadable/missing factor → 0 → DENY; throwing resolver → DENY), with crypto/TLS validation left
+> wholly in Node's TLS library (the adapter only folds K3 trits). +6 e2e (valid pinned cert→admit ·
+> revocation-unknown→401 · chain-invalid→401 · no-cert→401 · pin-mismatch→401 · throwing-revocation→401);
+> api-server 11→17 green. The remaining api-server tail is breadth-only (example-app, graceful drain). Net-new
+> buildables **0087** (compiler-enforced affine/type-state authority) and **0088** (signed flow-graph + GIR
+> compile-cache) remain dispatched to the R&D bridge.
 
 ## Bottom line
 

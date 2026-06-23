@@ -16,6 +16,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@logicn/core-network": "file:../logicn-core-network",
     "@logicn/framework-app-kernel": "file:../logicn-framework-app-kernel",
     "@logicn/tower-citizen": "file:../logicn-tower-citizen"
   },
