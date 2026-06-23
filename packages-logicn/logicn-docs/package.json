@@ -1,0 +1,24 @@
+{
+  "name": "@logicn/docs",
+  "version": "0.1.0-beta.0",
+  "description": "LogicN API documentation generator: emits a valid OpenAPI 3.x document from the App Kernel's governed route table (EffectiveRoutePolicy / RouteDeclaration) and contract metadata. The generated spec documents exactly the gates the kernel enforces — auth, body limits, idempotency, rate limits, and the error contract — and fails closed rather than emit an invalid or misleading governance contract.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run typecheck && npm run build && node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@logicn/framework-app-kernel": "file:../logicn-framework-app-kernel"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

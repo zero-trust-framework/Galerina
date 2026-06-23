@@ -52,6 +52,7 @@
         "packages-logicn/logicn-target-photonic",
         "packages-logicn/logicn-framework-app-kernel",
         "packages-logicn/logicn-framework-api-server",
+        "packages-logicn/logicn-docs",
         "packages-logicn/logicn-core-cli",
         "packages-logicn/logicn-core-tasks",
         "packages-logicn/logicn-tools-benchmark",
