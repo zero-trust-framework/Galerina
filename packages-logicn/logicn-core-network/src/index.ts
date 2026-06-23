@@ -492,3 +492,14 @@ export {
   withSideSignal,
   certGate,
 } from "./cert-gate.js";
+
+// Telemetry → K3 admission feedback loop (the closed runtime self-throttle).
+// Degrade-only: a live anomaly/health reading can throttle a channel toward DENY,
+// never open one. TritMesh R&D 2026-06-23 net-new mechanic #1.
+export {
+  type AdmissionHealth,
+  type AdmissionTelemetry,
+  telemetryToSideSignal,
+  withTelemetryFeedback,
+  certGateWithTelemetry,
+} from "./admission-feedback.js";
