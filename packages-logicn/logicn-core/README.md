@@ -9,19 +9,26 @@ Node.js.
 
 ---
 
-> **⚠️ STATUS CORRECTION (2026-06-06).** Much of *this package* README describes an early
+> **⚠️ STATUS CORRECTION (updated 2026-06-23).** Much of *this package* README describes an early
 > "prototype (v0.1-beta), Phase 4 next" framing that is **out of date**. `logicn-core` is the
 > **language-specification / foundation** package; the **active production compiler** is
 > [`logicn-core-compiler`](../logicn-core-compiler) (full lexer → parser → type/effect/governance
-> pipeline, **3,279 tests**). Project-wide, verified by running the suites: **44/44 packages ·
-> 4,129 tests · 0 audit findings.** Stage A is production-hardened. **Stage B self-hosting (P9) is
-> *in progress*** — the self-hosted lexer module now wabt-assembles to a real WASM binary (#145a);
-> `tokenize` byte-parity is the remaining gate (#145b → #143). The "Prototype / Phase 4 next"
-> sections below predate this work and are retained for language-design reference only.
-> **Authoritative status:** [`docs/.../logicn-runtime-status-SOT.md`](../../docs/Knowledge-Bases/logicn-runtime-status-SOT.md)
-> · [`docs/.../logicn-roadmap.md`](../../docs/Knowledge-Bases/logicn-roadmap.md).
-> **Honest line:** the compiler/runtime/governance engine is production-grade; the framework/app
-> packages are templates, not implemented.
+> pipeline, **3,176 tests**). Project-wide, verified by running the suites: **53/53 packages ·
+> 5,042 tests · 0 failures**, and the **SEC-002 mutation audit kills every registered fail-closed
+> gate** (each is genuinely guarded). Stage A is production-hardened. **Stage B self-hosting (P9) is
+> *in progress*** — the self-hosted lexer `tokenize` reaches byte-for-byte Stage-A == Stage-B
+> real-WASM parity (#143); extending it to the parser/type-checker/governance flows is the remaining gate.
+>
+> The **application-framework layer is now substantially real** — *not* just templates: the
+> deny-by-default admission/fusion border (3 gates + multi-module linker + revocation), the
+> `logicn new app` scaffolder, the governed package resolver, and the 0091 base packages
+> (auth · observability · test · docs · example-app *golden template*) are **shipped and tested**; the
+> governed HTTP transport (B8) is unlocked with the **S1 K3 cert-gate** landed. The signed registry
+> index + live-kernel wiring of the cert-gate are the remaining framework seams. The "Prototype /
+> Phase 4 next" sections below predate this and are retained for language-design reference only.
+> **Authoritative status:** the 2026-06-23 EOD %-audit + roadmap
+> [`logicn-roadmap-and-percent-audit-2026-06-23-eod.md`](../../docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23-eod.md)
+> · [`logicn-runtime-status-SOT.md`](../../docs/Knowledge-Bases/logicn-runtime-status-SOT.md).
 
 ---
 
@@ -678,6 +685,10 @@ node ../../logicn-core-cli/dist/index.js task buildApi --file tasks.lln --dry-ru
 ---
 
 ## Roadmap
+
+> **Authoritative project roadmap** (security-first, with live %-audit) is the
+> [2026-06-23 EOD roadmap + % audit](../../docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23-eod.md).
+> The language-foundation phases below are this package's own v1 grammar/spec milestones (reference).
 
 The v1 foundation phases build the language before expanding into domain
 packages, frameworks or advanced targets.

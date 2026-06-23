@@ -1,8 +1,22 @@
 # LogicN — Roadmap (rebuilt 2026-06-23, SECURITY FIRST)
 
+> **⚠️ END-OF-SESSION UPDATE (2026-06-23, late).** The authoritative current state is
+> **[logicn-roadmap-and-percent-audit-2026-06-23-eod.md](logicn-roadmap-and-percent-audit-2026-06-23-eod.md)** (~**77%**).
+> **Correction to item 2 below:** the morning claim that wat-emitter **#163 was "already fixed"/#165 "already lowered"
+> was WRONG.** R&D 0093 proved #163 was a **live fail-open** — the inline `;;` trap comment swallowed the enclosing
+> `)`, so wabt rejected the module, `assembleWAT` fell back to a stub, and `executeWASMFlow` *ran the stub and returned
+> a wrong value (5) instead of trapping*. It (plus #165 `%`-on-Float, plus a guarded-flow value-state bypass, plus two
+> more #163-class static-const/bitfield sites) is **now genuinely fixed** with block-comment traps + the
+> `lint-wat-inline-comments` detector (commits `91a615b`, `57ff489`; full compiler suite 3176/3176).
+> **Also landed late-session:** the telemetry→K3 admission feedback loop · the fail-open class taxonomy + the
+> `component-health.mjs` spec · the `.tmf` defensive-publication paper (quantum-resilient universal format) · the
+> README full refresh · the full benchmark + audit sweep (SEC-002 all-killed). **Approved build queue:** canCommit
+> Option A · value-state 34B-hole `LLN-VALUESTATE-008` · flow-kind `LLN-TIER-001` floor · the fail-open detectors.
+> All of the above is **pushed to `origin/main`** (`955a556`).
+
 Owner directive: **fix security issues first.** Missing/stub packages are *consider-not-always* (framework breadth,
 not security-critical) — see the note at the end. The weighted **% completion audit** lives in its companion
-[logicn-roadmap-and-percent-audit-2026-06-23.md](logicn-roadmap-and-percent-audit-2026-06-23.md) (overall **~76%**,
+[logicn-roadmap-and-percent-audit-2026-06-23-eod.md](logicn-roadmap-and-percent-audit-2026-06-23-eod.md) (overall **~77%**,
 **53/53 · 5,042 · 0 fail**). Run `node scripts/status.mjs` for the live one-liner.
 
 **This session already landed:** S1 cert-gate · **kernel K3-fold of `channelVerdict`** (fail-closed admission) ·
