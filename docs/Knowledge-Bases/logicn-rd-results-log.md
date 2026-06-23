@@ -24,6 +24,9 @@ refuted, with the reason — then refreshes the KB index. See [[feedback-rd-abso
 | 0083 | Closed-capabilities photonic/tri variant | ⏳ |
 | 0084 | Security standards × K3 (PCI/DSS + full OWASP + CWE/NIST/MITRE/SLSA) | ⏳ |
 | 0085 | RAG-vulnerabilities rulebook-curator → reconcile `LOGICN_SECURITY_RULEBOOK` + RAG threat class | ⏳ |
+| 0087 | Compiler-enforced affine authority + type-state passport pipeline (notes/46) | ⏳ |
+| 0088 | Signed content-hash-keyed flow-graph + GIR compile-cache (`//lln:` chain-of-logic) | ⏳ |
+| 0089 | api-server TLS peer-cert → `CertGateInput` mapper + https e2e (seam already shipped) | ⏳ |
 
 ## Adopted / Designed (recent)
 | Topic | Verdict | Why / what | Ref |
@@ -46,6 +49,12 @@ refuted, with the reason — then refreshes the KB index. See [[feedback-rd-abso
 | FHE encrypted-similarity | 🔭 TRACKED | crypto-on-core-OK but never line-rate + solves a threat model LogicN doesn't have; selective-disclosure ANN dominates | rd-absorbed/rd-fhe-encrypted-similarity-v0.md |
 | Real DSS.wasm / Wasmtime TCB (DRCM Ph5) | 🔒 GATED | #102-106 external-infra + owner gated | logicn-drcm.md |
 | ML-DSA-65 hybrid `.lmanifest` signing (#34) | 🔒 GATED | verify is PQ-ready; signer build owner-gated (offline custody) | logicn-quantum-resistance-posture.md |
+| notes/46 — borrow V8/Node+Rust patterns, not trust | 🔀 MIXED (mostly already-shipped) | Headline cache-law/K3/arena/backpressure/signed-admission re-derive shipped arch; on-disk hot-path compile cache **REFUTED** (~56ns compile vs ~2150ns key = ~38× slower); net-new = compiler-enforced **affine authority** + type-state pipeline + must-use→compile-error + newtype hashes (→bridge 0087); risk half (eval/finalizers/shared-mem/ambient-imports) all REFUTED | gate-cache.ts · hybrid-engine.ts:317 · value-state-checker.ts · [doc](logicn-rd-notes-46-47-50-51-apiserver-lln-2026-06-23.md) |
+| `//lln:` chain-of-logic cache (serialize R&D-0045 flow-graph + GIR) | ✅ ADOPTED (net-new, security-gated) | Works + ~30% pre-built; analyze recomputed each run & GIR never deserialized today; the `//lln:` TEXT is a forgeable generated VIEW → cache key MUST be SIGNED source; persist STRUCTURE never the ruling; red/green, uncertain=recompute (→bridge 0088) | flow-dependency-analysis.ts · gir-emitter.ts · [doc](logicn-rd-notes-46-47-50-51-apiserver-lln-2026-06-23.md) |
+| `logicn-framework-api-server` — all R&D done? | 🔀 MIXED (not 100%) | channelVerdict-supply seam **SHIPPED this session** (`resolveChannelVerdict`, `d33b0d5`); residual net-new = TLS peer-cert→`CertGateInput` mapper + https example (→bridge 0089); #212 deny→HTTP already-shipped; tail = example-app/drain (open-build), rate-limit→KERNEL (TRACK), v0.2 fat-spec re-import REFUTED | api-server/src/index.ts · cert-gate.ts · [doc](logicn-rd-notes-46-47-50-51-apiserver-lln-2026-06-23.md) |
+| notes/47 (DRCM precursor) + architecture blueprint PDF | already-shipped (~90% re-derive) | June-3 precursor of shipped DRCM (DbC / LLN-PRIVACY-002 / LLN-MONO + signed `.lmanifest` + ASIC + WASI #102-106 + PCI/OWASP 0084); ONLY net-new = numbered-PCI-requirement→artifact **compliance-evidence mapping TABLE** (doc only) | governance-verifier.ts · manifest-generator.ts · logicn-asic-cyber-physical.md |
+| notes/50 — backend roadmap + tri/photonic primer + photonics pointers | already-shipped (0 net-new buildable) | ~95% reference; primer re-derives K3 + substrate + blind-observability; SAX already mined today (S-parameter-composition); gdsfactory/Meep/Photontorch **REFUTED** (keep physics/sim outside the governance boundary) | three-valued-governance.ts · logicn-external-idea-mining-2026-06-23.md |
+| notes/51 — NumPy→TS: full numeric/ndarray/linalg in core? | ❌ REFUTED (by design) | Full NumPy parity in core = NO by design; core governs numeric SHAPES (core-vector types), compute behind ext-bridge-cpp/-bitnet; `for x in xs where c` = the shipped `np.where` analog; ndarray/broadcasting REFUTE; dense linalg (inv/det/eig) = TRACK behind a future Toxic-Border ext-bridge on real demand | core-vector/src/index.ts · ext-bridge-cpp/src/index.ts |
 
 ## Refuted — and WHY we did not adopt (the negative record)
 | Idea | Verdict | Why refuted |
