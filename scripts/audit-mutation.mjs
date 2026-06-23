@@ -206,7 +206,7 @@ try {
   const rebuilt = new Set();
   for (const m of MUTANTS) {
     if (!m.build) continue;
-    const key = `${m.cwd} ${JSON.stringify(m.build)}`;
+    const key = `${m.cwd}\0${JSON.stringify(m.build)}`;
     if (rebuilt.has(key)) continue;
     rebuilt.add(key);
     run(m, m.build); // clean rebuild so this package's artifacts match its restored source
