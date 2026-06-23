@@ -41,6 +41,44 @@ test("auth-required route with no Authorization header -> 401, handler NOT run",
   assert.equal(res.body !== undefined, true); // safe typed error body
 });
 
+// ── Channel/identity verdict (TLSTP S1 cert-gate) folded into auth, FAIL-CLOSED ──
+// The transport may supply a K3 channelVerdict (e.g. certGate(input).verdict). Only an explicit
+// ALLOW (+1) admits; INDETERMINATE (0) and DENY (−1) refuse — unknown → DENY by the algebra.
+
+test("auth: channel verdict DENY (-1) refuses admission, handler NOT run", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure" }],
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure", channelVerdict: -1 }));
+  assert.equal(res.status, 401);
+  assert.equal(errorOf(res), "unauthorized");
+  assert.equal(ran, false);
+});
+
+test("auth: channel verdict INDETERMINATE (0) refuses admission (fail-closed), handler NOT run", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure" }],
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure", channelVerdict: 0 }));
+  assert.equal(res.status, 401);
+  assert.equal(ran, false);
+});
+
+test("auth: channel verdict ALLOW (+1) admits even with NO Authorization header (handler runs)", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure" }],
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure", channelVerdict: 1 }));
+  assert.equal(ran, true);            // the channel verdict (+1) authorised admission
+  assert.notEqual(res.status, 401);
+});
+
 test("public route is allowed without Authorization (handler runs)", async () => {
   let ran = false;
   const k = createAppKernel({
