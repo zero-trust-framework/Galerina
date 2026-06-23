@@ -47,16 +47,16 @@ LogicN optimises for **mathematical proof and absolute Zero-Trust containment** 
 
 ---
 
-## Benchmarks (measured 2026-06-17 — honest numbers)
+## Benchmarks (measured 2026-06-23 — honest numbers)
 
-Run on an **Intel i9-9900K (8C/16T) + NVIDIA RTX 2060**, across Rust (native, generic + AVX2), Node.js (V8), Python (CPython), LogicN's WASM output, the Stage-A interpreter tiers, and real GPU (Deno WebGPU). 23 benchmarks; harness at `packages-logicn/logicn-devtools-benchmarks`.
+Run on an **Intel i9-9900K (8C/16T) + NVIDIA RTX 2060**, across Rust (native, generic + AVX2), Node.js (V8), Python (CPython), LogicN's WASM output, the Stage-A interpreter tiers, and real GPU (Deno WebGPU). Harness at `packages-logicn/logicn-devtools-benchmarks`; quote the canonical **§1.5 production-ceiling scoreboard** from `npm run compare` (the standard view — the 3 diagnostic `⟨interp⟩` tiers cannot "win", and the only honest LogicN cost is the shipping **WASM ▶ production** path).
 
-**The honest hierarchy on hot compute:** native/JIT (Rust ≈ LogicN-as-WASM ≈ Node) cluster within ~3× (0.1–4 B ops/s) → **Python** (100–1,000× back) → **the Stage-A TypeScript tree-walker** (the slowest tier, below Python on numeric loops — it allocates a boxed value per AST node).
+**The production-ceiling scoreboard (WASM ▶ production vs the fastest real runtime):**
 
-- **LogicN's *production* path (WASM) is native-class** — it wins or ties Rust and Node on several benchmarks (arithmetic-threshold, six-digit-guess, record-allocation, tri-logic, low-memory).
-- **The Stage-A interpreter is a diagnostic/reference tier, not the product** — its slowness is by design (it is the WASM byte-parity oracle).
-- **Governance overhead is low** (~1.6×: governed ≈ manifest) — the cost is tree-walk dispatch, which WASM eliminates.
-- **GPU** runs real dispatch on the RTX 2060 but is overhead-bound below ~500K elements (these kernels are too small); LogicN's own GPU backend is a Phase-38 stub.
+- **WASM ▶ production won outright** on `hardware-targets` (1st/4) and `fibonacci-recursive` (1st/5), and lands **~2.0–3.6× the winner** on most hot compute (`record-allocation` 2.0×, `six-digit-guess` 2.0×, `gpu-compute` 2.3×, `matrix-multiply` 3.6× behind the RTX-2060). Winner tally across the comparable set: Node.js 5 · Rust AVX2 5 · Rust (generic) 5 · **WASM ▶ production 2** · Deno-WebGPU 1.
+- **Governance is not free, stated honestly:** `governance-cost` is the heavy outlier at **293×** the AVX2 winner (the per-decision K3 fold), and `collection-pipeline` is 61× — these are the cost of compiling governance *into* the binary; on the per-flow `Node/LogicN` view governed overhead is ~**24.6%**.
+- **The Stage-A `⟨interp⟩` tiers are diagnostic, not the product** — they are the WASM byte-parity oracle and are *excluded from winning* by the scoreboard standard (they can read 1.0K–1025K× slower and that is expected).
+- **`tmf-container`** is now benchmarked (Rust 161.5K/s, Node 46.4K/s). `tri-logic` and `data-query` are **excluded — not unit-aligned** (R&D 0092, no silent caps).
 
 ---
 
@@ -77,7 +77,8 @@ Run on an **Intel i9-9900K (8C/16T) + NVIDIA RTX 2060**, across Rust (native, ge
 | **Stage-B self-hosting — interpreter parity** | 100% | R6 corpus: Stage-A == Stage-B |
 | **Stage-B self-hosting — WASM execution (P9)** | in progress | `tokenize` byte-parity achieved (#143); parser/checker/verifier flows remain |
 | **Post-Quantum & Hardware Security** | ~38% | hybrid Ed25519+ML-DSA-65 shipped on attestation/proof/bridge; `.lmanifest` hybrid gated on key custody (#34/#149) |
-| **`.tmf` trust engine (`logicn-ext-tmf`)** | slices 1–3 done | TMX-256 + container + KEM-DEM golden-verified; slice 4 (file-format signing / verify-before-read) next |
+| **`.tmf` trust-capsule format (`logicn-ext-tmf`)** | slices 1–3 done | A **quantum-resilient universal file & communications format** (not just a database): TMX-256 (3-ary SHAKE256 Merkle-XOF) + container + KEM-DEM golden-verified; codec-agnostic modalities (image/audio/video/document/structured) + seekable anti-truncation streaming. ML-DSA-65 root signing (slice 4) next. **Defensive-publication paper:** [`docs/scientific-papers/`](docs/scientific-papers/) |
+| **Security hardening — fail-open class taxonomy** | shipped today | 10 recurring fail-open classes named + mechanically detected; **SEC-002 mutation: all gates killed** (every fail-closed gate genuinely guarded); `lint-wat-inline-comments` + the #163/#165/guarded-flow codegen+value-state fixes landed; the `LLN-TIER-001` tier-floor + value-state 34B-hole + `canCommit` deny-by-default are the next approved items |
 | **Passive Execution Plans & Target Bridges** | ~22% | |
 | **AI Inference Tower (BitNet / GroqCloud / NVFP4)** | ~12% | default bridges are governed dev stubs/simulators |
 | **Photonic / Ternary Computing** | ~3% | software simulation only (not hardware) |
@@ -292,6 +293,9 @@ node packages-logicn/logicn-devtools-pci/dist/cli.js audit examples/auth-service
 |---|---|
 | [SETUP.md](SETUP.md) | Install on Windows / Linux / macOS, benchmarks, Hello World |
 | [`docs/Knowledge-Bases/KNOWLEDGE-BASE-INDEX.md`](docs/Knowledge-Bases/KNOWLEDGE-BASE-INDEX.md) | Master navigation — 4-layer KB hierarchy, conflict resolution |
+| [`docs/scientific-papers/`](docs/scientific-papers/) | Publishing standard (defensive-pub + measured-negative only, **no flagship by design**) + the `.tmf` defensive-publication paper + UK/US/EU compliance checklist |
+| [`docs/Knowledge-Bases/logicn-fail-open-taxonomy.md`](docs/Knowledge-Bases/logicn-fail-open-taxonomy.md) | The 10 recurring fail-open classes + mechanical detectors + the security-first hardening list |
+| [`AGENTS.md`](AGENTS.md) | The AI-agent entry point — authoritative sources, package map, conventions |
 | [`docs/Knowledge-Bases/logicn-build-roadmap.md`](docs/Knowledge-Bases/logicn-build-roadmap.md) | Forward roadmap, P9 critical path, audit remediation |
 | `docs/Knowledge-Bases/logicn-governance-rules.md` | Numbered rule registry — LLN codes, enforce status, examples |
 | `docs/Knowledge-Bases/logicn-architecture-patterns.md` | 9 canonical patterns with feature gates |
