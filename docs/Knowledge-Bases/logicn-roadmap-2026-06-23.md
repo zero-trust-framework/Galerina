@@ -64,9 +64,13 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
    `audit-mutation.mjs:28` `--config`-absent CLI crash was already fixed. **i32-overflow DONE 2026-06-23** — 4
    mutants on `i32-arith.ts` (the single trap-not-wrap source of truth: add/sub/mul/div wrap-instead-of-trap),
    all `[test]`-killed; **catalog now 15/15**. (add/sub use a single-line `(a op b) | 0` pre-wrap anchor —
-   CRLF-agnostic, since `i32-arith.ts` has mixed line endings.) **Remaining:** the **secret-egress** gate
-   (`logicn-core-sentinel-egress` never-drop / the VALUESTATE-006/007 secret→network-sink guard) — the last
-   uncovered fail-closed gate class.
+   CRLF-agnostic, since `i32-arith.ts` has mixed line endings.) **secret-egress DONE 2026-06-23 — #5 COMPLETE,
+   catalog now 17/17:** 2 mutants corrupt the `SINK_REQUIREMENTS` registry key (response.body / ai.remoteInference)
+   so the sink lookup misses → an unsafe value escapes with no `LLN-VALUESTATE-003`; `domain-security.test` kills
+   both `[test]`. *Finding:* the first two targets I tried SURVIVED, which was informative — the egress gate is
+   **multi-layered defense-in-depth** (sentinel-egress never-drop has TWO mechanisms + an unreachable re-push;
+   `isNetworkSink` is redundant with the registry), so mutation testing must target the **authoritative layer**
+   (the registry). Every fail-closed gate class is now mutation-regression-protected.
 6. **[MEDIUM] Flip the enforcers from report-only to CI-enforcing** — drive the scanner baseline 154→0 (+ doc-drift
    24, provenance 2) across Stages F/G/H, then drop `--soft` on `lint-conventions` + the scanner (Stage J). Today
    nothing can fail a build (the taxonomy/standards gap, dimension at 58%).
