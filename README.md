@@ -85,17 +85,7 @@ Run on an **Intel i9-9900K (8C/16T) + NVIDIA RTX 2060**, across Rust (native, ge
 | **B8 governed HTTP transport (TLSTP)** | in progress | **S1 K3 cert/channel-validation gate shipped** (`logicn-core-network`, 126 tests, fail-closed `revocation-unknown → DENY`, SEC-002 mutation-guarded) — wiring into live kernel auth + 0066 first-3 (handshake-bind · raw-byte shim · ECH/OHTTP) are next |
 | **Tri-Pipe fault tolerance (binary/hybrid/photonic)** | re-R&D | shipped: fail-closed core · arena + overflow traps · DbC post-conditions · K3 fail-safe · NMR tolerance · Freivalds verify · DRCM containment. A multi-agent stability re-R&D is in flight |
 
-> **Full roadmap + % audit** → [logicn-roadmap-and-percent-audit-2026-06-23.md](docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23.md) · [build-roadmap](docs/Knowledge-Bases/logicn-build-roadmap.md)
->
-> **Recent (2026-06-23)** → **TLSTP S1 cert-gate** — the B8 build-first K3 cert/channel-validation gate landed (`logicn-core-network`, 126 tests, fail-closed `revocation-unknown → DENY`, reuses the shipped `vAnd`/`allOf`/`decideAtBoundary` K3 rails, no new crypto; adversarially verified across 4 lenses + SEC-002 mutation-guarded). Kernel-wiring (live admission) is the next step. **53/53 · 5,042** · overall completion **~76%**.
->
-> **Recent (2026-06-22)** → **B8 HTTP transport UNLOCKED** by owner · **4-process QA-tooling program complete**: SEC-002 mutation/red-team gate (kills 3 B5a mutants) · DOC-004 doc-drift · BLD-003 artifact provenance/freshness (folds #216) · #218 derived code-registry + coverage cross-check · kb-index KB search over ~506 docs.
->
-> **Recent (2026-06-21)** → **application-framework build**: `logicn new app` scaffolder (B1) · unified admission capability vocabulary (B2 — compiler-canonical, alias-aware, drift-guarded) · signing-key **revocation** wired into the package resolver + bridge-attestation (+ new `bridge-attest verify`) · high-authority cap tiering at `border-check` · framework plan + flowchart + roadmap/% audit · **Tri-Pipe fault-tolerance re-R&D** launched · **53/53 · 4,980** · governance change-class **NEUTRAL — no authority widening** · graph 3,750 nodes / 4,148 edges.
->
-> **Recent (2026-06-20)** → security residuals closed (**0033** use-after-free REJECT-fill on free · **GOV-003** intermediate-binding response-leak · **`.tmf`** `crypto.timingSafeEqual` integrity compares; the three prior **0032** liveness hazards — fail-open loop, recursion OOM, sub-interpreter gate-drop — verified already-fixed) · **0017** first-class fail-closed `on_*_fault` handlers · **0016** contract-driven test generator (5-dimension vector taxonomy) · governance change-class **NEUTRAL — no authority widening** · graph 3,712 nodes / 4,103 edges · 50/50 · 4,731.
->
-> **Recent (2026-06-17)** → senior-developer zero-trust audit (advanced-prototype verdict; P0s: history-scrub of rotated signing key, denied `groq-inference-v1` placeholder hash, repo-wide typecheck reproducibility) · third-party license audit CLEAN + [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) shipped (all deps permissive/free) · benchmark unit-bug fixed + corrected numbers · #128(a) WAT fail-closed fix · notes 37/38/39 + tri-pipe/nested-quantum/partial-governance dispatched to R&D.
+**Full roadmap, % audit, and changelog** → [logicn-roadmap-and-percent-audit-2026-06-23.md](docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23.md) · [build-roadmap](docs/Knowledge-Bases/logicn-build-roadmap.md). *Latest (2026-06-23): the B8 TLSTP S1 K3 cert-gate landed (fail-closed `revocation-unknown → DENY`); wiring it into live kernel admission is the next step.*
 
 ---
 

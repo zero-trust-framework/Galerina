@@ -112,6 +112,11 @@
 | `logicn-framework-layer-design.md` | **Framework-layer scope decision** — one secure App Kernel boundary + many protocol adapters (REST now; SOAP/gRPC/GraphQL later); "no middleware" = fixed kernel pipeline; build order P1–P6 (P1/B2/B3 DONE); explicitly excludes notes' Citadel/photonic/Zig/middleware-fusion material |
 | `logicn-framework-api-server-v02.md` / `…-implementation.md` | Detailed REST/HTTP transport spec (v0.2) consumed by the framework layer's P2 |
 | `logicn-wasmtime-baseline.md` | Benchmark baseline: governance-cost 3.2K/s → 1.88M/s after WASM. *Context (2026-06-17): this is Stage-A tree-walker → WASM tier, NOT a "beats Python" claim; see `logicn-roadmap-and-audit-2026-06-17.md` §4 for the corrected cross-language hierarchy (interpreter is below Python; WASM is native-class).* |
+| `logicn-roadmap-and-percent-audit-2026-06-23.md` | **CURRENT READ-FOR-STATUS doc** — 53/53 · 5,042 · ~76%; weighted %-audit + NEAR/MID/LONG roadmap (supersedes the 2026-06-21/-22 audits). |
+| `logicn-outstanding-rd-and-todos-2026-06-23.md` | Single source of truth for everything outstanding — R&D gaps, designed-but-unbuilt, build items, missing/incomplete packages. |
+| `logicn-rd-results-log.md` | **R&D verdict quick-lookup** — adopted / designed / tracked / **refuted (with reasons)** / pending / gated; append a row per `done/NNNN-*`. |
+| `logicn-architecture-rd-2026-06-23.md` | Forward architecture R&D — zero-trust · best-tech · photonic-tri · Tri-Pipe + tower-citizen integration; 16-item prioritised build ladder. |
+| `logicn-contract-permissions-design.md` | **Layer 2B Syntax (DESIGN, net-new)** — `contract.permissions { hardware.camera }` device-grant clause (V_PERM + LLN-PERM-001..006, fail-closed). |
 
 ### Supporting Reference
 
