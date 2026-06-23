@@ -1053,13 +1053,18 @@ export function emitWATExpr(
           const fields = recordLayouts.get(recType);
           const idx = fields ? fields.indexOf(memberName) : -1;
           if (idx >= 0) {
-            const off = idx * WAT_REC_FIELD_SIZE;
             const local = vars.get(receiverName);
-            const recvWat = local !== undefined ? `(local.get ${local})` : `(i32.const 0)`;
+            // #163: a record-typed receiver with NO WAT local cannot yield a real base
+            // pointer. Fail CLOSED (trap) — never read reserved scratch at (i32.const 0),
+            // which would silently load a wrong-but-plausible value instead of trapping.
+            if (local === undefined) {
+              return `(unreachable) ;; unresolved record base: ${receiverName} — fail-closed (emitter cannot lower; #163)`;
+            }
+            const off = idx * WAT_REC_FIELD_SIZE;
             // NO trailing ;; comment — this expression is used INLINE (e.g. inside
             // (i32.add <left> <right>)), and a line comment would swallow the closing
             // paren of the enclosing S-expression.
-            return `(i32.load (i32.add ${recvWat} (i32.const ${off})))`;
+            return `(i32.load (i32.add (local.get ${local}) (i32.const ${off})))`;
           }
         }
       }
@@ -1199,8 +1204,14 @@ export function emitWATExpr(
           parts.push(`)`);
           return parts.join("\n");
         }
-        // Fallback: unknown base type — keep the null-handle placeholder (no trailing
-        // ;; comment so it stays safe as an inline argument).
+        // #163: INSIDE an emission walk (recordCtx active) but we could not lower the
+        // update (un-inferable base type / missing layout) → fail CLOSED with a trap,
+        // never a silent null record handle (downstream would read it as a wrong-but-
+        // plausible value instead of trapping). OUTSIDE an emission walk (recordCtx ===
+        // null) keep the placeholder so analysis-only pipeline callers are unchanged.
+        if (recordCtx !== null) {
+          return `(unreachable) ;; #record-update: base type unknown — fail-closed (emitter cannot lower; #163)`;
+        }
         return `(i32.const 0)`;
       }
       const children = node.children ?? [];
