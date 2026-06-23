@@ -113,6 +113,7 @@ Commands:
   logicn manifest-to-dot <file.lln>                   export manifest as Graphviz DOT for DAG audit
   logicn init-env                                      validate capabilities against root policy
   logicn keygen                                        generate Ed25519 signing keypair for manifests
+  logicn keygen --hybrid                               generate hybrid Ed25519 + ML-DSA-65 (PQ) keypair (#34)
   logicn deploy <file.lln> [--tag <image>]            run full deploy pipeline (check+build+verify+health)
   logicn budget                                        show auto assimilation_memory_budget for this machine
   logicn version                                      show version and runtime status
@@ -287,9 +288,48 @@ Baseline comparison (governance-cost):
   // Stage A: Ed25519 (Node.js native crypto)
   // Stage B: ML-DSA-65 (NIST FIPS 204) — upgrade once Node.js adds FIPS 204 support
   if (command === "keygen") {
-    const { generateKeyPairSync, randomBytes } = await import("node:crypto");
+    const { generateKeyPairSync, randomBytes, createPublicKey, createPrivateKey } = await import("node:crypto");
     const { writeFileSync: wfs, mkdirSync: mds, chmodSync: chm } = await import("node:fs");
     const { join: pjoin } = await import("node:path");
+
+    // ── #34: hybrid Ed25519 + ML-DSA-65 (NIST FIPS 204) keygen — wires the shipped, tested
+    // generateHybridGovernanceKeyPair into the offline key ceremony. Opt-in via --hybrid/--pq; the
+    // Ed25519 material stays byte-compatible with the legacy path (DER→PEM) so existing verify works.
+    if (rest.includes("--hybrid") || rest.includes("--pq")) {
+      const keyId = randomBytes(8).toString("hex");
+      const cc = await import(new URL("packages-logicn/logicn-core-compiler/dist/index.js", import.meta.url).href);
+      const kp = await cc.generateHybridGovernanceKeyPair(keyId);
+      const pubPem = createPublicKey({ key: Buffer.from(kp.publicKey), format: "der", type: "spki" }).export({ type: "spki", format: "pem" });
+      const privPem = createPrivateKey({ key: Buffer.from(kp.privateKey), format: "der", type: "pkcs8" }).export({ type: "pkcs8", format: "pem" });
+      mds("governance", { recursive: true });
+      const pubKeyPath = pjoin("governance", `signing-key-${keyId}.pub.pem`);
+      const mldsaPubPath = pjoin("governance", `signing-key-${keyId}.mldsa.pub.b64`);
+      wfs(pubKeyPath, pubPem);
+      wfs(mldsaPubPath, Buffer.from(kp.mlDsaPublicKey).toString("base64") + "\n");
+      const envPath = ".env.logicn-signing";
+      const envContent = [
+        `# LogicN governance signing key — NEVER COMMIT THIS FILE`,
+        `# Key ID: ${keyId}`,
+        `# Algorithm: ${kp.algorithm} (hybrid Ed25519 + ML-DSA-65, NIST FIPS 204 — #34 post-quantum)`,
+        `LOGICN_SIGNING_KEY_ID=${keyId}`,
+        `LOGICN_SIGNING_ALGORITHM=${kp.algorithm}`,
+        `LOGICN_SIGNING_KEY_CREATED=${new Date().toISOString()}`,
+        `LOGICN_SIGNING_PRIVATE_KEY_B64=${Buffer.from(privPem).toString("base64")}`,
+        `LOGICN_SIGNING_MLDSA_PRIVATE_KEY_B64=${Buffer.from(kp.mlDsaPrivateKey).toString("base64")}`,
+        ``,
+      ].join("\n");
+      wfs(envPath, envContent, { mode: 0o600 });
+      try { chm(envPath, 0o600); } catch { /* Windows / unsupported FS — best-effort */ }
+      console.log(`\n✅ LogicN HYBRID (post-quantum) governance signing keypair generated`);
+      console.log(`   Algorithm:   ${kp.algorithm}  (Ed25519 + ML-DSA-65, NIST FIPS 204)`);
+      console.log(`   Key ID:      ${keyId}`);
+      console.log(`   Public keys: ${pubKeyPath}`);
+      console.log(`                ${mldsaPubPath}  (safe to commit)`);
+      console.log(`   Private keys: ${envPath}      (NEVER COMMIT — keep in OFFLINE custody)`);
+      console.log(`\n   #34 offline ceremony: run on an air-gapped host; keep ${envPath} in offline custody.`);
+      console.log(`   Runbook: docs/Knowledge-Bases/logicn-34-offline-key-ceremony-runbook.md\n`);
+      process.exit(0);
+    }
 
     // Generate Ed25519 keypair (Stage A — will upgrade to ML-DSA-65 in Stage B)
     const { publicKey, privateKey } = generateKeyPairSync("ed25519", {
