@@ -14,11 +14,13 @@ cadence). **In flight:** the **api-server transport** (unblocks security #1).
 
 ## 🔒 SECURITY — fix first (ordered by severity)
 
-1. **[HIGH] Wire the cert-gate into live kernel admission** (`kernel.ts:307`). Today the auth gate is presence-only —
-   *any non-empty `Authorization` header passes*, with zero token/cert/claim verification (the audit's only HIGH).
-   The **api-server (building now) provides the real listener/connection seam**; then make the kernel auth a K3
-   `decideAtBoundary` fold (channel-cert verdict `allOf` token verdict) so unknown→DENY gates live traffic. Closes
-   the HIGH; turns the kernel from a boolean checker into a K3 boundary citizen. *(arch-rd #1; audit HIGH.)*
+1. **[HIGH] ◑ Wire the cert-gate into live kernel admission** — **kernel K3-fold DONE 2026-06-23.** The `kernel.ts`
+   auth step now collapses an optional `LogicnKernelRequest.channelVerdict` via `decideAtBoundary`, **fail-closed**
+   (only ALLOW admits; INDETERMINATE/DENY refuse; unknown→DENY by the algebra). +3 kernel tests, kernel 87→90 green,
+   api-server e2e still green. The kernel is now a K3 boundary citizen. **Remaining:** (a) the **api-server computes
+   + passes `channelVerdict`** over TLS (needs https + peer-cert → `certGate`) for the full end-to-end path; (b)
+   **OWNER DECISION** — tighten the legacy presence-only fallback (any non-empty `Authorization` header still passes
+   when no `channelVerdict` is supplied) to demand a verdict on every required-auth route (blast radius).
 2. **[HIGH] Fix the 2 WAT codegen fail-opens** — #163 `#record-update` emits a silent `(i32.const 0)` placeholder;
    #165 float arithmetic. A cannot-lower op must emit `(unreachable)` (fail-closed trap), **never a
    plausible-but-wrong value**. Verify the WASM-parity test impact first, then fix-forward (trap or proper lowering).
