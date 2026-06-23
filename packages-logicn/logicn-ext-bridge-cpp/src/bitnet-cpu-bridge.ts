@@ -87,11 +87,13 @@ export class BitNetCpuBridge implements InferenceBridge {
 
   /** Standard 2 — Governance Signal: must pass before native execution commits. */
   canCommit(): boolean {
-    // A 0 → +1 (HOLD → COMMIT) transition requires authorisation. For a bulk
-    // T-MAC the bridge treats the whole op as a potential commit; the enforcer
-    // gates it. Unrestricted ops are always allowed.
-    return this.governance.checkTransition(0, 1).allowed
-      || this.governance.checkTransition(-1, 0).allowed; // non-commit ops always allowed
+    // Option A (CWE-863 fix, R&D handoff 2026-06-23): the COMMIT gate is the
+    // 0 → +1 (HOLD → COMMIT) transition ONLY. Deny-by-default — under the default
+    // policy this requires a registered audit signature + schema validation, so the
+    // gate can actually return false. The old `|| checkTransition(-1, 0)` disjunct was
+    // always-allowed (the policy never restricts −1→0), which made the gate INERT —
+    // a present-but-inert predicate (it could never deny by default).
+    return this.governance.checkTransition(0, 1).allowed;
   }
 
   execute(op: BridgeOp): BridgeResult {

@@ -159,19 +159,33 @@ test("CPU bridge: governance denial blocks the native addon call (fail-closed)",
   assert.equal(tmacCalls, 0, "native tmac MUST NOT run when governance denies the commit");
 });
 
-test("CPU bridge: authorized governance allows the native addon call (no behaviour change)", () => {
+test("CPU bridge: an AUDIT-SIGNED caller may commit the native addon call (Option A deny-by-default)", () => {
   let tmacCalls = 0;
   const mockAddon = {
     init() {}, free() {}, setThreads() {},
     tmac() { tmacCalls++; return 30; }, // matches the simulator reference: 1·10 −1·20 +0·30 +1·40 = 30
   };
-  const b = new BitNetCpuBridge(); // default policy → canCommit() true
+  // Option A (CWE-863): the COMMIT gate is now deny-by-default — the 0→1 transition under the
+  // default policy requires BOTH a registered audit signature AND schema validation. An
+  // authorized caller signs first; without it, canCommit() is false and execute() traps.
+  const gov = new GovernanceEnforcer();
+  gov.signAudit("T-auth", "inputhash");
+  gov.markSchemaValidated();
+  const b = new BitNetCpuBridge(undefined, gov);
   b.native = mockAddon;
   b.initialized = false;
+  assert.equal(b.canCommit(), true, "an audit-signed + schema-validated caller may commit");
   const r = b.execute(tmacOp([1, -1, 0, 1], [10, 20, 30, 40]));
   assert.equal(tmacCalls, 1);
   assert.equal(r.executedNatively, true);
   assert.equal(r.value, 30);
+});
+
+test("CPU bridge: an UNSIGNED caller cannot commit by default (Option A — the gate is no longer inert)", () => {
+  // The regression that Option A fixes: with the old `|| checkTransition(-1,0)` disjunct this was
+  // ALWAYS true. Now an unsigned caller under the default policy is denied — deny-by-default.
+  const b = new BitNetCpuBridge(); // default policy, no audit signed
+  assert.equal(b.canCommit(), false, "unsigned + unvalidated caller must NOT be able to commit");
 });
 
 test("GPU bridge: governance denial blocks native execution when CUDA is ready (fail-closed)", () => {

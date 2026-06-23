@@ -47,8 +47,9 @@ export class BitNetGpuBridge implements InferenceBridge {
   gpuDetected(): boolean { return this.gpu.available; }
 
   canCommit(): boolean {
-    return this.governance.checkTransition(0, 1).allowed
-      || this.governance.checkTransition(-1, 0).allowed;
+    // Option A (CWE-863 fix): COMMIT gate = the 0 → +1 transition ONLY, deny-by-default.
+    // The old `|| checkTransition(-1, 0)` disjunct was always-allowed → an inert gate.
+    return this.governance.checkTransition(0, 1).allowed;
   }
 
   execute(op: BridgeOp): BridgeResult {
