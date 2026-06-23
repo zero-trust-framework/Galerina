@@ -101,4 +101,41 @@ Grammar + `permissionsDecl` AST → device vocabulary table → governance-verif
 alias/deprecation (LLN-PERM-003/004) + doc reconciliation. Each step gets ≥1 MUST-FLAG + ≥1 MUST-PASS fixture per
 the #219 triad standard.
 
-> Source: forward-architecture R&D workflow `wvauqijwc` (2026-06-23), dimension `permissions-contract`.
+## 9. `permissions{}` and third-party packages — it does NOT apply (use `effects{}`)
+
+**Critical clarification (grounded in `logicn-third-party-plugin-authoring-guide.md:110`):** a third-party governed
+package's capability surface is **`effects{}`, not `permissions{}`** — *"Do not look for a separate `permissions{}`
+block — there isn't one, deliberately"* (0062 §2: a second surface would drift from `effects{}`).
+
+- **Today**, a third-party package declares what it may touch in `effects{}` (`network.outbound`, `ai.inference`,
+  `database.write`, …) plus the signed `.lmanifest fuse{}` `capabilities`. The fuse-loader's **Gate-3 (closed
+  capabilities)** wires host imports ONLY for declared caps; an undeclared capability has no import →
+  `LLN-FUSE-UNKNOWN-CAP` → `CRITICAL_SECURITY_VIOLATION`. **Capability is conferred by the importer, not declared by
+  the package** (AI/cleverness cannot expand the set), and a dependency may use only a **subset** of its parent's
+  mask (transitive `effects(child) ⊆ mask(parent)`, #202).
+- **The `contract.permissions{}` device clause (this doc) is a FLOW-level clause for PHYSICAL DEVICES**
+  (camera/mic/location) — distinct from the package effects-surface. If a third-party package needs a device, its
+  `permissions{}` request is governed by the **same containment**: deny-by-default, conferred by the importer, and
+  clamped **⊆ the importer's granted device set** (the same differential-proof/clamp as the `browser{permissions{}}`
+  environment ceiling, §5). A package can never self-grant `hardware.camera`; the app that fuses it must grant it,
+  down to the env ceiling. `LLN-PERM-006` enforces the ⊆-ceiling.
+
+**Worked example — an app fusing a third-party `image-tagger` package:**
+```lln
+// inside image-tagger (the third-party package): its capability surface = effects{}
+secure flow tagImage(img: Image) -> Result<Tags, TagError>
+contract {
+  intent  { "Classify an image into content tags." }
+  effects { ai.inference, storage.read }      // the ONLY host imports it receives
+  limits  { memory 128mb request_time 5s }
+  // permissions { hardware.camera }           // FUTURE device clause — only if it captures, and only if the app grants it
+}
+{ /* ... */ }
+```
+The app fuses `image-tagger`'s signed `.wasm` at the 3 gates; the fuse-loader gives it host imports for
+`ai.inference` + `storage.read` and **nothing else**. If `image-tagger` later needs the camera it adds
+`permissions { hardware.camera }`, but only receives the device if the importing app's grant (≤ the env ceiling)
+includes it — otherwise admission denies (`LLN-PERM-006`).
+
+> Source: forward-architecture R&D workflow `wvauqijwc` (2026-06-23), dimension `permissions-contract`;
+> third-party grounding from `logicn-third-party-plugin-authoring-guide.md`.
