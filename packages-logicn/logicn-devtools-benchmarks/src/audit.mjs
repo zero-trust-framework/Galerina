@@ -65,7 +65,9 @@ for (const [id, field] of Object.entries(CHECKSUM_FIELD)) {
 
 // ── 2. Unit alignment (no FAIL) + 3. exclusions intact ──────────────────────
 console.log("\n2. Unit alignment + 3. exclusions");
-const MUST_BE_NONCOMPARABLE = new Set(["matrix-multiply", "tri-logic", "data-query"]);
+// matrix-multiply un-excluded 2026-06-23 (normalized to mul-adds/s — a size-invariant GEMM metric).
+// tri-logic & data-query stay excluded: their workload SHAPES (not just sizes) differ across runtimes.
+const MUST_BE_NONCOMPARABLE = new Set(["tri-logic", "data-query"]);
 for (const bench of data) {
   const u = bench.units;
   if (!u) continue;

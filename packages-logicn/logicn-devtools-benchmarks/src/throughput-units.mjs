@@ -149,11 +149,16 @@ const SPECS = {
 
   // ── NON-COMPARABLE: flag & exclude (workload shape/size differs) ──────────
   "matrix-multiply": {
-    N: 1024, unit: "cells/s", comparable: false,
-    reason: "workload SIZE differs by runtime — LogicN/WASM n=32 (1024 cells, 32³ mul-adds), " +
-            "node/python/rust n=64 (4096 cells, 64³), Deno n=128 (16384 cells). Per-cell work " +
-            "(dot-product length n) also differs, so no shared unit is apples-to-apples until n is unified.",
-    native: () => null,
+    // FIXED 2026-06-23: normalize to MUL-ADDS/s (= matmuls/s × n³), the standard size-invariant GEMM
+    // throughput metric (GFLOPS-style), so the different n become comparable in ONE unit. n still differs
+    // per runtime (LogicN/WASM 32, node/python/rust 64, Deno 128), so this measures mul-add THROUGHPUT —
+    // a real result that includes cache-hierarchy effects at larger n — not same-size wall-clock timing.
+    // LogicN/WASM (one main() = one 32³ matmul) normalize generically from N = 32³.
+    N: 32 * 32 * 32, unit: "mul-adds/s", comparable: true,
+    native: (rt, r) => {
+      const n = rt === "denoWebGpu" ? 128 : 64;        // node/python/rust/rustAvx2 = 64; Deno WebGPU = 128
+      return scale(r.iterationsPerSecond, n * n * n);  // matmuls/s × n³ mul-adds = mul-adds/s
+    },
   },
   "tri-logic": {
     N: 27000, unit: "trit-ops/s", comparable: false,
