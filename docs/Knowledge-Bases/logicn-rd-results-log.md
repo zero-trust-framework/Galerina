@@ -26,6 +26,7 @@ refuted, with the reason — then refreshes the KB index. See [[feedback-rd-abso
 | 0085 | RAG-vulnerabilities rulebook-curator → reconcile `LOGICN_SECURITY_RULEBOOK` + RAG threat class | ⏳ |
 | 0090 | Front-file / root-layout reorg to match the framework layout (PLAN only) | ⏳ |
 | 0091 | Base-package set a standard framework requires (full list to review) | ⏳ |
+| 0092 | Unify tri-logic + data-query benchmark workloads (so they become unit-comparable) | ⏳ |
 
 ## Adopted / Designed (recent)
 | Topic | Verdict | Why / what | Ref |

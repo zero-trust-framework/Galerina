@@ -102,7 +102,12 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
   #105) — moves Axis-B 80%→100% (`tokenize` is the only flow at byte-parity today).
 - **Close the 4 WASM codegen gaps** (#200 nested-member · #171 None sentinel · #172 `__int_to_str` · run-host string).
 - **0014 governance-fidelity differential harness** (walker ≡ bytecode ≡ WASM) — the lean→WASM trust gate.
-- **ML-DSA-65 hybrid `.lmanifest` signing** (#34, offline custody) — the remaining PQ gap (verify is PQ-ready).
+- **ML-DSA-65 hybrid `.lmanifest` signing** (#34) — **UNBLOCKABLE 2026-06-23**: the signing CODE is already
+  shipped + tested (`proof-graph.ts` `generateHybridGovernanceKeyPair`/`signProofGraphHybrid`/`verify…Hybrid`,
+  `tests/hybrid-pq-signature.test.mjs`); secure generation (QRNG/SP-800-90) + custody/rotation lifecycle research
+  all exist. The only gate was the owner's **offline key ceremony** — now documented as a runbook
+  ([#34 ceremony](logicn-34-offline-key-ceremony-runbook.md)). Residual is owner-only (air-gapped keygen) +
+  two smoothing follow-ups (a `logicn sign` CLI; #110/Gap-A rotation-body retention). Also covers the #149 re-sign.
 - **#216 WASM build-provenance** (fold/finish via BLD-003) · **#202 transitive capability-mask ⊆** · **#212
   kernel→runtime governance-deny bridge** (completes the cert-gate verdict→HTTP-response story once #1 lands).
 
