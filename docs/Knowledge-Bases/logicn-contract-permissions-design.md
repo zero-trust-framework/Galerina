@@ -120,22 +120,35 @@ block — there isn't one, deliberately"* (0062 §2: a second surface would drif
   environment ceiling, §5). A package can never self-grant `hardware.camera`; the app that fuses it must grant it,
   down to the env ceiling. `LLN-PERM-006` enforces the ⊆-ceiling.
 
-**Worked example — an app fusing a third-party `image-tagger` package:**
+**Where the grant lives — at the IMPORT SITE, not in the package.** Capabilities for a third-party plugin are
+conferred **where it is imported** (the main module / `boot.lln`), via an `access { grant … }` block on the
+`import plugin` statement — **Default Deny** (only listed caps; filesystem/shell/secrets auto-denied). The plugin's
+own `effects{}` must be a **subset** of that grant, proven at compile time by the deep DAG audit. Grounded example
+([`examples/foundations/hardened-border-plugin.lln`](../../examples/foundations/hardened-border-plugin.lln)):
+
 ```lln
-// inside image-tagger (the third-party package): its capability surface = effects{}
-secure flow tagImage(img: Image) -> Result<Tags, TagError>
-contract {
-  intent  { "Classify an image into content tags." }
-  effects { ai.inference, storage.read }      // the ONLY host imports it receives
-  limits  { memory 128mb request_time 5s }
-  // permissions { hardware.camera }           // FUTURE device clause — only if it captures, and only if the app grants it
+;; In the IMPORTING module (main / boot.lln) — THIS is where capabilities are SET:
+import plugin safe "./plugins/payment-gateway.lln" as Pay {
+  contract {
+    intent "Payment gateway — stateless per call"
+    access {                       ;; Default Deny — only these are granted
+      grant network.outbound       ;; V_DPM bit 0
+      grant audit.write            ;; V_DPM bit 3
+    }                              ;; filesystem / shell / secrets → automatically denied
+  }
 }
-{ /* ... */ }
 ```
-The app fuses `image-tagger`'s signed `.wasm` at the 3 gates; the fuse-loader gives it host imports for
-`ai.inference` + `storage.read` and **nothing else**. If `image-tagger` later needs the camera it adds
-`permissions { hardware.camera }`, but only receives the device if the importing app's grant (≤ the env ceiling)
-includes it — otherwise admission denies (`LLN-PERM-006`).
+The `payment-gateway` package does **not** grant itself anything — it only declares `effects { … }` (what it uses),
+and the DAG audit proves `effects(plugin) ⊆ granted(access)`. `import plugin safe` is demand-loaded (any module);
+`import plugin assimilate` (Hot-Code Residency, pre-warmed, reserves V_DPM slots for the whole process lifetime)
+may be granted **only in `boot.lln`** (`LLN-ASSIMILATE-001`). Toxic-Border protocol: the plugin is a hostile DMZ —
+inputs trapped, run in a `step` DWI isolate, hard-erased after.
+
+**Device permissions follow the same rule.** If a plugin needs `hardware.camera`, the *importer* grants it at the
+import site (clamped ≤ the env ceiling, `LLN-PERM-006`); the plugin never self-grants. So **`permissions{}` is never
+the third-party grant mechanism** — `access { grant … }` at the import site is, and the package's `effects{}`/(future
+device) requests are clamped ⊆ it.
 
 > Source: forward-architecture R&D workflow `wvauqijwc` (2026-06-23), dimension `permissions-contract`;
-> third-party grounding from `logicn-third-party-plugin-authoring-guide.md`.
+> third-party grounding from `logicn-third-party-plugin-authoring-guide.md` +
+> `examples/foundations/hardened-border-plugin.lln` (owner correction 2026-06-23: the grant is at the import site).
