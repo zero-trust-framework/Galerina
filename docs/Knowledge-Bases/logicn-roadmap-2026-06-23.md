@@ -46,8 +46,14 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
    artifacts with the rotated key (offline custody, gated on #34) + a **history rewrite**. The scan deliberately does NOT
    allowlist that key, so the gate stays red until remediated. (Key already revoked → Deny.)
 4. **[MEDIUM] Tainted-by-default at entry boundaries** — the 34B bare-flow-param trust
-   (`value-state-checker.ts:1162-1191`): an un-annotated param from a hostile caller is fail-open by default. Make
-   boundary-entry flows tainted-by-default (posture-gated; non-breaking for internal flows). *(arch-rd #4.)*
+   (`value-state-checker.ts:1152-1191`, `registerParamBinding`): 34A made an explicit `tainted` param untrusted
+   but **bare params stay trusted** (opt-in); a bare param on an externally-reachable flow is fail-open. *(arch-rd #4.)*
+   **VERIFY-BEFORE-BUILD 2026-06-23: this is design-heavy, NOT a clean autonomous chunk** — it needs (1) a precise
+   **"boundary-entry" definition** (flow-kind `secure`/`guarded` + a `contract.request{}` block is the cleanest
+   signal), (2) a **posture model** (the strictness must be posture-gated; `posture` lives in governance-verifier/
+   interpreter, not the value-state pass — needs threading), and (3) broad **test-impact analysis** (it changes the
+   default taint of many params across the 3,170-test compiler suite + the self-hosted corpus). **Recommend a
+   deliberate design pass / R&D-bridge job before building** — surfaced for owner sequencing.
 5. **[MEDIUM] ◑ Extend the SEC-002 mutant catalog** beyond the 3 B5a mutants. **cert-gate + fuse-loader DONE
    2026-06-23** — 5 TLSTP-S1 cert mutants (revocation-unknown/stale/throw→ALLOW · pin-mismatch soften · no-pin→ALLOW)
    + 3 fuse-loader gate mutants (hash · signature · revocation). Full run **11/11 killed, 0 survived, all `[test]`**.
@@ -55,8 +61,12 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
    (b) **the kernel `KERNEL_BUILD` ran `npm run build` = bare `tsc` (not on PATH) so it ALWAYS exited 1 — every
    kernel mutant, including the 3 pre-existing B5a ones, was vacuously "killed by build" with its test never
    running. Switched to the vendored tsc; the B5a adversarial coverage is genuine for the first time.** The
-   `audit-mutation.mjs:28` `--config`-absent CLI crash was already fixed. **Remaining:** secret-egress /
-   i32-overflow mutants — so **every** fail-closed gate is mutation-regression-protected.
+   `audit-mutation.mjs:28` `--config`-absent CLI crash was already fixed. **i32-overflow DONE 2026-06-23** — 4
+   mutants on `i32-arith.ts` (the single trap-not-wrap source of truth: add/sub/mul/div wrap-instead-of-trap),
+   all `[test]`-killed; **catalog now 15/15**. (add/sub use a single-line `(a op b) | 0` pre-wrap anchor —
+   CRLF-agnostic, since `i32-arith.ts` has mixed line endings.) **Remaining:** the **secret-egress** gate
+   (`logicn-core-sentinel-egress` never-drop / the VALUESTATE-006/007 secret→network-sink guard) — the last
+   uncovered fail-closed gate class.
 6. **[MEDIUM] Flip the enforcers from report-only to CI-enforcing** — drive the scanner baseline 154→0 (+ doc-drift
    24, provenance 2) across Stages F/G/H, then drop `--soft` on `lint-conventions` + the scanner (Stage J). Today
    nothing can fail a build (the taxonomy/standards gap, dimension at 58%).
