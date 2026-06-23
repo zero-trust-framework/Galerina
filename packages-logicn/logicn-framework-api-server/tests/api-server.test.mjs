@@ -193,14 +193,17 @@ test("no resolver configured → unchanged header path (no auth header → 401)"
   });
 });
 
-test("resolver returns undefined → defers to header path (Authorization header admits)", async () => {
+test("resolver returns undefined + header present → 401 (tightened: header presence is not authentication)", async () => {
   await withSecureServer({ resolveChannelVerdict: () => undefined }, async (port, ran) => {
     const res = await request(port, {
       method: "GET",
       path: "/secure",
       headers: { authorization: "Bearer tok" },
     });
-    assert.equal(res.status, 200); // undefined verdict → kernel header path → header present → admitted
-    assert.equal(ran.value, true);
+    // Tightened default (owner 2026-06-23): with no channel verdict supplied, a required-auth route
+    // does NOT admit on mere Authorization-header presence — the channel/identity verdict is the auth
+    // signal. (A route may opt back into the legacy presence-only behaviour via allowHeaderPresenceFallback.)
+    assert.equal(res.status, 401);
+    assert.equal(ran.value, false);
   });
 });

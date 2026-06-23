@@ -79,6 +79,44 @@ test("auth: channel verdict ALLOW (+1) admits even with NO Authorization header 
   assert.notEqual(res.status, 401);
 });
 
+// ── Tightened header-presence fallback (owner decision 2026-06-23, fail-closed by default) ──
+// A required-auth route with NO channelVerdict no longer admits on mere Authorization-header
+// presence — presence is not authentication. Opt back in per-route via allowHeaderPresenceFallback.
+
+test("auth: required + no verdict + header PRESENT but no opt-in → 401 (tightened default)", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure" }], // default required, no fallback opt-in
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure", headers: { authorization: "Bearer tok" } }));
+  assert.equal(res.status, 401);
+  assert.equal(errorOf(res), "unauthorized");
+  assert.equal(ran, false); // header presence alone is NOT sufficient
+});
+
+test("auth: required + allowHeaderPresenceFallback + header PRESENT → admits (legacy opt-in)", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure", auth: { mode: "required", allowHeaderPresenceFallback: true } }],
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure", headers: { authorization: "Bearer tok" } }));
+  assert.notEqual(res.status, 401);
+  assert.equal(ran, true); // explicit opt-in restores the weaker presence-only behaviour
+});
+
+test("auth: allowHeaderPresenceFallback opt-in still 401s when NO header is present", async () => {
+  let ran = false;
+  const k = createAppKernel({
+    routes: [{ method: "GET", path: "/secure", handler: "secure", auth: { mode: "required", allowHeaderPresenceFallback: true } }],
+    dispatch: { secure: () => { ran = true; return { body: { ok: true } }; } },
+  });
+  const res = await k.handle(req({ method: "GET", path: "/secure" }));
+  assert.equal(res.status, 401);
+  assert.equal(ran, false);
+});
+
 test("public route is allowed without Authorization (handler runs)", async () => {
   let ran = false;
   const k = createAppKernel({

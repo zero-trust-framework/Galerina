@@ -67,8 +67,16 @@ export function resolveEffectiveRoutePolicy(
     auth = SECURE_DEFAULTS.auth;
     appliedDefaults.push("auth");
   } else {
-    auth = { mode: route.auth.mode ?? "required", scopes: route.auth.scopes ?? [] };
+    auth = {
+      mode: route.auth.mode ?? "required",
+      scopes: route.auth.scopes ?? [],
+      // Carry the legacy presence-only opt-in through; default off (tightened/fail-closed).
+      ...(route.auth.allowHeaderPresenceFallback === true ? { allowHeaderPresenceFallback: true } : {}),
+    };
     if (auth.mode === "public") relaxations.push("auth:public");
+    // An explicit relaxation worth surfacing in the security report — it weakens required-auth to
+    // accept mere header presence as authentication.
+    if (auth.allowHeaderPresenceFallback === true) relaxations.push("auth:header-presence-fallback");
   }
 
   // ── body ──
