@@ -113,6 +113,19 @@ export class BitNetCpuBridge implements InferenceBridge {
       };
     }
 
+    // Standard 2 — Governance Signal (PREFLIGHT): the COMMIT gate MUST pass before any
+    // native execution. Fail-closed — a denied (or indeterminate) transition blocks the
+    // kernel and MUST NOT fall through to the native addon. (Preflight only; mid-compute
+    // revocation is a separate concern.) This wires the gate the docstring + canCommit()
+    // already advertised but execute() never called — closing the native governance bypass.
+    if (!this.canCommit()) {
+      throw new Error(
+        "[CITIZEN_STANDARD_VIOLATION]: GovernanceEnforcer denied the COMMIT transition " +
+          "(0 -> +1) — Standard 2 (Governance Signal) blocks native BitNet execution. " +
+          "Fail-closed: no native addon call is made.",
+      );
+    }
+
     // Native present — execute and cross-check (Standard 1).
     if (!(op.weights instanceof Int32Array)) {
       throw new Error("[BITNET_CPU]: native path requires packed Int32Array weights (zero-copy)");

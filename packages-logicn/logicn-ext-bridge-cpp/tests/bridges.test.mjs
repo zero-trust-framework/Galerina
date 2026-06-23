@@ -8,6 +8,7 @@ import {
   loadNativeAddon,
   selectTernaryBridge,
 } from "../dist/index.js";
+import { GovernanceEnforcer } from "@logicn/tower-citizen";
 
 // Pack a trit array into BitNet-faithful i32 words (same layout the simulator decodes).
 function packTrits(trits) {
@@ -126,4 +127,49 @@ test("selectTernaryBridge returns a working bridge for this machine", () => {
   assert.equal(b.bridgeId, "bitnet-cpu");
   const r = b.execute(tmacOp([1, 1], [3, 4])); // 3 + 4 = 7
   assert.equal(r.value, 7);
+});
+
+// ── Standard 2 governance gate on the NATIVE branch — fail-closed (security fix 2026-06-23) ──
+// execute() now calls canCommit() BEFORE the native addon. Previously the native branch skipped
+// the gate (governance bypass). A mock addon is injected to exercise the native path in CI (no
+// real .node is built here). canCommit() ORs 0->1 and -1->0, so the deny policy restricts BOTH.
+
+test("CPU bridge: governance denial blocks the native addon call (fail-closed)", () => {
+  let tmacCalls = 0;
+  const mockAddon = {
+    init() {}, free() {}, setThreads() {},
+    tmac() { tmacCalls++; return 999; }, // a wrong value if ever (incorrectly) reached
+  };
+  const denyAll = {
+    version: "test-deny-all",
+    defaultAction: -1,
+    restrictedTransitions: [
+      { from: 0, to: 1, requires: ["audit_signature"] },
+      { from: -1, to: 0, requires: ["audit_signature"] },
+    ],
+  };
+  const b = new BitNetCpuBridge(undefined, new GovernanceEnforcer(denyAll));
+  b.native = mockAddon;  // inject native to reach the native branch
+  b.initialized = false; // force re-init through the injected addon
+  assert.equal(b.canCommit(), false);
+  assert.throws(
+    () => b.execute(tmacOp([1, -1, 0, 1], [10, 20, 30, 40])),
+    /CITIZEN_STANDARD_VIOLATION/,
+  );
+  assert.equal(tmacCalls, 0, "native tmac MUST NOT run when governance denies the commit");
+});
+
+test("CPU bridge: authorized governance allows the native addon call (no behaviour change)", () => {
+  let tmacCalls = 0;
+  const mockAddon = {
+    init() {}, free() {}, setThreads() {},
+    tmac() { tmacCalls++; return 30; }, // matches the simulator reference: 1·10 −1·20 +0·30 +1·40 = 30
+  };
+  const b = new BitNetCpuBridge(); // default policy → canCommit() true
+  b.native = mockAddon;
+  b.initialized = false;
+  const r = b.execute(tmacOp([1, -1, 0, 1], [10, 20, 30, 40]));
+  assert.equal(tmacCalls, 1);
+  assert.equal(r.executedNatively, true);
+  assert.equal(r.value, 30);
 });
