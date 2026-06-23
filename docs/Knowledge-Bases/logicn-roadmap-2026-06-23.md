@@ -16,13 +16,17 @@ token-saving dev tools** (status/rd-absorb/stray-docs, wired into the Stop caden
 
 ## 🔒 SECURITY — fix first (ordered by severity)
 
-1. **[HIGH] ◑ Wire the cert-gate into live kernel admission** — **kernel K3-fold DONE 2026-06-23.** The `kernel.ts`
-   auth step now collapses an optional `LogicnKernelRequest.channelVerdict` via `decideAtBoundary`, **fail-closed**
-   (only ALLOW admits; INDETERMINATE/DENY refuse; unknown→DENY by the algebra). +3 kernel tests, kernel 87→90 green,
-   api-server e2e still green. The kernel is now a K3 boundary citizen. **Remaining:** (a) the **api-server computes
-   + passes `channelVerdict`** over TLS (needs https + peer-cert → `certGate`) for the full end-to-end path; (b)
-   **OWNER DECISION** — tighten the legacy presence-only fallback (any non-empty `Authorization` header still passes
-   when no `channelVerdict` is supplied) to demand a verdict on every required-auth route (blast radius).
+1. **[HIGH] ◑ Wire the cert-gate into live kernel admission** — **kernel K3-fold + transport supply BOTH DONE
+   2026-06-23.** The `kernel.ts` auth step folds an optional `LogicnKernelRequest.channelVerdict` via
+   `decideAtBoundary`, **fail-closed** (only ALLOW admits; 0/−1 refuse; unknown→DENY by the algebra). The **api-server
+   now makes the path LIVE**: a `resolveChannelVerdict(req)` hook computes the K3 verdict per request and threads it
+   to the kernel (transport → `certGate` → `channelVerdict` → fold). Fail-closed: a throwing resolver → DENY (never
+   downgraded to the header path); unset → header path (no change); only +1 authenticates (mutual-TLS in lieu of a
+   bearer token). +6 api-server e2e (5→11 green). **Remaining:** (a) a concrete **TLS peer-cert → `CertGateInput`
+   mapper helper** + an https example (the operator currently writes the mapper); (b) **OWNER DECISION** — tighten the
+   legacy presence-only fallback (any non-empty `Authorization` header still passes when no `channelVerdict` is
+   supplied); (c) **OWNER DECISION** — should a DENY channel verdict also block **public** routes (channel-level deny
+   vs route-level auth)? Today the verdict folds only in the required-auth step, so a public route ignores it.
 2. **[HIGH] Fix the 2 WAT codegen fail-opens** — #163 `#record-update` emits a silent `(i32.const 0)` placeholder;
    #165 float arithmetic. A cannot-lower op must emit `(unreachable)` (fail-closed trap), **never a
    plausible-but-wrong value**. Verify the WASM-parity test impact first, then fix-forward (trap or proper lowering).
