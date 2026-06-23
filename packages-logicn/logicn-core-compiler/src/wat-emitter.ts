@@ -1018,7 +1018,11 @@ export function emitWATExpr(
       if (watName !== undefined) return `(local.get ${watName})`;
       // Check compile-time constants (static NAME = EXPR)
       const constVal = staticConsts.get(name);
-      if (constVal !== undefined) return `(i32.const ${constVal}) ;; static ${name}`;
+      // #163 sibling: this `(i32.const N)` is an INLINE expression fragment (it gets
+      // spliced into a parent S-expression). A trailing `;;` line comment would swallow
+      // the enclosing `)` — exactly the rule the enum-variant path below (1037+) states.
+      // Use an inline-safe block comment to keep the diagnostic without the hazard.
+      if (constVal !== undefined) return `(i32.const ${constVal}) (; static ${name} ;)`;
       // Unknown identifier — emit with comment for diagnostics.
       return `(unreachable) (; unresolved: ${name} — fail-closed (emitter cannot lower; #128-sibling) ;)`;
     }
@@ -1032,7 +1036,9 @@ export function emitWATExpr(
         const receiverName = receiverNode.value ?? "";
         const dottedKey = `${receiverName}.${memberName}`;
         const constVal = staticConsts.get(dottedKey);
-        if (constVal !== undefined) return `(i32.const ${constVal}) ;; bitfield ${dottedKey}`;
+        // #163 sibling: inline-safe block comment (see the static-const path above) —
+        // this `(i32.const N)` is spliced inline, so a `;;` would swallow the enclosing `)`.
+        if (constVal !== undefined) return `(i32.const ${constVal}) (; bitfield ${dottedKey} ;)`;
 
         // P9.4d (#144): enum-variant access — EnumType.Variant → its declaration-order
         // i32 tag. NO trailing ;; comment — this is used INLINE (e.g. inside i32.store),
