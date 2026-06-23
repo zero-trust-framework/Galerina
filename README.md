@@ -85,7 +85,7 @@ Run on an **Intel i9-9900K (8C/16T) + NVIDIA RTX 2060**, across Rust (native, ge
 | **B8 governed HTTP transport (TLSTP)** | in progress | **S1 K3 cert/channel-validation gate shipped** (`logicn-core-network`, 126 tests, fail-closed `revocation-unknown → DENY`, SEC-002 mutation-guarded) — wiring into live kernel auth + 0066 first-3 (handshake-bind · raw-byte shim · ECH/OHTTP) are next |
 | **Tri-Pipe fault tolerance (binary/hybrid/photonic)** | re-R&D | shipped: fail-closed core · arena + overflow traps · DbC post-conditions · K3 fail-safe · NMR tolerance · Freivalds verify · DRCM containment. A multi-agent stability re-R&D is in flight |
 
-**Full roadmap, % audit, and changelog** → [logicn-roadmap-and-percent-audit-2026-06-23.md](docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23.md) · [build-roadmap](docs/Knowledge-Bases/logicn-build-roadmap.md). *Latest (2026-06-23): the B8 TLSTP S1 K3 cert-gate landed (fail-closed `revocation-unknown → DENY`); wiring it into live kernel admission is the next step.*
+**Roadmap (security-first)** → [logicn-roadmap-2026-06-23.md](docs/Knowledge-Bases/logicn-roadmap-2026-06-23.md) · **% audit** → [logicn-roadmap-and-percent-audit-2026-06-23.md](docs/Knowledge-Bases/logicn-roadmap-and-percent-audit-2026-06-23.md) · [build-roadmap](docs/Knowledge-Bases/logicn-build-roadmap.md). *Latest (2026-06-23): the S1 K3 cert-gate + a real api-server HTTP transport landed; the next security fix is wiring the cert-gate into live kernel admission (run `node scripts/status.mjs`).*
 
 ---
 
