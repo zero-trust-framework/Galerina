@@ -5,8 +5,15 @@
 //   ✅ Slice 2 — container reader/writer (header + 56-byte section table; §6 fail-closed reader)
 //   ✅ Slice 3 — KEM-DEM confidentiality (hybrid X25519+ML-KEM-768 → SHAKE256 KDF → AES-256-GCM + CTX commit)
 //   ⬜ Slice 4 — ML-DSA-65 signing over the root (#7), via @noble/post-quantum (hybrid Ed25519)
-//   🟡 Slice 5 — inclusion proofs + history chain (G4: chain + §5 freshness) + Governed Trust Capsule (#12)
-export { H, ARITY, ABSENT, leafHash, nodeHash, topNode, tmxRoot } from "./tmx256.js";
+//   🟡 Slice 5 — inclusion proofs ✅ + history chain (G4: chain + §5 freshness) ✅ + Governed Trust Capsule (#12)
+export { H, ARITY, ABSENT, leafHash, nodeHash, topNode, tmxRoot, rootFromTopNode } from "./tmx256.js";
+// Slice 5 (inclusion) — TMX-256 Merkle inclusion proofs: prove ONE section under the signed root without
+// shipping the file (selective disclosure / streaming verify). Membership only — authenticity is the
+// ML-DSA-65 signature over the reconstructed root (caller's, slice 4). Fail-closed; spec inclusion-proof-v0.
+export {
+  proveInclusion, reconstructRoot, verifyInclusion, verifyLeafData, serializeProof, deserializeProof,
+} from "./inclusion.js";
+export type { InclusionProof, InclusionPathEntry } from "./inclusion.js";
 export {
   MAGIC, HEADER_SIZE, HEADER_CORE_SIZE, ENTRY_SIZE, TMX_PROFILE_SHAKE,
   TmfError, headerCore, writeTmf, readTmf,

@@ -89,5 +89,14 @@ export function topNode(leafDigests: readonly Uint8Array[]): Uint8Array {
  * (byte offsets) is deliberately NOT bound — caught instead when the file is signed.
  */
 export function tmxRoot(headerCore: Uint8Array, leafDigests: readonly Uint8Array[]): Uint8Array {
-  return shake256(concat([lp(TAG_ROOT), lp(headerCore), topNode(leafDigests)]));
+  return rootFromTopNode(headerCore, topNode(leafDigests));
+}
+
+/**
+ * §5 root from a precomputed top_node — the same SHAKE256(LP(TMX-ROOT) ∥ LP(header_core) ∥ top_node)
+ * as `tmxRoot`, exposed so an inclusion proof (inclusion.ts) folds the path to a top_node and reuses
+ * the ONE canonical root computation instead of duplicating it. `tmxRoot` delegates here.
+ */
+export function rootFromTopNode(headerCore: Uint8Array, top: Uint8Array): Uint8Array {
+  return shake256(concat([lp(TAG_ROOT), lp(headerCore), top]));
 }
