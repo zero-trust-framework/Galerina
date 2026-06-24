@@ -951,6 +951,7 @@ LLN-VALUESTATE-008    An unmarked boundary input (a bare param of a secure/guard
 LLN-EFFECT-005    Effect is a broad alias; use the canonical effect name to precisely declare authority
 LLN-STDLIB-001    A stdlib call requires an effect not declared in the contract
 LLN-STDLIB-002    Unrecognised method on an effectful module — deny-by-default; declare the effect or use a recognised operation
+LLN-TIER-001      Under-declared flow tier — a flow/guarded declaration uses a secure-tier effect (egress, secret/crypto material, high-consequence sink, process exec) but is not declared 'secure', so the secure-only obligations (intent justification, epilogue proof, secret-egress sealing) never attach. Production-gated floor (build-production/build-deterministic); fix: declare it 'secure flow'.
 ```
 
 ### Governance / value classification

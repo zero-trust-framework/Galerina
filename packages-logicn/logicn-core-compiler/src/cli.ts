@@ -407,6 +407,12 @@ function compileFile(
       ? "production"
       : "development";
 
+  // LLN-TIER-001 (landing B): the flow-kind tier floor is enforced ONLY on real production
+  // builds (build-production / build-deterministic), never on check/dev. Default-off everywhere
+  // else, so all other checkEffects call sites are unaffected.
+  const enforceTierFloor =
+    (mode === "build-production" || mode === "build-deterministic");
+
   const valueStateResult = checkValueStates(parseResult.ast, effectCheckerMode);
   for (const d of valueStateResult.diagnostics) {
     pushDiag(
@@ -420,7 +426,7 @@ function compileFile(
     );
   }
 
-  const effectResults = checkEffects(parseResult.flows, parseResult.ast, effectCheckerMode);
+  const effectResults = checkEffects(parseResult.flows, parseResult.ast, effectCheckerMode, enforceTierFloor);
   for (const result of effectResults) {
     for (const d of result.diagnostics) {
       // LLN-EFFECT-001 and LLN-STDLIB-001 are downgraded to warning in dev/check/build modes.

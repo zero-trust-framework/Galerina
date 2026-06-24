@@ -399,6 +399,23 @@ const PLAIN_FLOW_PRIVILEGED_EFFECTS = new Set([
   "payment.charge",
 ]);
 
+// LLN-TIER-001 — effects that REQUIRE the `secure` flow tier. Touching any of these from a
+// `flow`/`guarded` declaration under-declares the obligation (secure-only passes never attach).
+// Deliberately conservative — benign reads (database.read, filesystem.read, desktop.user.read)
+// stay guarded-tier and are NOT included, to avoid false floors.
+const SECURE_REQUIRED_EFFECTS = new Set([
+  // Border / egress
+  "network.outbound", "network.external", "network.inbound", "network.internal", "email.send",
+  // Credential & cryptographic material
+  "secret.read", "secret.write",
+  "crypto.sign", "crypto.verify", "crypto.encrypt", "crypto.decrypt",
+  // High-consequence sinks & mutations
+  "payment.charge", "audit.write", "database.write", "filesystem.write",
+  "ai.inference", "pii.read", "pii.write", "phi.read", "phi.write",
+  // Code / process execution
+  "process.spawn", "unsafe.native",
+]);
+
 // ---------------------------------------------------------------------------
 // Helpers for suggestedCode generation
 // ---------------------------------------------------------------------------
@@ -421,6 +438,7 @@ export function checkEffects(
   flows: readonly FlowMeta[],
   ast: AstNode,
   mode: EffectCheckerMode = "production",
+  enforceTierFloor = false,
 ): readonly EffectCheckResult[] {
   const effectfulFlows = new Set(
     flows
@@ -429,7 +447,7 @@ export function checkEffects(
   );
   const callGraph = buildFlowCallGraph(flows, ast);
 
-  return flows.map((flow) => checkFlowEffects(flow, ast, flows, callGraph, effectfulFlows, mode));
+  return flows.map((flow) => checkFlowEffects(flow, ast, flows, callGraph, effectfulFlows, mode, enforceTierFloor));
 }
 
 export function checkFlowEffects(
@@ -443,6 +461,7 @@ export function checkFlowEffects(
       .map((candidate) => candidate.name),
   ),
   mode: EffectCheckerMode = "production",
+  enforceTierFloor = false,
 ): EffectCheckResult {
   const diagnostics: EffectDiagnostic[] = [];
   const flowNode = findFlowNode(ast, flow.name);
@@ -547,6 +566,29 @@ export function checkFlowEffects(
           suggestedCode: `secure flow ${flow.name}`,
         });
       }
+    }
+  }
+
+  // LLN-TIER-001 (landing B, production-gated): a flow/guarded declaration that touches a
+  // secure-required effect under-declares the obligation — the secure-only passes (intent
+  // justification, epilogue proof, secret-egress sealing) gate on qualifier === "secure" and
+  // never attach at this tier. Floor: escalate to `secure`. Default-off (enforceTierFloor
+  // false) so existing 2-arg callers and dev/check are untouched; only build-production /
+  // build-deterministic set the flag. `pure` is intentionally excluded — pure + these effects
+  // is already a hard LLN-EFFECT-003 error above.
+  if (enforceTierFloor && (flow.qualifier === "flow" || flow.qualifier === "guarded")) {
+    const tierEffects = new Set<string>([...observedEffects, ...flow.declaredEffects]);
+    const secureTriggers = [...tierEffects].filter((e) => SECURE_REQUIRED_EFFECTS.has(e)).sort();
+    if (secureTriggers.length > 0) {
+      diagnostics.push({
+        code: "LLN-TIER-001",
+        name: "UNDER_DECLARED_FLOW_TIER",
+        severity: "error",
+        message: `${flow.qualifier} flow "${flow.name}" uses secure-tier effect(s) ${formatEffects(secureTriggers)} but is declared "${flow.qualifier}", not "secure". Secure-only obligations (intent justification, epilogue proof, secret-egress sealing) are skipped at this tier.`,
+        location: flow.location,
+        suggestedFix: `Declare it "secure flow ${flow.name}" so the secure-tier obligations attach.`,
+        suggestedCode: `secure flow ${flow.name}`,
+      });
     }
   }
 
