@@ -39,9 +39,9 @@ The same payment body under all three modes:
 
 The defining behavior: **async commits the side effect then checks; resolution collapses then runs the body only on ALLOW.** On a denied/unknown path the body never executes.
 
-## 3. Security examination — 9/9 adversarial properties hold
+## 3. Security examination — 10/10 adversarial properties hold (incl. an independent review)
 
-The prototype's `--security` suite is a real test (exit = failures). All nine hold:
+An **independent adversarial reviewer** (that did not write the model) returned **SOUND-WITH-CAVEATS** and found a real `DENY→ALLOW` hole, now fixed (see P10): a hostile constraint that **truncates the shared obligation array** (`cons.length = 1`) hid a peer's `DENY` from `Array.map`, forging a silent `ALLOW` and defeating P4/P5/P8 at once. Fix: the collapse now evaluates an **immutable snapshot** of the obligation set. The reviewer also independently **vindicated the benchmark honesty** (built the fair guard-first-async comparison; resolution matches it to 1–3%, confirming P9's "speed is not the contribution"). The prototype's `--security` suite is a real test (exit = failures). All ten hold:
 
 | # | Property | What it proves |
 |---|---|---|
@@ -54,6 +54,7 @@ The prototype's `--security` suite is a real test (exit = failures). All nine ho
 | P7 | determinism | the collapse is a pure function of constraints — verdict independent of wall-clock |
 | P8 | never-silent | every DENY collapse emits `LLN-GOV-3VL-001` |
 | **P9** | **the honest differentiator** | a 2-valued "check-first" guard is just as FAST but **fails OPEN on INDETERMINATE**; resolution fails closed |
+| **P10** | **mutable-constraint forge defeated** | a hostile constraint truncating the shared obligation array cannot hide a peer's `DENY` (collapse over an immutable snapshot) — the adversarial-review HOLE-1 regression |
 
 **P9 is the crux of the honesty.** The obvious objection is *"any check-before-work code skips denied work — what's unique?"* Correct: the **speed** is not unique. What is unique is that resolution is **fail-closed-by-construction on the third state.** A hand-written boolean guard (`block if explicitly denied, else proceed`) is 2-valued — it treats "not explicitly denied" as permission, so an `INDETERMINATE` verdict **runs the body**. The K3 resolution boundary makes `unknown → deny` structural: you cannot forget it, and uncertainty cannot leak. That is the contribution — uncertainty-safe, can't-forget-it, uniform gating, not throughput.
 
@@ -80,7 +81,9 @@ This is the **Safe-Floor Theorem (RD-0117) at the delivery layer**: resolution-g
 
 This is a prototype. A production resolution-delivery runtime must additionally handle:
 
-- **Concurrency / parallel collapse.** The model is single-threaded, so there is *no* TOCTOU gap between collapse and body. In a concurrent system the collapse must **bind the state it decided on** (snapshot/lease) so the world can't change between decide and use.
+- **Continuous re-validation / revocation (review HOLE-2).** The collapse is **point-in-time**: the verdict is captured before the body's `await`, so a policy *revoked mid-flight* (during a long `compute()`) is not seen — the body runs to completion. Within single-threaded JS there is verifiably *no* gap *between* collapse and guard (sound), but there is no continuous re-check. A runtime governing long/streaming work needs leases/TTLs, mid-execution re-checks, or cooperative cancellation.
+- **Concurrency / parallel collapse.** Single-threaded JS gives free atomicity between collapse and guard; a multi-threaded/distributed runtime has no such guarantee and needs explicit synchronization (and the collapse must **bind the state it decided on** — snapshot/lease).
+- **Obligation-set immutability.** Now enforced in the model via the snapshot collapse (P10), but a production impl must treat the obligation set as frozen *and* forbid side-effecting constraints (constraints are assumed pure here).
 - **Distributed boundaries.** A collapse across a network inherits the no-signaling time-bound (RD-0122 §B.3): the resolution is async feed-forward, not instantaneous.
 - **Constraints with side effects / cost.** The model assumes constraint evaluation is cheap and pure. A constraint that is itself expensive or effectful changes both the perf calculus and the security argument (a constraint must not leak or mutate).
 - **Timing side-channels.** The collapse *duration* can leak the verdict; where the verdict is secret, constraint evaluation must be constant-time.
