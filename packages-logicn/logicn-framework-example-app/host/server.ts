@@ -173,3 +173,17 @@ export async function startServer(config?: AppConfig, fuseOpts: FuseOptions = {}
 
 export { loadConfig, parseConfig } from "./config.js";
 export type { AppConfig, AppEnv, AppPosture } from "./config.js";
+
+// ── Runnable entry ──────────────────────────────────────────────────────────────
+// Start the server when this module is executed directly (the container / CLI
+// entrypoint `node dist/server.js`), but NOT when imported (tests import startServer
+// themselves). Without this guard, `node server.js` would define exports and exit
+// without ever serving. Binds to the configured port; the reverse proxy fronts it.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  startServer()
+    .then(({ port }) => console.log(`LogicN app listening on http://127.0.0.1:${port}`))
+    .catch((err) => {
+      console.error("LogicN app failed to start:", err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    });
+}
