@@ -1724,7 +1724,52 @@ Baseline comparison (governance-cost):
   }
 
   // Compile to WASM
-  const fx = m.checkEffects(parsed.flows, parsed.ast);
+  // ── Production-gated governance floor (mirror of
+  //    packages-logicn/logicn-core-compiler/src/cli.ts:405-450) ───────────────────────────────────
+  // The internal compiler bin (cli.ts) derives the effect-checker mode + LLN-TIER-001 tier-floor flag
+  // from the build mode and SURFACES checkValueStates / checkEffects ERROR diagnostics so an
+  // under-declared flow fails the build. The user-facing `logicn build` path did NEITHER: checkEffects
+  // was 2-arg (enforceTierFloor defaulted false) and its `.diagnostics` were fed to emitGIR but never
+  // inspected, so LLN-TIER-001 / LLN-VALUESTATE-008 / LLN-EFFECT-* errors never failed the build — only
+  // codegen (assembled.valid) did. We gate strictness on the SAME fail-secure LOGICN_PROFILE resolver
+  // the signing/admission gates already use (logicn.mjs:1815): UNSET/dev → enforcement OFF (zero-touch
+  // local dev), exact "production" → ON, any set-but-unrecognized value fail-secures to ON. The
+  // governed-run gate at ~1699-1705 is the surfacing/exit model mirrored below.
+  const { resolveSigningProfileWarned: resolveBuildProfile } = await import("./governance/profile.mjs");
+  const buildIsProduction = resolveBuildProfile().profile === "production";
+  let fx;
+  if (buildIsProduction) {
+    // PRODUCTION ONLY: turn on the flow-kind tier floor (LLN-TIER-001) and escalate the boundary-input
+    // check (LLN-VALUESTATE-008). mode is passed EXPLICITLY as the 3rd arg so enforceTierFloor lands in
+    // the 4th position. checkEffects/emitGIR ignore `.diagnostics` for codegen (emitGIR reads only
+    // observedEffects), so the floored fx produces byte-identical GIR — the floor only adds diagnostics.
+    fx = m.checkEffects(parsed.flows, parsed.ast, "production", true);
+    const govErrors = [];
+    for (const result of fx) {
+      for (const d of result.diagnostics ?? []) {
+        if (d.severity === "error") govErrors.push(d);
+      }
+    }
+    // LLN-VALUESTATE-008 (bare boundary param into a governed sink) — net-new on this path, mirroring
+    // cli.ts:416. Production-gated so it can never reject a currently-valid dev/check build.
+    const valueStateResult = m.checkValueStates(parsed.ast, "production");
+    for (const d of valueStateResult.diagnostics ?? []) {
+      if (d.severity === "error") govErrors.push(d);
+    }
+    if (govErrors.length > 0) {
+      for (const d of govErrors) {
+        const loc = d.location?.line !== undefined ? ` (${llnFile}:${d.location.line}:${d.location.column ?? 0})` : "";
+        console.error(`  ⛔ ${d.code}: ${d.message}${loc}`);
+      }
+      console.error(`\n❌ Build of '${llnFile}' FAILED (fail-closed under LOGICN_PROFILE=production) — ${govErrors.length} governance error(s) above. Declare the required tier/effects (or seal/gate boundary inputs) and rebuild.`);
+      process.exit(1);
+    }
+  } else {
+    // DEV / CHECK / UNSET: identical to the pre-existing 2-arg call (mode defaults to "production",
+    // enforceTierFloor defaults to false). No floor, no value-state check, nothing printed, no extra
+    // exit — the dev/check build is byte-for-byte unchanged and `fx` is the exact same value as before.
+    fx = m.checkEffects(parsed.flows, parsed.ast);
+  }
   const { gir } = m.emitGIR(parsed.ast, parsed.flows, fx);
   const watModule = m.buildWATModuleFromGIR(gir, undefined, "wasm-standalone", parsed.ast, true);
   const wat = m.renderWAT(watModule);
