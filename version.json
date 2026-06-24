@@ -1,7 +1,7 @@
 {
   "version": "1.0.0-beta.2",
   "stage": "Stage A (production-hardened compiler/runtime) + Stage B self-hosting in progress",
-  "date": "2026-06-23",
+  "date": "2026-06-24",
   "runtime": "LogicN Stage A — TypeScript governed interpreter; Stage B (self-hosted → WASM) in progress",
   "drcmPhases": "1-7 complete (Stage A simulation); real DSS.wasm pending (#102-#106, Post-P9)",
   "testCount": 5250,
@@ -14,11 +14,18 @@
   "securityNote": "2026-06-06: a previously-committed signing private key (.env.logicn-signing, key id 8eecf4187ebc9341) was found tracked in git history (commit cb5036d). It is now untracked + git-ignored and the key was ROTATED to ab46f4c7e2797b9b. The OLD key is COMPROMISED — any signature from 8eecf4187ebc9341 must be distrusted. 2026-06-17 DECISION: publish a formal revocation (security/revocations/REV-2026-06.md) rather than a git history scrub — rewriting history rebases all commit SHAs and breaks the verifiable trust chain. The exposed key lineage is permanently distrusted (evaluate as -1 Deny in Key Custody); history still contains it (acceptable residual under the revocation advisory). Open: CI secret scan + re-sign any exclusively-old-key-signed artifacts (#149).",
   "nextMilestone": "Stage B self-hosting + real DSS.wasm (P9 → Post-P9)",
   "openTasks": [
-    "#149 signing-key remediation: revocation published (security/revocations/REV-2026-06.md, 2026-06-17); REMAINING = CI secret scan + re-sign legacy old-key-signed artifacts (CRITICAL)",
-    "#161-#191 post-parity technical-debt review (WASM lowering, host fidelity, security)",
-    "#102-#106 Stage B DSS.wasm",
-    "#110 secrets{} key rotation"
+    "Verify/run-side PQ floor: the certified/production CONSUME path must reject a PQ-downgraded (Ed25519-only) manifest — hybrid Ed25519+ML-DSA-65 is enforced at SIGN time only (one-directional gap)",
+    "#149: add a CI secret-scan gate (CRITICAL). Revocation is published + ENFORCED (key 8eecf41... evaluates Deny); the legacy re-sign sweep has 0 in-tree artifacts (the key appears only as a revocation-registry entry, never as a signer)",
+    "S1 cert/channel gate into the LIVE kernel auth path: channelVerdict ships in core-network but the app-kernel does not consume it on the live admission path (admits on Authorization-header presence) — highest-value governance gap toward 1.0",
+    "Signed central registry index: the governed resolver + revocation registry are real, but the central index itself is unsigned",
+    "ext-tmf slice 4: ML-DSA-65 root signing + verify-before-read (slices 1-3 golden-verified; container honestly keeps flags.signed=0 until slice 4)",
+    "#110 secrets{} body-drop: retain the credential/rotation body + emit a signed secret-rotation manifest obligation (ready diff spec; owner-gated grammar change, low blast radius)",
+    "#161-#191 post-parity technical-debt (WASM lowering / host fidelity / security) — partially closed this cycle (#163, #173, FO-* fail-open classes); burn down the remainder",
+    "#102-#106 Stage B DSS.wasm deterministic isolation / Wasmtime TCB (design-spec drafted; Post-P9, hardware/TCB-gated — also gates the Black Hole Protocol design)",
+    "#150: auto-generate test/package counts from the runner to prevent SOT-doc drift",
+    "Generalize the LLN-TIER-001 tier floor to policies / @experimental_profile (the flow-kind floor + dev/check warning shipped 2026-06-24)"
   ],
+  "shippedThisCycle_2026_06_24": "opt-in hybrid Ed25519+ML-DSA-65 .lmanifest signing + makeManifestEnvelope; LLN-TIER-001 tier floor enforced on the production build path + dev/check WARNING; LLN-VALUESTATE-008 surfaced; @logicn/ext-secrets-tmf (env.tmf sealed secrets); semver reconciled to 1.0.0-beta.2; enterprise scaffold removed; #173 resolved; #153 corrected; docs/README/KNOWN-ISSUES refreshed; CLI tier-floor integration test; benchmark truth-audit clean.",
   "notes": "Stage A delivers all DRCM Phases 1-7, full Tower-native syntax, CBOR manifests, Ed25519+ML-DSA-65 signing, OCI packaging, OWASP-hardened governance verification. Test/package counts and Stage status are verified by running the suites (npm test); see docs/Knowledge-Bases/logicn-runtime-status-SOT.md. RECOMMENDED: auto-generate these counts from the test runner to prevent drift (#150).",
   "testCountByPackage": {
     "logicn-ai": 4,
