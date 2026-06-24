@@ -99,6 +99,13 @@ Workflow `ws0znezws` · **DONE** — all three adequate-with-gaps: graph CLI run
 ### Hardware protection summary
 [`logicn-hardware-protection-summary-2026-06-24.md`](logicn-hardware-protection-summary-2026-06-24.md) — consolidates what's BUILT (hardware-tier fail-closed attestation, LLN-RETAIN-001 eraseModel rail, photonic-admission, substrate noise model, Safe-Floor Theorem, calibration-as-attestation, bridge attestation) vs R&D'd/designed (ASIC cyber-physical, DRCM, hardware-as-capabilities, cross-layer resilience, future substrates). Answers "did we protect hardware + R&D it" = yes to both.
 
+### RD-0122 — The third logic-delivery paradigm (async:sync :: ?:third)
+Doc: [`logicn-third-logic-delivery-and-governed-quantum-substrate-2026-06-24.md`](logicn-third-logic-delivery-and-governed-quantum-substrate-2026-06-24.md) (consolidated, maths-complete) · Workflow `wma8bsgh1`
+- `RD-0122-O1` — the third is NOT time (sync/async are siblings on the time axis); it is **resolution/collapse-driven delivery**: hold a possibility-space, collapse it once at a boundary, ordered by constraint not time.
+- `RD-0122-O2` — spatial-propagative (56-x1) = shallow/linear case (GROUNDED delivery, REFUTED standalone model — trigger reappears at readout); MBQC (57-x) = quantum case (real, but NOT instant/non-local — no-signaling ⇒ time-bound async feed-forward).
+- `RD-0122-O3` — the genuinely-new SOFTWARE contribution = **K3-as-resolution-boundary** (`INDETERMINATE + decideAtBoundary + unknown→deny`), already SHIPPED; net-new buildable = the `resolve … at boundary` construct + the signed toleranceWitness for a Tier-3 co-processor (owner-gated).
+- Full DISMISSED ledger D1–D11 (latency≠work, multiply-saddle, Holevo, no-signaling, Grover, superdense, drop-MAC, holographic, QBER-in-KDF).
+
 ### Outcomes + paper ledger
 [`logicn-rd-outcomes-table-2026-06-24.md`](logicn-rd-outcomes-table-2026-06-24.md) — the positive/negative/could-not-be-done + science-paper table for the whole `RD-0110`–`RD-0118` run, plus the R&D-driven builds shipped.
 
