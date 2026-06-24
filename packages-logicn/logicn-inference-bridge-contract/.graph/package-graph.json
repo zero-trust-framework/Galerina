@@ -13,6 +13,10 @@
       "to": "src/precision-types.ts"
     },
     {
+      "from": "src/bridge.ts",
+      "to": "src/manifest.ts"
+    },
+    {
       "from": "src/index.ts",
       "to": "src/precision-types.ts"
     },
@@ -44,7 +48,7 @@
   ],
   "stats": {
     "fileCount": 5,
-    "internalEdgeCount": 7,
+    "internalEdgeCount": 8,
     "externalDepCount": 0,
     "nodeCoreCount": 0,
     "workspaceCount": 0,

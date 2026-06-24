@@ -2,13 +2,18 @@
   "packageName": "@logicn/tower-citizen",
   "nodes": [
     "src/audit-logger.ts",
+    "src/bridge-attestation.ts",
     "src/bridge/interface.ts",
     "src/bridge/stub-provider.ts",
+    "src/compiled-policy.ts",
+    "src/gate-cache.ts",
     "src/governance-enforcer.ts",
     "src/hybrid-engine.ts",
     "src/index.ts",
     "src/plugin-sandbox.ts",
     "src/precision-strategy.ts",
+    "src/substrate-model.ts",
+    "src/three-valued-governance.ts",
     "src/tower-runtime.ts",
     "src/tpl-simulator.ts"
   ],
@@ -28,6 +33,18 @@
     {
       "from": "src/bridge/stub-provider.ts",
       "to": "src/bridge/interface.ts"
+    },
+    {
+      "from": "src/compiled-policy.ts",
+      "to": "src/hybrid-engine.ts"
+    },
+    {
+      "from": "src/gate-cache.ts",
+      "to": "src/compiled-policy.ts"
+    },
+    {
+      "from": "src/gate-cache.ts",
+      "to": "src/hybrid-engine.ts"
     },
     {
       "from": "src/hybrid-engine.ts",
@@ -52,6 +69,14 @@
     {
       "from": "src/hybrid-engine.ts",
       "to": "src/audit-logger.ts"
+    },
+    {
+      "from": "src/hybrid-engine.ts",
+      "to": "src/bridge-attestation.ts"
+    },
+    {
+      "from": "src/hybrid-engine.ts",
+      "to": "src/compiled-policy.ts"
     },
     {
       "from": "src/index.ts",
@@ -83,11 +108,43 @@
     },
     {
       "from": "src/index.ts",
+      "to": "src/three-valued-governance.ts"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "src/substrate-model.ts"
+    },
+    {
+      "from": "src/index.ts",
       "to": "src/bridge/interface.ts"
     },
     {
       "from": "src/index.ts",
+      "to": "src/bridge-attestation.ts"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "src/compiled-policy.ts"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "src/gate-cache.ts"
+    },
+    {
+      "from": "src/index.ts",
       "to": "src/bridge/stub-provider.ts"
+    },
+    {
+      "from": "src/substrate-model.ts",
+      "to": "src/tpl-simulator.ts"
+    },
+    {
+      "from": "src/substrate-model.ts",
+      "to": "src/three-valued-governance.ts"
+    },
+    {
+      "from": "src/three-valued-governance.ts",
+      "to": "src/tpl-simulator.ts"
     },
     {
       "from": "src/tower-runtime.ts",
@@ -111,14 +168,31 @@
       "specifier": "@logicn/inference-bridge-contract",
       "kind": "workspace",
       "importedBy": [
+        "src/bridge-attestation.ts",
         "src/bridge/interface.ts",
         "src/precision-strategy.ts"
+      ]
+    },
+    {
+      "specifier": "@logicn/substrate-math",
+      "kind": "workspace",
+      "importedBy": [
+        "src/substrate-model.ts"
+      ]
+    },
+    {
+      "specifier": "@noble/post-quantum/ml-dsa.js",
+      "kind": "thirdparty",
+      "importedBy": [
+        "src/bridge-attestation.ts"
       ]
     },
     {
       "specifier": "node:crypto",
       "kind": "node_core",
       "importedBy": [
+        "src/bridge-attestation.ts",
+        "src/gate-cache.ts",
         "src/governance-enforcer.ts",
         "src/hybrid-engine.ts",
         "src/plugin-sandbox.ts"
@@ -144,12 +218,12 @@
     "src/index.ts"
   ],
   "stats": {
-    "fileCount": 10,
-    "internalEdgeCount": 23,
-    "externalDepCount": 4,
+    "fileCount": 15,
+    "internalEdgeCount": 36,
+    "externalDepCount": 6,
     "nodeCoreCount": 3,
-    "workspaceCount": 1,
-    "thirdpartyCount": 0,
+    "workspaceCount": 2,
+    "thirdpartyCount": 1,
     "orphanCount": 0
   }
 }

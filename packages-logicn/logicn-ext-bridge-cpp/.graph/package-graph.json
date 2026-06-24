@@ -63,6 +63,13 @@
       ]
     },
     {
+      "specifier": "node:crypto",
+      "kind": "node_core",
+      "importedBy": [
+        "src/addon-loader.ts"
+      ]
+    },
+    {
       "specifier": "node:fs",
       "kind": "node_core",
       "importedBy": [
@@ -105,8 +112,8 @@
   "stats": {
     "fileCount": 5,
     "internalEdgeCount": 7,
-    "externalDepCount": 8,
-    "nodeCoreCount": 6,
+    "externalDepCount": 9,
+    "nodeCoreCount": 7,
     "workspaceCount": 2,
     "thirdpartyCount": 0,
     "orphanCount": 0
