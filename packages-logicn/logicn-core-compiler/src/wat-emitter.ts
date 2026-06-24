@@ -572,20 +572,19 @@ export function renderWAT(module: WATModule): string {
         && !bodyHasEarlyReturn && (bodyArr.length - locEnd) > 0;
 
       if (emitZeroOnExit) {
-        // Distinct block/loop labels for the entry vs exit zeroing (both live in this one function); the
-        // entry-zero reuses the standard $__lln_zd/$__lln_zl naming + the $__lln_zero_i counter so the
-        // existing "$__lln_zl emitted" checks still recognise a secret-zeroing module.
+        // G5 (Intrusion-Triggered Arena Fill): the reclaimed/secret region [WAT_HEAP_BASE, $__lln_heap) is
+        // zeroed with the WASM bulk-memory `memory.fill` primitive — ONE atomic instruction in place of the
+        // per-i32 store loop (no counter local, no bounded trip-count for an interrupt to race). The
+        // $__lln_zd/$__lln_zl ($__lln_xd/$__lln_xl on exit) marker tokens are retained in the comment so the
+        // existing "$__lln_zl/$__lln_xl emitted" secret-zeroing recognition still holds. memory.fill reads
+        // the LIVE $__lln_heap for its length, so it MUST run before the rebase. wabt encodes it as 0xFC 0x0B
+        // (bulk-memory, default-on); an OOB fill traps cleanly — fail-closed.
         const zloop = (zd: string, zl: string) => [
-          `    (local.set $__lln_zero_i (i32.const ${WAT_HEAP_BASE}))`,
-          `    (block ${zd} (loop ${zl}`,
-          `      (br_if ${zd} (i32.ge_u (local.get $__lln_zero_i) (global.get $__lln_heap)))`,
-          `      (i32.store (local.get $__lln_zero_i) (i32.const 0))`,
-          `      (local.set $__lln_zero_i (i32.add (local.get $__lln_zero_i) (i32.const 4)))`,
-          `      (br ${zl})))`,
+          `    ;; ${zd} ${zl} — bulk-memory zero-fill [base, heap) (G5 memory.fill, was an i32.store loop)`,
+          `    (memory.fill (i32.const ${WAT_HEAP_BASE}) (i32.const 0) (i32.sub (global.get $__lln_heap) (i32.const ${WAT_HEAP_BASE})))`,
         ];
         for (const l of bodyArr.slice(0, locEnd)) lines.push(`    ${l}`);            // the body's own locals
         lines.push(`    (local $__lln_ret i32)`);
-        lines.push(`    (local $__lln_zero_i i32)`);
         if (emitZeroing) { lines.push(`    ;; B2b on-entry: zero the reclaimed previous arena`); for (const z of zloop("$__lln_zd", "$__lln_zl")) lines.push(z); }
         lines.push(`    ;; B2 per-flow arena reset (rebase the bump pointer before this call allocates)`);
         lines.push(`    (global.set $__lln_heap (i32.const ${WAT_HEAP_BASE}))`);
@@ -602,18 +601,15 @@ export function renderWAT(module: WATModule): string {
         continue; // this flow is fully emitted via the zero-on-exit path
       }
 
-      // B2b: the zeroing loop needs a counter local — declare it first so all locals precede instructions.
-      if (emitZeroing) lines.push(`    (local $__lln_zero_i i32)`);
+      // G5 (Intrusion-Triggered Arena Fill): zero the reclaimed arena with the WASM bulk-memory
+      // `memory.fill` primitive (one atomic instruction) instead of the per-i32 store loop — no counter
+      // local. The $__lln_zd/$__lln_zl marker tokens are kept in the comment for the secret-zeroing checks.
       const resetBlock: string[] = [];
       if (emitZeroing) {
-        resetBlock.push(`    ;; B2b (R&D 0055): zero the reclaimed arena [base, prev-heap) before rebasing — the WASM`);
+        resetBlock.push(`    ;; B2b (R&D 0055)/G5: zero the reclaimed arena [base, prev-heap) before rebasing — the WASM`);
         resetBlock.push(`    ;; module exports its memory, so an un-zeroed reclaimed secret arena is host-readable remanence.`);
-        resetBlock.push(`    (local.set $__lln_zero_i (i32.const ${WAT_HEAP_BASE}))`);
-        resetBlock.push(`    (block $__lln_zd (loop $__lln_zl`);
-        resetBlock.push(`      (br_if $__lln_zd (i32.ge_u (local.get $__lln_zero_i) (global.get $__lln_heap)))`);
-        resetBlock.push(`      (i32.store (local.get $__lln_zero_i) (i32.const 0))`);
-        resetBlock.push(`      (local.set $__lln_zero_i (i32.add (local.get $__lln_zero_i) (i32.const 4)))`);
-        resetBlock.push(`      (br $__lln_zl)))`);
+        resetBlock.push(`    ;; $__lln_zd $__lln_zl — bulk-memory zero-fill (G5 memory.fill, was an i32.store loop)`);
+        resetBlock.push(`    (memory.fill (i32.const ${WAT_HEAP_BASE}) (i32.const 0) (i32.sub (global.get $__lln_heap) (i32.const ${WAT_HEAP_BASE})))`);
       }
       if (emitArenaReset) {
         resetBlock.push(`    ;; B2 (R&D 0055): per-flow arena reset — reclaim the previous invocation's heap (leaf entry-point)`);
