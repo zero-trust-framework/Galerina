@@ -1,0 +1,139 @@
+<svg width="100%" viewBox="0 0 720 760" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
+<title>LogicN Stage-A compiler pipeline + Deterministic-Foresight intelligence layer</title>
+<desc>.lln source flows top-down through ten compile-time passes — lexer (LLN-LEX), parser (AST flow/contract/match), symbol resolver (LLN-NAME), type checker (LLN-TYPE), value-state checker (SECRET/TAINT/GATE), effect checker (deny-by-default LLN-EFFECT), governance verifier (Kleene-K3, LLN-GOV, ProofGraph), GIR emitter, WAT emitter, to WASM/bytecode targets. Overlaid on the right is the Deterministic-Foresight intelligence layer from R&amp;D Document 005: (a) static K3 abstract interpretation driving Governance Dead-Code Elimination of provably-DENY branches into a static TRAP+ERASE — marked NET-NEW design, not yet shipped; (b) Tri-Pipe substrate routing R(o) choosing Binary, Hybrid or Photonic per kernel with crypto pinned Binary — shipped; (c) semantic auto-resilience injecting the K3 0-holding state on network calls — shipped via resilience-inference. Cross-cutting fail-closed K3 and LLN diagnostic codes hold across every pass: INDETERMINATE resolves to deny, never silent.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text x="40" y="28" font-size="16" font-weight="700" fill="#1c2128">LogicN Stage-A compiler + Deterministic-Foresight intelligence</text>
+<text x="40" y="47" font-size="11" fill="#5a6470">blue = compile-time pass · teal = emit/target · amber = substrate routing · purple = static foresight / invariant · red = fail-closed</text>
+
+<!-- ================= COMPILE-TIME PIPELINE (left column) ================= -->
+<text x="40" y="72" font-size="11" fill="#5a6470">Compile-time pipeline — ten passes, top-down (README §Architecture · compiler pipeline)</text>
+
+<!-- 1 source -->
+<rect x="40" y="80" width="300" height="46" rx="8" fill="#e8effb" stroke="#3b6fd4" stroke-width="1.5"/>
+<text x="190" y="101" text-anchor="middle" font-size="13" font-weight="600" fill="#1f3a6b">.lln source — flow + contract + match</text>
+<text x="190" y="117" text-anchor="middle" font-size="10.5" fill="#3a5285">intent · effects · privacy · substrate</text>
+<path d="M190 126 L190 140" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 2 lexer -->
+<rect x="40" y="142" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="162" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Lexer — tokenise</text>
+<text x="190" y="178" text-anchor="middle" font-size="10.5" fill="#3a5285">LLN-LEX-001..006</text>
+<path d="M190 186 L190 200" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 3 parser -->
+<rect x="40" y="202" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="222" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Parser → AST</text>
+<text x="190" y="238" text-anchor="middle" font-size="10.5" fill="#3a5285">flow · contract · match · record · for · import</text>
+<path d="M190 246 L190 260" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 4 symbol resolver -->
+<rect x="40" y="262" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="282" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Symbol resolver</text>
+<text x="190" y="298" text-anchor="middle" font-size="10.5" fill="#3a5285">LLN-NAME-001..003</text>
+<path d="M190 306 L190 320" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 5 type checker -->
+<rect x="40" y="322" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="342" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Type checker</text>
+<text x="190" y="358" text-anchor="middle" font-size="10.5" fill="#3a5285">LLN-TYPE-001..023 · ~90%</text>
+<path d="M190 366 L190 380" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 6 value-state checker -->
+<rect x="40" y="382" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="402" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Value-state checker</text>
+<text x="190" y="418" text-anchor="middle" font-size="10.5" fill="#3a5285">SECRET · TAINT · GATE (LLN-VALUESTATE)</text>
+<path d="M190 426 L190 440" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 7 effect checker -->
+<rect x="40" y="442" width="300" height="44" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="462" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Effect checker — deny-by-default</text>
+<text x="190" y="478" text-anchor="middle" font-size="10.5" fill="#3a5285">LLN-EFFECT-001..005</text>
+<path d="M190 486 L190 500" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 8 governance verifier -->
+<rect x="40" y="502" width="300" height="50" rx="8" fill="#eef3fc" stroke="#5b85dd" stroke-width="1.5"/>
+<text x="190" y="522" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1f3a6b">Governance verifier — K3 + ProofGraph</text>
+<text x="190" y="538" text-anchor="middle" font-size="10.5" fill="#3a5285">LLN-GOV-001..020 · LLN-TERM-001 · verifySubstrate</text>
+<path d="M190 552 L190 566" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- 9 GIR emitter -->
+<rect x="40" y="568" width="146" height="48" rx="8" fill="#e2f5f1" stroke="#2f9e8f" stroke-width="1.5"/>
+<text x="113" y="588" text-anchor="middle" font-size="12.5" font-weight="600" fill="#16544c">GIR emitter</text>
+<text x="113" y="604" text-anchor="middle" font-size="10" fill="#1f6b60">Governed IR → Stage-B</text>
+
+<!-- 10 WAT emitter -->
+<rect x="194" y="568" width="146" height="48" rx="8" fill="#e2f5f1" stroke="#2f9e8f" stroke-width="1.5"/>
+<text x="267" y="588" text-anchor="middle" font-size="12.5" font-weight="600" fill="#16544c">WAT emitter</text>
+<text x="267" y="604" text-anchor="middle" font-size="10" fill="#1f6b60">~89% · trap-on-unhandled</text>
+
+<path d="M113 616 L113 632" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M267 616 L267 632" fill="none" stroke="#8a94a3" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+<!-- target -->
+<rect x="40" y="634" width="300" height="46" rx="8" fill="#e2f5f1" stroke="#2f9e8f" stroke-width="1.5"/>
+<text x="190" y="655" text-anchor="middle" font-size="13" font-weight="600" fill="#16544c">WASM / bytecode targets</text>
+<text x="190" y="671" text-anchor="middle" font-size="10.5" fill="#1f6b60">WASM = production path · tiered runtime + tree-walker oracle</text>
+
+<!-- ================= INTELLIGENCE LAYER (right column) ================= -->
+<text x="372" y="72" font-size="11" fill="#5a6470">Deterministic-Foresight intelligence (R&amp;D Doc 005) — proof, not guessing</text>
+<rect x="372" y="80" width="308" height="476" rx="10" fill="#f7f4fd" stroke="#7c5cd0" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="526" y="101" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3f2d73">Static K3 mathematical foresight</text>
+<text x="526" y="116" text-anchor="middle" font-size="10" fill="#52408f">runs across the pass column — verdict V = {−1, 0, +1}</text>
+
+<!-- (a) abstract interpretation + DCE — NET-NEW -->
+<rect x="388" y="128" width="276" height="118" rx="8" fill="#efe9fb" stroke="#7c5cd0" stroke-width="1.5"/>
+<text x="526" y="148" text-anchor="middle" font-size="12" font-weight="600" fill="#3f2d73">(a) K3 abstract interpretation</text>
+<text x="526" y="163" text-anchor="middle" font-size="10" fill="#52408f">per-variable trust over the DAG · vAnd = min</text>
+<rect x="402" y="172" width="248" height="30" rx="6" fill="#f6f2fe" stroke="#9277d9" stroke-width="1.5"/>
+<text x="526" y="191" text-anchor="middle" font-size="10.5" fill="#3f2d73">min(+1 pinned, −1 revoked) = −1 proven</text>
+<rect x="402" y="206" width="248" height="32" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
+<text x="526" y="221" text-anchor="middle" font-size="10.5" font-weight="600" fill="#9b2d20">Governance Dead-Code Elimination</text>
+<text x="526" y="233" text-anchor="middle" font-size="9.5" fill="#9b2d20">provably-DENY branch → static TRAP + ERASE</text>
+<text x="650" y="142" text-anchor="end" font-size="9" font-weight="700" fill="#c0392b">NET-NEW</text>
+
+<!-- (b) Tri-Pipe routing — SHIPPED -->
+<rect x="388" y="256" width="276" height="118" rx="8" fill="#fbf2dd" stroke="#c98a1b" stroke-width="1.5"/>
+<text x="526" y="276" text-anchor="middle" font-size="12" font-weight="600" fill="#6b4a12">(b) Tri-Pipe substrate routing R(o)</text>
+<text x="526" y="291" text-anchor="middle" font-size="10" fill="#7a5a1c">execution-router · PartitionDecider · per kernel</text>
+<rect x="402" y="300" width="78" height="34" rx="6" fill="#fdf8ec" stroke="#d8a23e" stroke-width="1.5"/>
+<text x="441" y="317" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6b4a12">Binary</text>
+<text x="441" y="329" text-anchor="middle" font-size="8.5" fill="#7a5a1c">default floor</text>
+<rect x="487" y="300" width="78" height="34" rx="6" fill="#fdf8ec" stroke="#d8a23e" stroke-width="1.5"/>
+<text x="526" y="317" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6b4a12">Hybrid</text>
+<text x="526" y="329" text-anchor="middle" font-size="8.5" fill="#7a5a1c">net-win only</text>
+<rect x="572" y="300" width="78" height="34" rx="6" fill="#fdf8ec" stroke="#d8a23e" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="611" y="317" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6b4a12">Photonic</text>
+<text x="611" y="329" text-anchor="middle" font-size="8.5" fill="#c0392b">emulated</text>
+<rect x="402" y="338" width="248" height="28" rx="6" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
+<text x="526" y="356" text-anchor="middle" font-size="10" font-weight="600" fill="#9b2d20">crypto pinned Binary · S_P→S_B key = LLN-SUBSTRATE-001</text>
+<text x="650" y="270" text-anchor="end" font-size="9" font-weight="700" fill="#2f9e8f">SHIPPED</text>
+
+<!-- (c) semantic auto-resilience — SHIPPED -->
+<rect x="388" y="384" width="276" height="100" rx="8" fill="#fbf2dd" stroke="#c98a1b" stroke-width="1.5"/>
+<text x="526" y="404" text-anchor="middle" font-size="12" font-weight="600" fill="#6b4a12">(c) Semantic auto-resilience</text>
+<text x="526" y="419" text-anchor="middle" font-size="10" fill="#7a5a1c">resilience-inference injects the 0-holding state</text>
+<rect x="402" y="428" width="248" height="48" rx="6" fill="#fdf8ec" stroke="#d8a23e" stroke-width="1.5"/>
+<text x="526" y="445" text-anchor="middle" font-size="10" fill="#6b4a12">db.fetch → ternary state machine:</text>
+<text x="526" y="459" text-anchor="middle" font-size="9.5" fill="#7a5a1c">+1 verified · 0 noise → hold/repair · −1 invalid → TRAP</text>
+<text x="526" y="471" text-anchor="middle" font-size="9" fill="#7a5a1c">on_*_fault handler parsing still partial (◑)</text>
+<text x="650" y="398" text-anchor="end" font-size="9" font-weight="700" fill="#2f9e8f">SHIPPED</text>
+
+<!-- caveat inside band -->
+<text x="526" y="502" text-anchor="middle" font-size="9.5" fill="#52408f" font-style="italic">~70–80% of the blueprint re-derives shipped code;</text>
+<text x="526" y="516" text-anchor="middle" font-size="9.5" fill="#52408f" font-style="italic">(a) Governance DCE is the genuine net-new pass.</text>
+<text x="526" y="536" text-anchor="middle" font-size="9.5" fill="#9b2d20">Photonic perf projected/emulated, not measured on silicon.</text>
+<text x="526" y="550" text-anchor="middle" font-size="9.5" fill="#9b2d20">Real DSS.wasm enforcement is a stub (Stage-A simulation).</text>
+
+<!-- coupling arrows from pipeline column into the band -->
+<path d="M340 524 C 362 524, 366 200, 388 197" fill="none" stroke="#9277d9" stroke-width="1.4" stroke-dasharray="5 4" fill-opacity="0" marker-end="url(#arrow)"/>
+<path d="M340 458 C 360 458, 368 320, 388 318" fill="none" stroke="#c98a1b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<path d="M340 410 C 358 410, 370 432, 388 434" fill="none" stroke="#c98a1b" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+<!-- ================= CROSS-CUTTING FAIL-CLOSED FOOTER ================= -->
+<rect x="40" y="696" width="640" height="44" rx="8" fill="#fdecea" stroke="#c0392b" stroke-width="1.5"/>
+<text x="360" y="716" text-anchor="middle" font-size="12.5" font-weight="600" fill="#9b2d20">Cross-cutting invariant — fail-closed K3 over every pass</text>
+<text x="360" y="732" text-anchor="middle" font-size="10" fill="#9b2d20">vAnd = min · INDETERMINATE (0) → deny, never silent · diagnosed by LLN-* codes · no runtime surprise</text>
+</svg>
