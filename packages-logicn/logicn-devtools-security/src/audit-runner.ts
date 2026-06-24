@@ -32,6 +32,19 @@ import {
 
 export type SecuritySeverity = "critical" | "high" | "medium" | "low" | "info";
 
+/**
+ * K3 / NIST SP 800-207 T6 verdict.
+ *   - "pass"          — every expected checker RAN and produced no gate finding.
+ *   - "fail"          — a gate-severity finding was raised.
+ *   - "indeterminate" — at least one expected checker did NOT run (parse failure /
+ *                       threw): the oracle was partially blind. Unknown -> deny.
+ */
+export type SecurityVerdict = "pass" | "fail" | "indeterminate";
+
+/** Checkers that constitute a complete security audit; absence of any => blind. */
+export const EXPECTED_CHECKERS = ["value-safety", "taint", "profile", "governance"] as const;
+export type ExpectedChecker = (typeof EXPECTED_CHECKERS)[number];
+
 export interface SecurityFinding {
   readonly code:     string;
   readonly name:     string;
@@ -50,7 +63,16 @@ export interface SecurityAuditReport {
   readonly high:          readonly SecurityFinding[];
   readonly medium:        readonly SecurityFinding[];
   readonly low:           readonly SecurityFinding[];
+  /**
+   * True ONLY when verdict === "pass". A blind/partial audit (a checker did not
+   * run) is now `false`, closing the unknown -> pass hole. Kept as the back-compat
+   * top-line boolean.
+   */
   readonly passed:        boolean;
+  /** K3 verdict — first-class not-attested state (0084-secaudit-unknown). */
+  readonly verdict:       SecurityVerdict;
+  /** Checker ids that did NOT execute this run (parse failure / threw) — not attested. */
+  readonly indeterminate: readonly ExpectedChecker[];
   readonly summary:       string;
   readonly checkedAt:     string;
 }
@@ -165,6 +187,12 @@ export async function runSecurityAudit(
   const findings: SecurityFinding[] = [];
   const checkedAt = new Date().toISOString();
 
+  // 0084-secaudit-unknown: a checker counts as ATTESTED only when it actually RAN
+  // (executed without throwing) over a parseable AST. A clean program where every
+  // checker ran but raised nothing is a genuine ALLOW; a program the checkers never
+  // analyzed (parse failure / a checker threw) leaves `ran` incomplete => INDETERMINATE.
+  const ran = new Set<ExpectedChecker>();
+
   // Parse
   const parsed = parseProgram(source, fileName);
   const parseErrors = (parsed.diagnostics ?? []).filter(d => d.severity === "error");
@@ -178,14 +206,17 @@ export async function runSecurityAudit(
     });
   }
 
-  // If parse failed entirely, return early
+  // If parse failed entirely, return early. `ran` is empty here => verdict
+  // "indeterminate" => passed=false (deny-by-default; matches rd-0098).
   if (parseErrors.length > 0 && parsed.flows.length === 0) {
-    return buildReport(source, profiles, findings, checkedAt);
+    return buildReport(source, profiles, findings, checkedAt, strict, ran);
   }
 
   // Value-state / taint-sink check (LLN-VALUESTATE, LLN-GATE, LLN-SECRET codes)
   // Tracks unsafe bindings flowing to governed sinks (AuditLog.write, DB, network).
   // Distinct from checkTaint (LLN-TAINT capability flags) — both are needed.
+  // Each checker is wrapped so a THROW counts as "did not attest" (INDETERMINATE),
+  // never as a silent clean. A checker is added to `ran` only after it returns.
   const vsResult = checkValueStates(parsed.ast);
   for (const d of vsResult.diagnostics ?? []) {
     findings.push({
@@ -196,18 +227,21 @@ export async function runSecurityAudit(
       checker: "value-safety" as const,
     });
   }
+  ran.add("value-safety");
 
   // Capability-flag taint check (LLN-TAINT codes)
   const taintDiags: TaintDiagnostic[] = checkTaint(parsed.ast, parsed.flows);
   for (const d of taintDiags) {
     findings.push({ code: d.code, name: d.name, severity: classifySeverity(d.code, d.severity === "error" ? "error" : "warning"), message: d.message, checker: "taint" as const, ...(d.flowName !== undefined ? { flowName: d.flowName } : {}) });
   }
+  ran.add("taint");
 
   // Profile check
   const profileDiags: ProfileDiagnostic[] = checkProfiles(parsed.ast, parsed.flows, profiles);
   for (const d of profileDiags) {
     findings.push({ code: d.code, name: d.name, severity: classifySeverity(d.code, d.severity === "error" ? "error" : "warning"), message: d.message, checker: "profile" as const, ...(d.flowName !== undefined ? { flowName: d.flowName } : {}) });
   }
+  ran.add("profile");
 
   // Governance check (LLN-VAL, LLN-HW, LLN-GOV, etc.)
   const fx = checkEffects(parsed.flows, parsed.ast);
@@ -221,8 +255,9 @@ export async function runSecurityAudit(
       checker: mapCheckerType(d.code),
     });
   }
+  ran.add("governance");
 
-  return buildReport(source, profiles, findings, checkedAt, strict);
+  return buildReport(source, profiles, findings, checkedAt, strict, ran);
 }
 
 function buildReport(
@@ -231,21 +266,43 @@ function buildReport(
   findings: readonly SecurityFinding[],
   checkedAt: string,
   strict = false,
+  ran: ReadonlySet<ExpectedChecker> = new Set(),
 ): SecurityAuditReport {
   const critical = findings.filter(f => f.severity === "critical");
   const high     = findings.filter(f => f.severity === "high");
   const medium   = findings.filter(f => f.severity === "medium");
   const low      = findings.filter(f => f.severity === "low");
 
-  const passed = strict
-    ? findings.length === 0
-    : critical.length === 0 && high.length === 0;
+  // Checkers that did NOT run this audit (parse failure / threw) — not attested.
+  const indeterminate = EXPECTED_CHECKERS.filter(c => !ran.has(c));
+
+  // A gate finding is a positive DENY signal.
+  const hasGateFinding = strict
+    ? findings.length > 0
+    : critical.length > 0 || high.length > 0;
+
+  // K3 fold (deny-by-default). A TOTALLY blind audit (no checker ran — e.g. a parse
+  // failure that yields zero flows) is INDETERMINATE *first*: the oracle could analyze
+  // nothing, so even the parse-error findings do not make it a definitive "fail" — it
+  // is "I could not audit this" (LLN-GOV-3VL-001). Otherwise: any DENY => fail; any
+  // not-attested checker (partial blindness) => indeterminate; ALLOW only when every
+  // expected checker actually ran clean.
+  const verdict: SecurityVerdict =
+    ran.size === 0              ? "indeterminate"
+    : hasGateFinding            ? "fail"
+    : indeterminate.length > 0  ? "indeterminate"
+    :                             "pass";
+
+  // Boundary collapse: only a positive "pass" authorizes.
+  const passed = verdict === "pass";
 
   const total  = findings.length;
-  const status = passed ? "PASS" : "FAIL";
-  const summary = total === 0
-    ? `${status} — no security findings`
-    : `${status} — ${critical.length} critical, ${high.length} high, ${medium.length} medium, ${low.length} low`;
+  const status = verdict === "pass" ? "PASS" : verdict === "fail" ? "FAIL" : "INDETERMINATE";
+  const summary = verdict === "indeterminate"
+    ? `INDETERMINATE (LLN-GOV-3VL-001) — not attested: ${indeterminate.join(", ")}`
+    : total === 0
+      ? `${status} — no security findings`
+      : `${status} — ${critical.length} critical, ${high.length} high, ${medium.length} medium, ${low.length} low`;
 
   return {
     schemaVersion: "lln.security-audit.v1",
@@ -257,6 +314,8 @@ function buildReport(
     medium,
     low,
     passed,
+    verdict,
+    indeterminate,
     summary,
     checkedAt,
   };
