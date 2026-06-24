@@ -35,11 +35,13 @@ const PRODUCTION_BLOCKERS: ReadonlySet<string> = new Set([
   "LLN-RUNTIME-005",
   // Audit violations
   "LLN-RUNTIME-007",
-  // Memory safety
-  "LLN-MEMORY-001",
-  "LLN-MEMORY-002",
-  "LLN-MEMORY-003",
-  "LLN-MEMORY-007",
+  // Memory safety — only LLN-MEMORY-008 (unsafe-block-missing-reason) has a WIRED emitter today
+  // (detectUnsafeBlockWithoutReason). LLN-MEMORY-001/002/003/007 (use-after-move / borrow-after-move /
+  // borrow-escapes-scope / unchecked-access) are RESERVED: NO compiler pass emits them, so listing them
+  // here advertised a production memory-safety block the gate cannot actually detect — a false capability
+  // claim (RD-0124 audit, single-most-important finding). Re-add each ONLY when its move/borrow detector
+  // is wired and emitting; a non-emittable PRODUCTION_BLOCKER misleads any operator who trusts ready=true.
+  // (Real move/borrow checking is a separate, larger build — a LATER roadmap item.)
   "LLN-MEMORY-008",
   // Raw pointer outside unsafe
   "LLN-RAWPTR-001",

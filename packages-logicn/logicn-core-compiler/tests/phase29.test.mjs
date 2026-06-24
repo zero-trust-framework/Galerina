@@ -205,14 +205,15 @@ describe("Phase 29C: checkProductionReadiness", () => {
     const diagnostics = [
       { code: "LLN-EFFECT-005", severity: "warning", message: "Broad alias" },
       { code: "LLN-TYPE-002", severity: "error", message: "Narrowing" },
-      { code: "LLN-MEMORY-001", severity: "error", message: "Use after move" },
+      { code: "LLN-MEMORY-008", severity: "error", message: "unsafe block missing reason" },
     ];
     const r = checkProductionReadiness(diagnostics);
     assert.equal(r.ready, false);
     assert.equal(r.errors, 2);
     assert.equal(r.warnings, 1);
-    // LLN-MEMORY-001 is a blocker, LLN-TYPE-002 is an error but not in PRODUCTION_BLOCKERS
-    assert.ok(r.blockers.some((b) => b.includes("LLN-MEMORY-001")));
+    // LLN-MEMORY-008 is a blocker WITH A REAL EMITTER (detectUnsafeBlockWithoutReason); LLN-TYPE-002 is
+    // an error but not in PRODUCTION_BLOCKERS. (001/002/003/007 removed — RESERVED, no emitter; RD-0124.)
+    assert.ok(r.blockers.some((b) => b.includes("LLN-MEMORY-008")));
   });
 
   it("handles diagnostics without code or message gracefully", () => {
