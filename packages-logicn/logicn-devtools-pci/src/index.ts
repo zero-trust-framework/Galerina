@@ -7,7 +7,11 @@ export {
   type PciFinding,
   type PciAuditReport,
   type PciRequirement,
+  type PciVerdict,
+  type PciUnmodelledFamily,
+  type PciAuditOptions,
   ALL_PCI_REQUIREMENTS,
+  PCI_UNMODELLED_FAMILIES,
 } from "./types.js";
 
 // Black Box compliance ledger (#146) — hash-linked, append-only compliance

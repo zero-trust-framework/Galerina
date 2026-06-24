@@ -17,7 +17,16 @@
 // =============================================================================
 
 import { parseProgram, checkValueStates, type AstNode, type AstNodeKind, NodeFlags } from "@logicn/core-compiler";
-import { type PciFinding, type PciAuditReport, type PciRequirement, ALL_PCI_REQUIREMENTS } from "./types.js";
+import {
+  type PciFinding,
+  type PciAuditReport,
+  type PciRequirement,
+  type PciVerdict,
+  type PciUnmodelledFamily,
+  type PciAuditOptions,
+  ALL_PCI_REQUIREMENTS,
+  PCI_UNMODELLED_FAMILIES,
+} from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Constants — keyword sets
@@ -330,9 +339,22 @@ function makeFinding(
  * @param source   - .lln source content
  * @param fileName - optional file name for finding metadata
  */
-export function runPciAudit(source: string, fileName?: string): PciAuditReport {
+export function runPciAudit(
+  source: string,
+  options?: string | PciAuditOptions,
+): PciAuditReport {
+  const opts: PciAuditOptions =
+    typeof options === "string" ? { fileName: options }
+    : options ?? {};
+  const fileName = opts.fileName;
+  const requireFullAttestation = opts.requireFullAttestation === true;
   const auditedAt = new Date().toISOString();
   const findings: PciFinding[] = [];
+  // 0084-pci-unknown: did the audit see a complete, analyzable program? A parse
+  // error means the static checker is BLIND for part (or all) of the source — it
+  // cannot attest what it could not parse, so the verdict must collapse to
+  // INDETERMINATE (unknown -> deny), not silently report the modelled families clean.
+  let analyzerBlind = false;
 
   // Parse
   const parsed = parseProgram(source, fileName ?? "source.lln");
@@ -346,6 +368,7 @@ export function runPciAudit(source: string, fileName?: string): PciAuditReport {
   // NIST SP 800-207 T6 / CWE-636 (not-failing-securely) / CWE-703 / CWE-1287.
   const parseErrors = (parsed.diagnostics ?? []).filter(d => d.severity === "error");
   if (parseErrors.length > 0) {
+    analyzerBlind = true;
     findings.push(makeFinding(
       "LLN-PCI-000",
       "ParseFailure",
@@ -358,7 +381,7 @@ export function runPciAudit(source: string, fileName?: string): PciAuditReport {
     // Total parse failure (no auditable AST): return now. Partial failure: fall through and audit
     // whatever DID parse (defense in depth), with the parse-failure finding already recorded.
     if (parsed.flows.length === 0 && (parsed.ast.children ?? []).length === 0) {
-      return buildReport(source, findings, auditedAt, fileName);
+      return buildReport(source, findings, auditedAt, fileName, analyzerBlind, requireFullAttestation);
     }
   }
 
@@ -585,7 +608,7 @@ export function runPciAudit(source: string, fileName?: string): PciAuditReport {
     ));
   }
 
-  return buildReport(source, findings, auditedAt, fileName);
+  return buildReport(source, findings, auditedAt, fileName, analyzerBlind, requireFullAttestation);
 }
 
 // ---------------------------------------------------------------------------
@@ -597,6 +620,8 @@ function buildReport(
   findings: readonly PciFinding[],
   auditedAt: string,
   _fileName?: string,
+  analyzerBlind = false,
+  requireFullAttestation = false,
 ): PciAuditReport {
   const critical = findings.filter(f => f.severity === "critical");
   const high = findings.filter(f => f.severity === "high");
@@ -605,7 +630,32 @@ function buildReport(
   const failedRequirements = Array.from(failedReqs);
   const passedRequirements = ALL_PCI_REQUIREMENTS.filter(r => !failedReqs.has(r));
 
-  const passed = critical.length === 0 && high.length === 0;
+  // attestedRequirements: modelled AND not failed = positively attested clean.
+  // (Identical to passedRequirements today; kept as a distinct, intention-revealing
+  // field so "we evaluated and it passed" is never conflated with "we never looked".)
+  const attestedRequirements = passedRequirements;
+
+  // 0084-pci-unknown: the families this static checker cannot model are ALWAYS
+  // surfaced as not-attested, never silently rolled into passedRequirements.
+  const notAttested: PciUnmodelledFamily[] = [...PCI_UNMODELLED_FAMILIES];
+
+  // K3 verdict (NIST SP 800-207 T6, deny-by-default):
+  //   any modelled requirement failed            -> "fail"
+  //   blind (parse failure)                       -> "indeterminate"
+  //   requireFullAttestation but something un-attested -> "indeterminate"
+  //   else (every modelled requirement clean)     -> "pass"
+  const hasGateFinding = critical.length > 0 || high.length > 0;
+  const incompleteAttestation = requireFullAttestation && notAttested.length > 0;
+  const verdict: PciVerdict =
+    hasGateFinding         ? "fail"
+    : analyzerBlind        ? "indeterminate"
+    : incompleteAttestation ? "indeterminate"
+    :                        "pass";
+
+  // Boundary collapse: only a positive "pass" authorizes. (analyzerBlind already
+  // pushes a high finding, so hasGateFinding is true on parse failure too — the
+  // explicit analyzerBlind branch is belt-and-suspenders for the indeterminate label.)
+  const passed = verdict === "pass";
 
   const sourceSnippet = source.slice(0, 200) + (source.length > 200 ? "..." : "");
 
@@ -619,6 +669,9 @@ function buildReport(
     requirementsCovered: [...ALL_PCI_REQUIREMENTS],
     passedRequirements,
     failedRequirements,
+    attestedRequirements,
+    notAttested,
+    verdict,
     auditedAt,
     passed,
   };
