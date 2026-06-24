@@ -70,6 +70,9 @@ const CORPUS = [
   ["pure flow fDiv(a: Int, b: Int) -> Int contract { effects {} } { return a / b }", "fDiv", ["a", "b"], [[7, 2], [-1, 2], [10, 0], [MIN, -1]]],
   ["pure flow fMod(a: Int, b: Int) -> Int contract { effects {} } { return a % b }", "fMod", ["a", "b"], [[10, 3], [10, 0], [MIN, -1]]],
   ["pure flow fNeg(a: Int) -> Int contract { effects {} } { return 0 - a }", "fNeg", ["a"], [[5], [MIN]]],
+  // #0021: the UNARY-minus operator `-a` (distinct from binary `0 - a`) — the corpus blind spot.
+  // -INT32_MIN must TRAP (overflow) on the walker exactly as the VM/WASM do; -0 -> +0.
+  ["pure flow fUNeg(a: Int) -> Int contract { effects {} } { return -a }", "fUNeg", ["a"], [[5], [MIN], [MAX], [0]]],
 ];
 
 test("0014 slice-1: tree-walker ≡ bytecode/fast tier, byte-exact (value + trap) over the i32 edges", async () => {

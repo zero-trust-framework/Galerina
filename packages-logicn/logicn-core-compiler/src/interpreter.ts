@@ -15,7 +15,7 @@ import { pureFlowCacheKey, getCachedPureFlow, setCachedPureFlow } from "./pure-f
 import { activeSinkMonitor } from "./security-sink-monitor.js";
 import { buildExecutionGraph, getOrLoadGraph, storeGraph, executionGraphCacheKey, ExecOp, type ExecutionGraph } from "./execution-graph.js";
 import { compileToBytecode, runBytecode } from "./bytecode-vm.js";
-import { i32AddChecked, i32SubChecked, i32MulChecked, i32DivChecked, i32ModChecked, isI32Trap, type I32Result } from "./i32-arith.js";
+import { i32AddChecked, i32SubChecked, i32MulChecked, i32DivChecked, i32ModChecked, i32NegChecked, isI32Trap, type I32Result } from "./i32-arith.js";
 
 export type LogicNValue =
   | { readonly __tag: "int";       readonly value: number }
@@ -513,7 +513,8 @@ class SyncInterpreter {
       case "unaryExpr": {
         const op = node.value ?? "";
         const operand = this.evalExprS(node.children![0]!);
-        if (op === "-" && operand.__tag === "int")   return intVal(-(operand.value as number));
+        // #0021: checked i32 unary-minus on the SYNC fast path too (traps -INT32_MIN, canonicalizes -0).
+        if (op === "-" && operand.__tag === "int")   return i32R(i32NegChecked(operand.value as number));
         if (op === "-" && operand.__tag === "float")  return { __tag: "float", value: -(operand.value as number) };
         if (op === "!" && operand.__tag === "bool")   return boolVal(!(operand.value as boolean));
         throw new SyncNotSupported(`unary ${op} on ${operand.__tag}`);
@@ -1450,7 +1451,10 @@ class Interpreter {
         const operand = await this.evalExpr(operandNode);
         const op = node.value ?? "";
         if (op === "!" && operand.__tag === "bool") return { __tag: "bool", value: !operand.value };
-        if (op === "-" && operand.__tag === "int") return { __tag: "int", value: -operand.value };
+        // #0021: route i32 unary-minus through the CHECKED negation so -INT32_MIN TRAPS
+        // (overflow) and -0 canonicalizes to +0 — byte-identical to the VM (Op.NEG) and WASM,
+        // instead of the raw `-x` that silently returned an out-of-i32-range value.
+        if (op === "-" && operand.__tag === "int") return i32R(i32NegChecked(operand.value));
         if (op === "-" && operand.__tag === "float") return { __tag: "float", value: -operand.value };
         return { __tag: "runtimeError", message: `Unary '${op}' not valid for ${operand.__tag}` };
       }
