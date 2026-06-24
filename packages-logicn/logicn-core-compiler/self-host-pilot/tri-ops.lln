@@ -1,0 +1,83 @@
+// =============================================================================
+// STAGE-B tri-ops self-host pilot
+//
+// Pure scalar-trit logic over balanced ternary {-1, 0, 1}, re-implementing the
+// numeric `Tri` operations from
+//   packages-logicn/logicn-core-logic/src/index.ts
+// (triNot / triAnd / triOr / triNor).
+//
+// Encoding (identical to the .ts numeric Tri type):
+//   -1 = FALSE      0 = UNKNOWN      1 = TRUE
+//
+// DELIBERATE SIMPLIFICATION vs the v0.2 TriState in src/tri/tri-ops.ts:
+//   The v0.2 ops thread an UnknownReason[] chain through every "unknown"
+//   result (records-of-arrays). LogicN's Stage-A compiler has a known
+//   recursive-record gap, so this pilot drops the reason/record chain entirely
+//   and operates on the bare scalar trit (Int -1/0/1) — exactly the surface of
+//   the v0.1 numeric `Tri` ops, which carry no reasons. Semantics of the
+//   scalar verdict are preserved 1:1; only the (orthogonal) reason metadata is
+//   omitted.
+//
+// Op semantics (Kleene strong three-valued logic):
+//   NOT a   = unknown stays unknown; otherwise flip sign      (matches triNot)
+//   a AND b = min(a, b)                                        (matches triAnd)
+//   a OR  b = max(a, b)                                        (matches triOr)
+//   a NOR b = NOT(a OR b)                                      (matches triNor)
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// NOT  —  expressed with `match` (the prompt asked for match/enum + Int).
+//
+// NOTE: a Stage-A parser gap blocks NEGATIVE integer literals in match arm
+// patterns (`-1 =>` fails with LLN-PARSE-001). We therefore match the two
+// non-negative cases (1, 0) explicitly and let the wildcard `_` cover the
+// remaining trit, -1. This yields the exact triNot truth table:
+//   triNot(1) = -1   triNot(0) = 0   triNot(-1) = 1
+// ---------------------------------------------------------------------------
+pure flow triNot(a: Int) -> Int
+contract {
+  intent { "Balanced-ternary NOT: unknown stays unknown, otherwise flip sign." }
+}
+{
+  match a {
+    1 => return -1   ;; TRUE  -> FALSE
+    0 => return 0    ;; UNKNOWN -> UNKNOWN
+    _ => return 1    ;; FALSE (-1) -> TRUE
+  }
+}
+
+// ---------------------------------------------------------------------------
+// AND  =  min(a, b)
+// ---------------------------------------------------------------------------
+pure flow triAnd(a: Int, b: Int) -> Int
+contract {
+  intent { "Balanced-ternary AND = min(a, b)." }
+}
+{
+  if a < b { return a }
+  return b
+}
+
+// ---------------------------------------------------------------------------
+// OR   =  max(a, b)
+// ---------------------------------------------------------------------------
+pure flow triOr(a: Int, b: Int) -> Int
+contract {
+  intent { "Balanced-ternary OR = max(a, b)." }
+}
+{
+  if a > b { return a }
+  return b
+}
+
+// ---------------------------------------------------------------------------
+// NOR  =  NOT(OR(a, b))   — composes the two flows above
+// ---------------------------------------------------------------------------
+pure flow triNor(a: Int, b: Int) -> Int
+contract {
+  intent { "Balanced-ternary NOR = NOT(OR(a, b))." }
+}
+{
+  let o: Int = triOr(a, b)
+  return triNot(o)
+}
