@@ -1283,3 +1283,11 @@ The `workspace.lindex` cache TRUSTS its stored `flows`/`fileHashes` on an increm
 A safety control that is parsed + stored but **not yet enforced** must never read as enforced (the honest-posture / never-silent principle). A flow that declares `resilience { fallback circuit_breaker }` gets a **warning**: the circuit-breaker posture-trip is a NO-OP today (DRCM Phase 5), so on failure it will not actually trip the defensive-mode posture bit — do not rely on it for graceful degradation. The declaration is valid (warning, not error); the author is told to track the breaker externally or choose an enforced fallback (`propagate` / `return_cached` / `return_default` / `quarantine` / `escalate`) until DRCM Phase 5 lands. (The sibling rule `LLN-RES-001` (error) forbids retry on a mutation effect without `idempotent: true`.)
 
 ---
+
+## SBOM integrity — never claim coverage you don't have
+
+**Status:** ENFORCED in the emitter (R&D 0120-F3; `logicn-core-compiler/src/sbom.ts` `generateCycloneDxSbom`, 6 tests)  **Diagnostic:** LLN-SBOM-001
+
+The CycloneDX 1.5 SBOM is assembled from the resolved `PackageManifest` set (name / version / sha256 `hash` / `signerKeyId` / `registry` / `effects` / `capabilities`). Fail-closed posture: an SBOM must **never claim integrity it does not have**. A component without a well-formed `sha256:<64 hex>` content hash is emitted **without** a `hashes` entry, tagged `logicn:integrity = UNVERIFIED`, raised as **LLN-SBOM-001** (error), and the whole BOM is marked `logicn:complete = false`. A consumer gates on `result.complete` (reject an incomplete SBOM) rather than trusting a document that silently omits an unverifiable component. Output is **deterministic** (component order = input order; no wall-clock unless a timestamp is supplied) for reproducible builds. The governance footprint (effects/capabilities/signer/registry) rides as CycloneDX `properties` — a *governed* SBOM, not just a dependency list.
+
+---

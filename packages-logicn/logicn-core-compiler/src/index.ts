@@ -344,6 +344,10 @@ export {
   type ResolvedPackageEntry,
 } from "./package-resolver.js";
 
+// CycloneDX SBOM emitter (R&D 0120-F3) — fail-closed on missing integrity (LLN-SBOM-001).
+export { generateCycloneDxSbom } from "./sbom.js";
+export type { SbomResult, SbomDiagnostic, SbomOptions } from "./sbom.js";
+
 // ---------------------------------------------------------------------------
 // Package resolver diagnostics — LLN-PKG-001..005
 // ---------------------------------------------------------------------------
