@@ -47,6 +47,11 @@ const CHECKS = [
     desc: "0056-ci-lint: open-core contamination guard — no NON-Apache license declaration in the package tree (PD-spec↛Apache) + no core→enterprise import (governance/tier-manifest.json, inert until /enterprise exists). Zero-baseline; also runs ENFORCING in conventions.yml.",
   },
   {
+    name: "diagnostic-doc-drift",
+    script: "scripts/audit-diagnostic-doc-drift.mjs",
+    desc: "RD-0124: the canonical diagnostic doc (compiler-diagnostics.md) must not misdescribe a wired code — for any LLN-* with a structured name/message in source AND a doc description, the two must share ≥1 meaningful word (zero-overlap = drift). Caught the LLN-RUNTIME-006 'Audit event stream write failed' (really RateLimitExceeded) bug + 14 more. Zero-baseline; also runs ENFORCING in conventions.yml.",
+  },
+  {
     name: "graph-integrity",
     script: "scripts/audit-graph-integrity.mjs",
     desc: "RD-0121: structural validation of a GENERATED project graph — no dangling edge (from/to ref a real node), no duplicate node id, no stale sourcePath (node→nonexistent file), and the depends_on subgraph is a DAG (no cycle). Validate-IF-PRESENT: skips when build/graph/*.json (a ~3MB gitignored artifact) is absent, validates fail-closed when present. The detectors' --self-test runs ENFORCING in conventions.yml (build-free, anti-neuter).",

@@ -228,7 +228,7 @@ older `LNN-*` codes as the compiler matures.
 | `LLN-SYNTAX-*` | Syntax rule violations |
 | `LLN-RAWPTR-*` | Raw pointer ban |
 | `LLN-FUSE-*` | Pipeline fusion optimisation reports |
-| `LLN-GRAPH-*` | lln-graph library (graph structure) |
+| `LLN-GRAPH-*` | Governance flow-graph (devtools-flowgraph): structural (cycle) + governance (dead flow, authority escalation, PII-leakage path, missing audit coverage) |
 | `LLN-GOV-3VL-*` | Three-valued governance verdict collapse (runtime, fail-closed) |
 | `LLN-SUBSTRATE-*` | Substrate failure-mode guarantees vs a seeded noise model (Direction C, fail-closed) |
 | `LLN-RUNTIME-*` | Runtime enforcement |
@@ -365,8 +365,8 @@ LLN-SYNTAX-004   ACTIVE_KEYWORD_AS_IDENT     Active keyword used as identifier
 LLN-SYNTAX-005   TOP_LEVEL_FN_DENIED         fn may only appear inside a flow body
 LLN-SYNTAX-006   INVALID_BINDING_PREFIX      Unrecognised binding prefix (not let/mut/unsafe let/safe mut)
 LLN-SYNTAX-007   MISSING_RETURN_TYPE         Flow or fn declaration is missing a return type annotation
-LLN-SYNTAX-008   INVALID_ROUTE_METHOD        Route declaration uses an unrecognised HTTP method
-LLN-SYNTAX-009   DUPLICATE_CONTRACT_SECTION  Contract block contains a duplicate section key
+LLN-SYNTAX-008   UNSAFE_LET_AT_TOP_LEVEL   unsafe let is only allowed inside a secure flow (boundary data must be owned by a governed flow)
+LLN-SYNTAX-009   EMIT_AT_TOP_LEVEL   Events may only be emitted inside flows (declare globally, emit inside governed execution)
 LLN-SYNTAX-010   ELSE_IF_DENIED              'else if' is not valid LogicN syntax; use 'match' or sequential 'if'
 ```
 
@@ -383,9 +383,9 @@ Advisory diagnostics for code style. These are warnings, not errors (unless a st
 profile upgrades them).
 
 ```text
-LLN-STYLE-001   ELSE_IF_CHAIN_ADVISORY   Advisory: 'else if' chain detected; prefer 'match' or sequential 'if'
+LLN-STYLE-001   FlowNameCamelCase   Flow and fn names should use camelCase (e.g. getUser, createPatient)
                                           (Note: in v1 this is now elevated to LLN-SYNTAX-010 hard error)
-LLN-STYLE-002   DEEP_NESTING             Nesting depth exceeds 3; consider extracting to a named fn or flow
+LLN-STYLE-002   TypeNamePascalCase   Type, record, and enum names should use PascalCase (e.g. UserId, PatientRecord)
 ```
 
 ### Taint (canonical series: LLN-TAINT-*)
@@ -397,7 +397,7 @@ without an explicit sanitiser boundary. Introduced in Phase 28.
 LLN-TAINT-001   INJECTION_SINK_TAINTED       Tainted value at injection sink (database.query, html.render, shell.exec)
                                               — use a named stdlib sanitiser (Sql.escape, Html.escape, Shell.quote)
 LLN-TAINT-002   LOGIC_SINK_UNVALIDATED       Unvalidated value at business-logic sink — validate before use
-LLN-TAINT-003   TAINT_PROPAGATION            Taint propagated from source X to Y without sanitiser boundary
+LLN-TAINT-003   WrongContextUntaint   A value cleaned for one sink context is used in a sink expecting a different context
 LLN-TAINT-004   UNTAINT_BOUNDARY_REQUIRED    Tainted value used in context requiring explicit untaint
 LLN-TAINT-005   TAINTED_RETURN               Tainted value returned from flow without explicit declassification
 LLN-TAINT-006   CROSS_BOUNDARY_TAINT         Tainted value crosses a trust boundary without sanitiser
@@ -412,7 +412,7 @@ active compilation profile (strict, high_integrity, etc.). Introduced in Phase 2
 ```text
 LLN-PROFILE-001   STRICT_EFFECT_DENIED        Effect not permitted in 'strict' profile
 LLN-PROFILE-002   HIGH_INTEGRITY_SINK_DENIED  Governed sink not permitted in 'high_integrity' profile
-LLN-PROFILE-003   PROFILE_CAPABILITY_MISSING  Required capability not declared for this profile
+LLN-PROFILE-003   ExceptionControlFlowProhibited   Exception control flow (try/catch/throw) is prohibited; LogicN uses Result<T, Error>
 LLN-PROFILE-004   PROFILE_UNSAFE_BINDING      unsafe let binding not permitted in this profile without gateway
 LLN-PROFILE-005   PROFILE_AUDIT_REQUIRED      Profile requires audit.write effect; flow does not declare it
 LLN-PROFILE-005B  PROFILE_AUDIT_INCOMPLETE    Audit event produced but missing required fields for this profile
@@ -428,7 +428,7 @@ diagnostics (Phase 55+). See `logicn-post-quantum-hardware-security.md`.
 ```text
 LLN-HW-001   HARDWARE_CLASS_MISMATCH        Flow requires hardware class X; target provides class Y
 LLN-HW-002   PROOF_LEVEL_INSUFFICIENT       Flow requires proof level X; current level is Y
-LLN-HW-003   IMMUTABLE_SEAL_VIOLATED        ImmutableInputSeal constraint violated by flow
+LLN-HW-003   AcceleratorPlaneRequiresAttestation   A photonic/neuromorphic AcceleratorPlane at ProofLevel.Escalated requires runtime attestation
 LLN-HW-004   UNKNOWN_HARDWARE_TARGET        Target not in the hardware-trust registry — yellow uncertainty (K3 INDETERMINATE), build proceeds; auto-clears once registered (R&D 0045 tier D)
 LLN-HW-101   MISSING_REQUIRED_ATTESTATION   High-trust flow requires attestation; none provided
 LLN-HW-102   UNSUPPORTED_ATTESTATION_ALG    Attestation algorithm not accepted by target trust profile
@@ -490,7 +490,7 @@ LLN-TYPE-009   InvalidGenericInstantiation  Wrong number of generic type argumen
 LLN-TYPE-020   ShadowedBinding              Binding shadows outer-scope name (warning)
 LLN-TYPE-021   NonExhaustiveMatch           (retired) superseded by LLN-TYPE-023 mandatory wildcard
 LLN-TYPE-022   UnreachablePattern           Pattern already covered by an earlier `_`/`else` arm
-LLN-TYPE-023   MissingWildcardArm           every match must end with a mandatory `_ =>` (or `else =>`) catch-all
+LLN-TYPE-023   DeferredTypeCheck   A type check was deferred (could not be resolved at this point)
 ```
 
 ### Name Resolution (canonical series: LLN-NAME-*)
@@ -498,7 +498,7 @@ LLN-TYPE-023   MissingWildcardArm           every match must end with a mandator
 ```text
 LLN-NAME-001   UNDECLARED_NAME          Name not defined in current scope
 LLN-NAME-002   DUPLICATE_NAME           Name already declared in this scope
-LLN-NAME-003   USE_BEFORE_DECLARATION   Name referenced before its declaration point
+LLN-NAME-003   CrossModuleShadow   Local binding shadows a built-in domain type; rename to avoid confusion
 LLN-NAME-004   PRIVATE_ACCESS           Name is not exported from its defining package
 LLN-NAME-005   AMBIGUOUS_NAME           Name resolves to multiple candidates
 ```
@@ -899,10 +899,10 @@ LLN-RUNTIME-007   Manifest requires an audit entry but AuditLog.write was not ca
 
 ```text
 LLN-GRAPH-001   Graph contains a cycle where a DAG is required
-LLN-GRAPH-002   Referenced node does not exist in graph
-LLN-GRAPH-003   A declared dependency was not found
-LLN-GRAPH-004   Iterative fixpoint did not converge within max iterations
-LLN-GRAPH-005   Resource lifecycle state transition is not permitted
+LLN-GRAPH-002   DeadFlow   A declared flow is unreachable / never invoked (dead flow)
+LLN-GRAPH-003   AuthorityEscalation   A flow escalates authority beyond its declared grant (authority escalation)
+LLN-GRAPH-004   PiiLeakagePath   A dataflow path carries PII to an unsanitised sink (PII leakage path)
+LLN-GRAPH-005   MissingAuditCoverage   A governed flow lacks required audit coverage (missing audit coverage)
 ```
 
 ### Supply Chain
@@ -1015,7 +1015,7 @@ LLN-PKG-006   Package is signed by a REVOKED key (revocation refused at resoluti
 ```text
 LLN-BORDER-001   Plugin input is required but missing
 LLN-BORDER-002   Plugin input type mismatch (expected vs actual)
-LLN-BORDER-003   Plugin input length exceeds the declared maximum
+LLN-BORDER-003   FIELD_TOO_LARGE   A plugin/border input field exceeds its declared maximum size
 LLN-BORDER-004   Plugin input value below the declared minimum
 LLN-ECON-001     Flow execution may exceed the declared economic budget
 LLN-ECON-002     Protected data binding has no lineage declaration

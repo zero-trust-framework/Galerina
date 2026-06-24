@@ -66,6 +66,24 @@ jobs:
           node scripts/audit-tier-boundary.mjs --self-test
           node scripts/audit-tier-boundary.mjs
 
+  # diagnostic-doc-drift (build-free, zero-baseline, ENFORCING): the canonical diagnostic reference
+  # (compiler-diagnostics.md) must not misdescribe a WIRED code. For any LLN-* code that carries a
+  # structured name/message in source AND a description in the doc, the two must share at least one
+  # meaningful word — zero overlap means the doc is describing a different fault (the LLN-RUNTIME-006
+  # "Audit event stream write failed" / really RateLimitExceeded class). The --self-test proves the
+  # detector fires; then the scan runs ENFORCING (reads .ts source + the .md doc directly — no build).
+  diagnostic-doc-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Diagnostic doc↔source drift (self-test, then enforcing)
+        run: |
+          node scripts/audit-diagnostic-doc-drift.mjs --self-test
+          node scripts/audit-diagnostic-doc-drift.mjs
+
   # graph-integrity self-test (build-free): the structural-graph detectors (dangling edge / dup id /
   # dependency cycle / stale sourcePath) must keep firing. The FULL audit validates a GENERATED graph
   # (build/graph/*.json is a ~3MB gitignored artifact + the CLI dist is not committed), so it cannot run
