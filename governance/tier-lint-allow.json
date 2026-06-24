@@ -1,0 +1,4 @@
+{
+  "note": "Allow-list for the tier-boundary lint (scripts/audit-tier-boundary.mjs). Add a repo-relative path only with a vetted reason (e.g. a module that legitimately quotes a non-Apache license string). Keep empty if possible — every entry is a hole in the open-core contamination guard.",
+  "files": []
+}

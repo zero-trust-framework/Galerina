@@ -1,0 +1,6 @@
+{
+  "note": "Open-core tier manifest (TASK 0056-ci-lint). Default tier for every package is `core` (Apache-2.0). List enterprise-tier (BSL/proprietary) package names under `enterprise` as they are created; the tier-boundary lint then forbids any core package from importing them. There is no enterprise tier yet — the license-contamination rule is active, the core→enterprise import rule is wired but inert.",
+  "defaultTier": "core",
+  "coreLicense": "Apache-2.0",
+  "enterprise": []
+}

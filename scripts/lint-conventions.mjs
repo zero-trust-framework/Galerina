@@ -41,6 +41,11 @@ const CHECKS = [
     script: "scripts/lint-lln.mjs",
     desc: "owner .lln rules (2026-06-23): every flow has a human comment (rule 1) + a contract{intent} declaring clauses EXCEPT auto-settings (rule 2), and no AI slop / bad syntax (rule 3). Production src only — fixtures/examples/benchmarks whitelisted in governance/lln-lint-allow.json. Baseline > 0 (report-only until the self-hosted/.lln corpus is retrofitted).",
   },
+  {
+    name: "tier-boundary",
+    script: "scripts/audit-tier-boundary.mjs",
+    desc: "0056-ci-lint: open-core contamination guard — no NON-Apache license declaration in the package tree (PD-spec↛Apache) + no core→enterprise import (governance/tier-manifest.json, inert until /enterprise exists). Zero-baseline; also runs ENFORCING in conventions.yml.",
+  },
   // #218 (coverage cross-check) runs separately as `audit-coverage.mjs`.
 ];
 

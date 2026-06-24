@@ -48,3 +48,20 @@ jobs:
           node-version: "20"
       - name: No NUL bytes in source (enforcing)
         run: node --test packages-logicn/logicn-core-compiler/tests/source-hygiene-no-nul.test.mjs
+
+  # A green, build-free, zero-baseline OPEN-CORE invariant (0056-ci-lint): no NON-Apache license
+  # declaration may contaminate the Apache-2.0 package tree (PD-spec↛Apache), and no core package may
+  # import an enterprise-tier package (core↛enterprise, via governance/tier-manifest.json). The lint's
+  # --self-test proves both detectors still fire (a neutered lint is itself a fail-open), then the lint
+  # runs ENFORCING. FAILS a PR that introduces cross-tier contamination.
+  tier-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Tier-boundary contamination guard (self-test, then enforcing)
+        run: |
+          node scripts/audit-tier-boundary.mjs --self-test
+          node scripts/audit-tier-boundary.mjs
