@@ -35,6 +35,13 @@ export interface KernelCost {
   /** Eligibility gates (crypto-on-core): crypto / control-flow NEVER offload. */
   readonly isCrypto?: boolean;
   readonly isControlFlow?: boolean;
+  /**
+   * The kernel's declared effect footprint. The crypto gate derives crypto-eligibility AUTHORITATIVELY
+   * from this (any `crypto.*` effect), so a mis-wired or hostile caller passing isCrypto:false on a
+   * crypto kernel cannot route crypto onto a noisy/photonic lane (RD-0126 A-2). Optional for back-compat;
+   * when present it can only ADD to the gate (fail-safe), never relax it.
+   */
+  readonly declaredEffects?: readonly string[];
 }
 
 export interface Decision {
@@ -109,8 +116,16 @@ export function crossover(N: number): number { return (NS.c_opt_ns + NS.c_verify
 export class PartitionDecider {
   decide(kernel: KernelCost): Decision {
     // (M5) eligibility gate FIRST — crypto / control-flow / explicitly-digital never offload.
-    if (kernel.isCrypto || kernel.isControlFlow) {
-      return { target: "digital", reason: "INELIGIBLE: crypto/control-flow stays on the digital core (LLN-SUBSTRATE-001)" };
+    // Crypto-eligibility is derived from the AUTHORITATIVE declared-effect footprint, NOT just the
+    // caller's self-reported isCrypto flag (RD-0126 A-2): a mis-wired/hostile caller passing
+    // isCrypto:false on a crypto kernel must not be able to route crypto onto a noisy/photonic lane.
+    // `crypto.` prefix is a deliberately CONSERVATIVE superset of substrate-inference.ts:65 CRYPTO_EFFECT
+    // — fail-safe: it can only keep MORE work on the digital core, never less, even if a new crypto.*
+    // effect is later added to the canonical set.
+    const declaresCrypto = (kernel.declaredEffects ?? []).some((e) => e.startsWith("crypto."));
+    if (kernel.isCrypto || declaresCrypto || kernel.isControlFlow) {
+      const derived = declaresCrypto && !kernel.isCrypto ? " (crypto derived from declared effects — caller flag not trusted alone)" : "";
+      return { target: "digital", reason: "INELIGIBLE: crypto/control-flow stays on the digital core (LLN-SUBSTRATE-001)" + derived };
     }
     if (kernel.lane === "digital") {
       return { target: "digital", reason: "declared lane:digital — inert" };

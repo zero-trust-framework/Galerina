@@ -60,6 +60,19 @@ test("M5: crypto / control-flow / lane:digital stay digital even when huge", () 
   assert.equal(decider.decide({ n: 100000, redundancyN: 1, lane: "digital" }).target, "digital");
 });
 
+// RD-0126 A-2 — crypto-eligibility is derived from the AUTHORITATIVE declared-effect footprint, so a
+// caller cannot bypass the crypto→digital gate by passing isCrypto:false on a crypto kernel.
+test("A-2: crypto declared via effects routes digital even with isCrypto:false (caller flag not trusted alone)", () => {
+  // hostile/mis-wired: claims not-crypto, but the declared effects say otherwise -> still digital.
+  const d = decider.decide({ n: 100000, redundancyN: 1, lane: "photonic", isCrypto: false, declaredEffects: ["crypto.sign"] });
+  assert.equal(d.target, "digital");
+  assert.ok(/derived from declared effects/.test(d.reason));
+  // conservative superset: a future crypto.* effect (e.g. crypto.kem) is also caught.
+  assert.equal(decider.decide({ n: 100000, redundancyN: 1, lane: "photonic", declaredEffects: ["crypto.kem"] }).target, "digital");
+  // non-crypto effects on a large photonic kernel still offload (the gate didn't over-fire).
+  assert.equal(decider.decide({ n: 100000, redundancyN: 1, lane: "photonic", declaredEffects: ["math.matmul"] }).target, "photonic");
+});
+
 // M6 — fail-closed on unknown cost.
 test("M6: NaN/negative/infeasible inputs all fail closed → digital", () => {
   assert.equal(decider.decide({ n: 1024, redundancyN: NaN, lane: "photonic" }).target, "digital");
