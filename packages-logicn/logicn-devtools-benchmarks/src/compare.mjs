@@ -102,6 +102,38 @@ function fmtBpo(n, rt) {
   return n.toFixed(0) + " B/op";
 }
 
+// ── Blank-cell reasons (owner rule 2026-06-24) ──────────────────────────────────
+// A benchmark table must NEVER show a silent blank. Every empty cell renders an
+// explicit short reason instead of a bare "—". `cellReason(bench, rt)` classifies
+// WHY a given runtime has no comparable throughput for a given benchmark, so the
+// table cell can say e.g. "not run", "errored", "no WASM — strings/records"
+// rather than an ambiguous dash. Reasons are deliberately short (table cells).
+const STRING_RECORD_BENCH = new Set(["crypto-ops", "text-html", "json-parse", "tmf-container", "framework-pipeline"]);
+function cellReason(bench, rt) {
+  const r = bench?.results?.[rt];
+  // 1. Runtime never produced a result object for this benchmark.
+  if (!r) {
+    if (rt === "denoWebGpu") return "not run — no GPU path";
+    if (rt === "cpp")        return "not run — no C++ impl";
+    if (rt === "rustAvx512") return "not run — no AVX-512";
+    if (rt === "wasm" && STRING_RECORD_BENCH.has(bench?.benchmark)) return "no WASM — strings/records";
+    if (rt === "wasm")       return "no WASM build";
+    if (NATIVE_RT.has(rt))   return "not run — no native impl";
+    return "not run";
+  }
+  // 2. Runtime ran but errored.
+  if (r.error) {
+    if (rt === "wasm") return "WASM compile failed";
+    return "errored";
+  }
+  // 3. Ran, but no comparable throughput metric (e.g. excluded / non-numeric).
+  return "no comparable metric";
+}
+// Format a throughput cell: a number when present, else an explicit short reason.
+function fmtTCell(bench, rt, n) {
+  return (n === null || n === undefined) ? cellReason(bench, rt) : fmtT(n);
+}
+
 // ── Traffic Light ──────────────────────────────────────────────────────────────
 // Compares a runtime's throughput to a reference (best, Node.js, or Rust).
 // ratio = subject / reference:
@@ -236,7 +268,7 @@ console.log("|---|---|---|---|---|---|---|");
 
 for (const bench of data) {
   if (!comparable(bench)) {
-    console.log(`| **${bench.benchmark}** | ⚠️ not unit-aligned | — | — | — | — | excluded — ${unitReason(bench)} |`);
+    console.log(`| **${bench.benchmark}** | ⚠️ not unit-aligned | N/A — excluded | N/A — excluded | N/A — excluded | N/A — excluded | excluded — ${unitReason(bench)} |`);
     continue;
   }
   const m = {};
@@ -247,7 +279,15 @@ for (const bench of data) {
   for (const rt of ORDER) {
     if (m[rt] && m[rt] > winnerSpeed) { winnerSpeed = m[rt]; winnerRt = rt; }
   }
-  if (!winnerRt) { console.log(`| ${bench.benchmark} | — | — | — | — | — | No data |`); continue; }
+  if (!winnerRt) {
+    // No runtime produced a comparable throughput for this benchmark — say so in
+    // every cell rather than leaving five silent dashes.
+    const why = bench.results && Object.keys(bench.results).length
+      ? "not run — no comparable runtime"
+      : "not run — benchmark not executed";
+    console.log(`| **${bench.benchmark}** | ⚪ no result | ${why} | not run | n/a — no winner | n/a — no winner | No runtime produced a throughput number |`);
+    continue;
+  }
 
   const winnerLabel = LABEL[winnerRt] ?? winnerRt;
   const deviceEmoji = (winnerRt === "denoWebGpu") ? "🎮" : "🖥️";
@@ -256,9 +296,10 @@ for (const bench of data) {
   // ── LogicN governed tier vs winner + vs Python floor ──
   const gov = m.logicnGoverned ?? 0;
   const py  = m.python ?? 0;
-  const govStr = gov ? fmtT(gov) : "—";
+  // governed ⟨interp⟩ didn't run for this benchmark → say why, never a bare dash.
+  const govStr = gov ? fmtT(gov) : cellReason(bench, "logicnGoverned");
 
-  let govVsWinner = "—";
+  let govVsWinner = gov ? "—" : "N/A — governed ⟨interp⟩ not run";
   if (gov && winnerSpeed) {
     if (winnerRt === "logicnGoverned") {
       govVsWinner = "🏆 1.00× (is winner)";
@@ -271,14 +312,12 @@ for (const bench of data) {
     }
   }
 
-  let govVsPython = "—";
+  let govVsPython = gov ? "n/a (no Python)" : "N/A — governed ⟨interp⟩ not run";
   if (gov && py) {
     const r = gov / py;
     govVsPython = r >= 1
       ? `✅ **${r.toFixed(2)}×** faster`
       : `❌ ${r.toFixed(2)}× (${(1/r).toFixed(1)}× slower)`;
-  } else if (gov && !py) {
-    govVsPython = "n/a (no Python)";
   }
 
   // Short note explaining why this runtime wins
@@ -355,9 +394,9 @@ for (const bench of data) {
   const wasmRank = ranked.indexOf("wasm");
   const wasm = throughput(bench.results?.wasm) ?? 0;
   const gov = throughput(bench.results?.logicnGoverned) ?? 0;
-  const wasmCell = wasm > 0 && wasmRank >= 0 ? `${ordinal(wasmRank + 1)}/${M} · ${xSlower(wasm, winSpeed)}` : "—";
+  const wasmCell = wasm > 0 && wasmRank >= 0 ? `${ordinal(wasmRank + 1)}/${M} · ${xSlower(wasm, winSpeed)}` : cellReason(bench, "wasm");
   winTally[LABEL[winnerRt]] = (winTally[LABEL[winnerRt]] ?? 0) + 1;
-  canonRows.push({ bench: bench.benchmark, winnerLabel: LABEL[winnerRt], winSpeed, wasmCell, govCell: gov > 0 ? xSlower(gov, winSpeed) : "—" });
+  canonRows.push({ bench: bench.benchmark, winnerLabel: LABEL[winnerRt], winSpeed, wasmCell, govCell: gov > 0 ? xSlower(gov, winSpeed) : cellReason(bench, "logicnGoverned") });
 }
 canonRows.sort((a, b) => a.winnerLabel.localeCompare(b.winnerLabel) || b.winSpeed - a.winSpeed);
 for (const r of canonRows) console.log(`| ${r.bench} | **${r.winnerLabel}** | ${fmtT(r.winSpeed)} | ${r.wasmCell} | ${r.govCell} |`);
@@ -376,8 +415,9 @@ console.log("|" + Array(ORDER.length + 2).fill("---").join("|") + "|");
 
 for (const bench of data) {
   if (!comparable(bench)) {
-    const cells = ORDER.map(() => "—");
-    console.log("| " + [`${bench.benchmark} ⚠️`, ...cells, "⚠️ excluded"].join(" | ") + " |");
+    // Excluded benchmark: every data cell says why instead of a silent dash.
+    const cells = ORDER.map(() => "N/A — excluded");
+    console.log("| " + [`${bench.benchmark} ⚠️`, ...cells, "⚠️ excluded — not unit-aligned"].join(" | ") + " |");
     continue;
   }
   const m = {}; for (const rt of ORDER) m[rt] = throughput(bench.results?.[rt]);
@@ -387,17 +427,23 @@ for (const bench of data) {
   for (const rt of ORDER) if (m[rt] && m[rt] > winnerSpeed) winnerSpeed = m[rt];
 
   const row = [bench.benchmark, ...ORDER.map(rt => {
+    // Number when present (winner bolded); else an explicit short reason.
+    if (!m[rt]) return cellReason(bench, rt);
     const s = fmtT(m[rt]);
-    return (m[rt] && Math.abs(m[rt] - winnerSpeed) / winnerSpeed < 0.05) ? `**${s}**` : s;
+    return (Math.abs(m[rt] - winnerSpeed) / winnerSpeed < 0.05) ? `**${s}**` : s;
   })];
 
   if (GOV_COST_ONLY.has(bench.benchmark)) {
     const govOverhead = m.logicnManifest && m.logicnGoverned
       ? ((1 - m.logicnGoverned / m.logicnManifest) * 100).toFixed(1) + "% gov overhead"
-      : "—";
+      : "N/A — only LogicN tiers ran";
     row.push(govOverhead);
   } else {
-    row.push((m.nodejs && m.logicnGoverned) ? ratio(m.nodejs, m.logicnGoverned) : "—");
+    row.push((m.nodejs && m.logicnGoverned)
+      ? ratio(m.nodejs, m.logicnGoverned)
+      : (!m.nodejs && !m.logicnGoverned) ? "N/A — neither ran"
+      : !m.logicnGoverned ? "N/A — no governed ⟨interp⟩"
+      : "N/A — no Node.js");
   }
   console.log("| "+row.join(" | ")+" |");
 }
@@ -765,7 +811,7 @@ for (const bench of data) {
   const winnerLabel = LABEL[winnerRt] ?? winnerRt;
   const cells = rtsInOrder.map(rt => {
     const t = m[rt];
-    if (!t) return "—";
+    if (!t) return cellReason(bench, rt);   // explicit short reason, never a bare dash
     const ratio = winnerSpeed / t;
     if (ratio <= 1.05) return "**🏆 winner**";
     if (ratio <= 1.5)  return `${ratio.toFixed(1)}× slower`;
@@ -777,7 +823,7 @@ for (const bench of data) {
   console.log(`| **${bench.benchmark}** | ${winnerLabel} | ` + cells.join(" | ") + " |");
 }
 
-console.log("\n> Bold = significantly behind (>10×). Blanks = benchmark not run for this runtime.");
+console.log("\n> Bold = significantly behind (>10×). A non-numeric cell states why that runtime has no figure (e.g. \"not run — no native impl\", \"errored\", \"no WASM build\") — never a silent blank.");
 console.log("> Fibonacci passive is excluded from 'winner' comparison — LRU cache hit is not a fair race.");
 console.log(`> gpu-compute GPU: ${GPU_NAME} slower than CPU at 100K elements (setup overhead dominates — crossover ~500K elements).`);
 
