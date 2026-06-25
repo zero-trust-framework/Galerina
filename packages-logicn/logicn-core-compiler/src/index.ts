@@ -100,6 +100,7 @@ export {
   LEGACY_EFFECT_CALL_PATTERNS_COUNT,
   inferEffectsForOperation,
   inferDirectEffectsForFlow,
+  buildModuleAliasMap,
   buildFlowEffectSummary,
   type EffectCheckResult,
   type EffectDiagnostic,

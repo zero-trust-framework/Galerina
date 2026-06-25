@@ -142,17 +142,55 @@ export function inferEffectsForOperation(name: string): readonly string[] {
  * Infers effects directly used in a flow's body by matching call names
  * against the EFFECT_REGISTRY.
  */
+/**
+ * C1 (threat-model) — module-alias resolver. A `let`/`const` binding of a bare module identifier
+ * (`let x = AuditLog`) lets a caller rename an effectful module and call it through the alias
+ * (`x.write(...)`), which the receiver-NAME matching below would miss — smuggling the effect (and the
+ * tier floor + taint sink that key off the same name) past the capability model. This maps every alias
+ * name back to the module it ultimately points at, with transitive resolution (`let y = x; let x = Http`)
+ * and a cycle guard. Resolution can ONLY ADD inferred effects (a name resolves to a module or stays
+ * itself), so it is fail-closed: it never removes an effect, and aliasing an effectful module and
+ * calling it genuinely performs that effect, so detecting it is always correct.
+ */
+export function buildModuleAliasMap(flowNode: AstNode): ReadonlyMap<string, string> {
+  const direct = new Map<string, string>();
+  function collect(node: AstNode): void {
+    if (node.kind === "letDecl" && node.value) {
+      const rhs = node.children?.[0];
+      // A module alias is `let x = AuditLog` — child[0] is a bare identifier. A literal/binary/member RHS
+      // has child[0] of another kind and is correctly ignored. (For `let z = compute(1)` the parser binds
+      // z to the bare identifier `compute` and emits the call args as a SEPARATE sibling statement, so z
+      // resolves to "compute" — harmless, since it matches no effectful module.) Over-resolution only ever
+      // ADDS effects, so it is fail-closed. `letDecl` is LogicN's only binding node.
+      if (rhs?.kind === "identifier" && rhs.value) direct.set(node.value, rhs.value);
+    }
+    for (const c of node.children ?? []) collect(c);
+  }
+  collect(flowNode);
+  const resolved = new Map<string, string>();
+  for (const [name] of direct) {
+    let cur = name;
+    const seen = new Set<string>();
+    while (direct.has(cur) && !seen.has(cur)) { seen.add(cur); cur = direct.get(cur)!; }
+    if (cur !== name) resolved.set(name, cur);
+  }
+  return resolved;
+}
+
 export function inferDirectEffectsForFlow(
   flowNode: AstNode,
 ): readonly string[] {
   const effects = new Set<string>();
+  const aliasMap = buildModuleAliasMap(flowNode);
 
   function walk(node: AstNode): void {
     if (node.kind === "callExpr") {
       // Build full call name: receiver.method or just method
       const methodName = node.value ?? "";
       const receiver = node.children?.[0];
-      const receiverName = receiver?.kind === "identifier" ? (receiver.value ?? "") : "";
+      const rawReceiver = receiver?.kind === "identifier" ? (receiver.value ?? "") : "";
+      // C1: resolve a module alias (`let x = AuditLog; x.write()` → `AuditLog.write`) before matching.
+      const receiverName = aliasMap.get(rawReceiver) ?? rawReceiver;
       const fullName = receiverName !== "" ? `${receiverName}.${methodName}` : methodName;
 
       for (const effect of inferEffectsForOperation(fullName)) {
@@ -1043,13 +1081,14 @@ function findCallsToEffectfulFlows(
 
 function inferEffectsFromNode(node: AstNode): Set<string> {
   const effects = new Set<string>();
+  const aliasMap = buildModuleAliasMap(node); // C1: resolve `let x = Module` aliases before matching
 
   function walk(n: AstNode): void {
     // Task 3: skip fnDecl bodies — their effects are handled separately via
     // collectFnHelperEffects / validateInterFlowPropagation to emit EFFECT-002
     if (n.kind === "fnDecl") return;
     if (n.kind === "callExpr" || n.kind === "memberExpr") {
-      const callText = buildCallText(n);
+      const callText = buildCallText(n, aliasMap);
       for (const [pattern, effect] of EFFECT_CALL_PATTERNS) {
         if (pattern.test(callText)) {
           effects.add(effect);
@@ -1073,12 +1112,13 @@ function inferEffectsFromNode(node: AstNode): Set<string> {
  */
 function inferEffectCallLocations(node: AstNode): Map<string, SourceLocation> {
   const locations = new Map<string, SourceLocation>();
+  const aliasMap = buildModuleAliasMap(node); // C1: alias-aware, consistent with inferEffectsFromNode
 
   function walk(n: AstNode): void {
     // Skip fnDecl bodies — consistent with inferEffectsFromNode
     if (n.kind === "fnDecl") return;
     if (n.kind === "callExpr" || n.kind === "memberExpr") {
-      const callText = buildCallText(n);
+      const callText = buildCallText(n, aliasMap);
       for (const [pattern, effect] of EFFECT_CALL_PATTERNS) {
         if (pattern.test(callText)) {
           if (!locations.has(effect) && n.location !== undefined) {
@@ -1141,13 +1181,17 @@ function collectFnHelperEffects(flowNode: AstNode): Map<string, SourceLocation |
   return effects;
 }
 
-function buildCallText(node: AstNode): string {
+function buildCallText(node: AstNode, aliasMap?: ReadonlyMap<string, string>): string {
   if (node.kind === "callExpr") {
     const methodName = node.value ?? "";
     const receiver = node.children?.[0];
     if (receiver !== undefined) {
-      const receiverText = buildCallText(receiver);
-      if (receiverText !== "" && receiverLooksLikeMemberReceiver(receiver)) {
+      const receiverText = buildCallText(receiver, aliasMap);
+      // C1: an alias resolves a lowercase receiver to a module name (`x` → `AuditLog`); the raw node is
+      // not member-like (lowercase `x`), so also accept when the RESOLVED text looks like a module, so
+      // `x.write` builds as `AuditLog.write` and the effect patterns match. Resolving a non-module alias
+      // is harmless — the resulting text simply won't match any effect pattern.
+      if (receiverText !== "" && (receiverLooksLikeMemberReceiver(receiver) || nameLooksLikeModule(receiverText))) {
         return `${receiverText}.${methodName}`;
       }
     }
@@ -1157,22 +1201,27 @@ function buildCallText(node: AstNode): string {
     const receiver = node.children?.[0];
     const member = node.value ?? "";
     if (receiver !== undefined) {
-      const receiverText = buildCallText(receiver);
+      const receiverText = buildCallText(receiver, aliasMap);
       return receiverText !== "" ? `${receiverText}.${member}` : member;
     }
     return member;
   }
   if (node.kind === "identifier") {
-    return node.value ?? "";
+    const name = node.value ?? "";
+    // C1: resolve a module alias at the receiver leaf (`let x = AuditLog` → `x` reads as `AuditLog`).
+    return aliasMap?.get(name) ?? name;
   }
   return "";
+}
+
+function nameLooksLikeModule(value: string): boolean {
+  return /^[A-Z]/.test(value) || value === "http" || value === "fs" || value === "env" || value === "json" || value === "toml" || value === "vault";
 }
 
 function receiverLooksLikeMemberReceiver(node: AstNode): boolean {
   if (node.kind === "memberExpr") return true;
   if (node.kind !== "identifier") return false;
-  const value = node.value ?? "";
-  return /^[A-Z]/.test(value) || value === "http" || value === "fs" || value === "env" || value === "json" || value === "toml" || value === "vault";
+  return nameLooksLikeModule(node.value ?? "");
 }
 
 function formatEffects(effects: readonly string[]): string {
