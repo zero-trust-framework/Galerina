@@ -108,6 +108,12 @@ export {
   type EffectCheckerMode,
 } from "./effect-checker.js";
 
+// ── AI-code-gen referee: the machine-consumable structural leak proof (lln.leakproof.v1) ──
+// Normalizes the compiler's governance diagnostics into one stable schema an autonomous LLM writer can
+// read to self-patch the exact capability leak. Fail-closed (any deny → module verdict 'leak'); signable.
+export { buildLeakProof, canonicalLeakProof } from "./leak-proof.js";
+export type { CapabilityLeakProof, LeakFinding, LeakCategory, LeakFix, CodeAnchor } from "./leak-proof.js";
+
 // Execution Graph Kernel — ProofGraph, ExecutionSignature, GraphFingerprint
 // Phase 26B: ImmutableInputSeal, HardwareSealedDispatch, LLN-HW-001/002/003
 // Phase 40: EpilogueReceipt, generateEpilogueReceipt
