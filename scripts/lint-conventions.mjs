@@ -62,6 +62,11 @@ const CHECKS = [
     desc: "RD-0124: the canonical diagnostic doc (compiler-diagnostics.md) must not misdescribe a wired code — for any LLN-* with a structured name/message in source AND a doc description, the two must share ≥1 meaningful word (zero-overlap = drift). Caught the LLN-RUNTIME-006 'Audit event stream write failed' (really RateLimitExceeded) bug + 14 more. Zero-baseline; also runs ENFORCING in conventions.yml.",
   },
   {
+    name: "overclaim-phrases",
+    script: "scripts/audit-overclaim-phrases.mjs",
+    desc: "RD-0126 overclaim-E / RD-0114-G2: no doc/.lln/comment may pair an O(1)/single-clock/constant-time claim with fill/wipe/memory.fill within ~8 words — memory.fill is ONE opcode doing Θ(arena-size) work, not O(1) (the wat-emitter already phrases it right). Correction/refutation lines are exempt. Approved phrasing: 'one atomic instruction doing Θ(arena-size) work'. Zero-baseline; also runs ENFORCING in conventions.yml.",
+  },
+  {
     name: "graph-integrity",
     script: "scripts/audit-graph-integrity.mjs",
     desc: "RD-0121: structural validation of a GENERATED project graph — no dangling edge (from/to ref a real node), no duplicate node id, no stale sourcePath (node→nonexistent file), and the depends_on subgraph is a DAG (no cycle). Validate-IF-PRESENT: skips when build/graph/*.json (a ~3MB gitignored artifact) is absent, validates fail-closed when present. The detectors' --self-test runs ENFORCING in conventions.yml (build-free, anti-neuter).",

@@ -227,3 +227,47 @@ test("provenance: a missing sidecar → UNSTAMPED", () => {
   rmSync(join(tmp7, "build", "kb-index", "provenance.json"));
   assert.ok(kbFindings(prov()).some((f) => f.issue === "UNSTAMPED"));
 });
+
+// ── RD-0126 overclaim-E: the "O(1) / constant-time zero-wipe" phrase-blocklist (memory.fill is Θ(arena-size)) ──
+const tmp8 = mkdtempSync(join(tmpdir(), "lln-overclaim-"));
+after(() => { try { rmSync(tmp8, { recursive: true, force: true }); } catch { /* best effort */ } });
+// a doc: the false claim (flag), the approved phrasing (pass), and a correction line (co-occurs but exempt).
+writeFileSync(join(tmp8, "doc.md"), [
+  `# Overclaim fixture`,
+  `The intrusion wipe is an O(1) memory.fill(0) zero-wipe.`,                  // L2 → MUST flag
+  `The reset is one atomic memory.fill (Θ(arena-size) work).`,               // L3 → MUST pass (no boost token)
+  `Note: memory.fill is O(arena-size), not "O(1)" — linear work.`,           // L4 → co-occurs but is the CORRECTION → exempt
+].join("\n") + "\n");
+// a source file: the overclaim in a string literal is masked (code, not a claim); in a // comment it is caught.
+writeFileSync(join(tmp8, "mod.ts"), [
+  `const s = "O(1) memory.fill zero-wipe"; // a literal codegen string, not prose`, // L1 → masked → NOT flagged
+  `foo(); // O(1) memory.fill zero-wipe`,                                            // L2 → comment prose → MUST flag
+].join("\n") + "\n");
+const oc = JSON.parse(spawnSync(process.execPath,
+  [join(SCRIPTS, "audit-overclaim-phrases.mjs"), "--json", "--root", tmp8],
+  { encoding: "utf8" }).stdout);
+const ocIn = (suffix) => oc.findings.filter((f) => f.file.endsWith(suffix));
+
+test("overclaim-phrases: catches 'O(1) memory.fill(0) zero-wipe' in a doc", () => {
+  const hit = ocIn("doc.md").find((f) => f.line === 2);
+  assert.ok(hit, "the O(1) memory.fill zero-wipe line is flagged");
+  assert.equal(hit.boost, "O(1)");
+  assert.equal(hit.target, "memory.fill");
+});
+
+test("overclaim-phrases: passes the approved 'one atomic memory.fill (Θ(arena-size) work)' phrasing", () => {
+  assert.ok(!oc.findings.some((f) => f.file.endsWith("doc.md") && f.line === 3), "approved-phrasing line is NOT flagged");
+});
+
+test("overclaim-phrases: a correction line (O(arena-size), not 'O(1)') is exempt despite co-occurrence", () => {
+  assert.ok(!oc.findings.some((f) => f.file.endsWith("doc.md") && f.line === 4), "the correction line is exempt");
+});
+
+test("overclaim-phrases: caught in a // comment but masked inside a string literal", () => {
+  assert.ok(ocIn("mod.ts").some((f) => f.line === 2), "comment prose is flagged");
+  assert.ok(!ocIn("mod.ts").some((f) => f.line === 1), "string-literal codegen is masked, not flagged");
+});
+
+test("overclaim-phrases: the fixture yields exactly the two intended violations", () => {
+  assert.equal(oc.violations, 2);
+});

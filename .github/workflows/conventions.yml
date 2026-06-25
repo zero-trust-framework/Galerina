@@ -133,6 +133,25 @@ jobs:
           node scripts/audit-diagnostic-doc-drift.mjs --self-test
           node scripts/audit-diagnostic-doc-drift.mjs
 
+  # overclaim-phrases (build-free, zero-baseline, ENFORCING): no doc/.lln/code-comment may pair a
+  # complexity-boost claim (O(1) / single-clock / constant-time) with a zeroing token (fill / wipe /
+  # memory.fill) within ~8 words. memory.fill is ONE WASM opcode (0xFC 0x0B) that does Θ(arena-size) work
+  # — the "O(1) zero-wipe / single-clock-cycle wipe" framing is settled-false (RD-0126 overclaim-E,
+  # RD-0114-G2) and the shipped wat-emitter already phrases it right ("ONE atomic instruction" over
+  # [base, heap)). Lines that CORRECT/refute the claim are exempt. The --self-test proves the detector
+  # fires AND its exemption stays targeted; then the scan runs ENFORCING (reads docs/source directly — no build).
+  overclaim-phrases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Overclaim phrase-blocklist (self-test, then enforcing)
+        run: |
+          node scripts/audit-overclaim-phrases.mjs --self-test
+          node scripts/audit-overclaim-phrases.mjs
+
   # graph-integrity self-test (build-free): the structural-graph detectors (dangling edge / dup id /
   # dependency cycle / stale sourcePath) must keep firing. The FULL audit validates a GENERATED graph
   # (build/graph/*.json is a ~3MB gitignored artifact + the CLI dist is not committed), so it cannot run
