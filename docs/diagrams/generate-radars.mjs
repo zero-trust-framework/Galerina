@@ -80,14 +80,17 @@ const pt = (i, n, v) => {
   return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
 };
 const fmt = ([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`;
+// Escape XML-special chars in text content. A raw `&` (e.g. "Security & Governance") makes the SVG invalid
+// XML and renders as an error — the bug this fixes. (`<`/`>` escaped too for safety.)
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 function svg(chart) {
   const n = chart.axes.length;
   const parts = [];
   parts.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" font-family="system-ui,Segoe UI,Roboto,sans-serif">`);
   parts.push(`<rect width="${W}" height="${H}" fill="#ffffff"/>`);
-  parts.push(`<text x="${CX}" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">${chart.title}</text>`);
-  parts.push(`<text x="${CX}" y="56" text-anchor="middle" font-size="13" fill="#666">${chart.subtitle}</text>`);
+  parts.push(`<text x="${CX}" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">${esc(chart.title)}</text>`);
+  parts.push(`<text x="${CX}" y="56" text-anchor="middle" font-size="13" fill="#666">${esc(chart.subtitle)}</text>`);
 
   // concentric grid rings
   for (let ring = 1; ring <= RINGS; ring++) {
@@ -103,7 +106,7 @@ function svg(chart) {
     const lx = CX + (R + 18) * Math.cos(a), ly = CY + (R + 18) * Math.sin(a);
     const cos = Math.cos(a);
     const anchor = cos > 0.25 ? "start" : cos < -0.25 ? "end" : "middle";
-    parts.push(`<text x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${anchor}" font-size="12.5" font-weight="600" fill="#333">${chart.axes[i]}</text>`);
+    parts.push(`<text x="${lx.toFixed(1)}" y="${(ly + 4).toFixed(1)}" text-anchor="${anchor}" font-size="12.5" font-weight="600" fill="#333">${esc(chart.axes[i])}</text>`);
   }
   // data polygons
   const names = Object.keys(chart.series);
@@ -120,7 +123,7 @@ function svg(chart) {
   names.forEach((name) => {
     const c = SERIES_COLORS[name] ?? "#888";
     parts.push(`<rect x="556" y="${ly - 10}" width="16" height="6" rx="2" fill="${c}"/>`);
-    parts.push(`<text x="578" y="${ly - 4}" font-size="13" font-weight="${name === "LogicN" ? 700 : 500}" fill="#1a1a1a">${name}</text>`);
+    parts.push(`<text x="578" y="${ly - 4}" font-size="13" font-weight="${name === "LogicN" ? 700 : 500}" fill="#1a1a1a">${esc(name)}</text>`);
     ly += 24;
   });
   parts.push(`<text x="${CX}" y="${H - 14}" text-anchor="middle" font-size="11" fill="#aaa">0 (center) → 10 (edge) · LogicN vs mainstream languages</text>`);

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" font-family="system-ui,Segoe UI,Roboto,sans-serif">
 <rect width="720" height="560" fill="#ffffff"/>
-<text x="300" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">3 · Developer Experience & Ecosystem</text>
+<text x="300" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">3 · Developer Experience &amp; Ecosystem</text>
 <text x="300" y="56" text-anchor="middle" font-size="13" fill="#666">LogicN is new — strong on safety, thin on maturity</text>
 <polygon points="300.0,258.0 336.4,279.0 336.4,321.0 300.0,342.0 263.6,321.0 263.6,279.0" fill="none" stroke="#e3e3e3" stroke-width="1"/>
 <polygon points="300.0,216.0 372.7,258.0 372.7,342.0 300.0,384.0 227.3,342.0 227.3,258.0" fill="none" stroke="#e3e3e3" stroke-width="1"/>
