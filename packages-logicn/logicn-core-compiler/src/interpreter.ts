@@ -860,6 +860,9 @@ class Interpreter {
   private auditWriteCalled = false;
   /** R4C: the name of the currently executing flow (for governed-value access checks). */
   private currentFlowName: string | undefined;
+  /** Step 3g: the base type the current flow returns, so a bare `return <Int64 literal>` (no binding)
+   *  evaluates via the i64 type-directed path. Set per flow at runFlow entry. */
+  private flowReturnBase = "";
   /** R4C: maps binding name → the flow that declared it as a governed value. */
   private readonly governedBindingSource = new Map<string, string>();
   /** Fail-closed recursion-depth counter (logical flow/fn-call nesting). runNestedFlow sets it on the
@@ -1019,6 +1022,14 @@ class Interpreter {
     this.currentFlowName = flowName;
     const flowNode = this.flowIndex.get(flowName);
     const qualifier = flowNode === undefined ? "flow" : qualifierFromFlowKind(flowNode.kind);
+    // Step 3g: the flow's declared return base (the typeRef after the params), so a bare
+    // `return <Int64 literal>` evaluates via the i64 type-directed path instead of the lossy parseInt path.
+    {
+      const kids = flowNode?.children ?? [];
+      const np = kids.filter((c) => c.kind === "paramDecl").length;
+      const rt = kids[np]?.value;
+      this.flowReturnBase = typeof rt === "string" ? numericBaseType(rt) : "";
+    }
 
     // Step 2A: Check deadline before doing any work — emit LLN-RUNTIME-006
     if (this.enforcer !== undefined) {
@@ -1418,7 +1429,10 @@ class Interpreter {
 
       case "returnStmt": {
         const retExpr = node.children?.[0];
-        return retExpr !== undefined ? await this.evalExpr(retExpr) : LLN_VOID;
+        if (retExpr === undefined) return LLN_VOID;
+        // Step 3g: a bare `return <expr>` in an Int64 flow evaluates in an Int64 context (i64 type-directed),
+        // so a large literal / int-product return is exact, matching the emitter's return-base threading.
+        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr) : await this.evalExpr(retExpr);
       }
 
       case "ifStmt": {
@@ -1566,7 +1580,10 @@ class Interpreter {
       // return its inner value rather than falling to default:LLN_VOID.
       case "returnStmt": {
         const retExpr = node.children?.[0];
-        return retExpr !== undefined ? await this.evalExpr(retExpr) : LLN_VOID;
+        if (retExpr === undefined) return LLN_VOID;
+        // Step 3g: a bare `return <expr>` in an Int64 flow evaluates in an Int64 context (i64 type-directed),
+        // so a large literal / int-product return is exact, matching the emitter's return-base threading.
+        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr) : await this.evalExpr(retExpr);
       }
 
       case "stringLiteral": {

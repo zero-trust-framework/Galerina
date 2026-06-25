@@ -359,6 +359,10 @@ let enumVariants: ReadonlyMap<string, readonly string[]> | null = null;
  *  value-based __array_contains_str bridge. null/absent → no inference (placeholder). */
 let flowReturnTypes: ReadonlyMap<string, string> | null = null;
 
+/** Step 3g (return-literal): the base type the CURRENT flow returns, so a bare `return <Int64 literal>`
+ *  (no binding) emits i64.const. Module-level (mirrors recordVarTypes); set per flow in emitWATFromFlowAST. */
+let currentReturnBase = "";
+
 /** Build the flowName → return-type registry from a program AST's flow decls.
  *  Flow node shape (parser): value = name; children = [...paramDecls, retTypeNode, …].
  *  The return-type node sits immediately after the parameter decls; its `value` is the
@@ -1777,8 +1781,9 @@ function emitBlockStatements(
 
       case "returnStmt": {
         const exprNode = stmt.children?.[0];
+        // Step 3g: thread the flow's declared return base so a bare `return <Int64 literal>` emits i64.const.
         const exprStr  = exprNode !== undefined
-          ? emitWATExpr(exprNode, vars, staticConsts)
+          ? emitWATExpr(exprNode, vars, staticConsts, currentReturnBase)
           : "(i32.const 0) ;; return void";
         // Inside nested blocks (if/while body), use explicit (return <expr>)
         // so the value is returned from the FUNCTION, not just pushed to the block stack.
@@ -2255,9 +2260,12 @@ export function emitWATFromFlowAST(
   const prevLayouts = recordLayouts;
   const prevVarTypes = recordVarTypes;
   const prevEnums = enumVariants;
+  const prevReturnBase = currentReturnBase;
   recordLayouts = layouts;
   recordVarTypes = new Map<string, string>();
   enumVariants = enums;
+  // Step 3g: the flow's declared return base, so a bare `return <Int64 literal>` emits i64.const.
+  currentReturnBase = numericBaseType(flowReturnTypes?.get(flowNode.value ?? "") ?? "");
   // Seed parameter types (e.g. `flow f(r: TokenizeResult, s: String)`). Record types
   // enable `r.field` lowering; scalar types (#160) enable type-directed `+` / toString.
   {
@@ -2273,7 +2281,7 @@ export function emitWATFromFlowAST(
   // Find the block body of the flow.
   const blockNode = (flowNode.children ?? []).find((c) => c.kind === "block");
   if (blockNode === undefined) {
-    recordLayouts = prevLayouts; recordVarTypes = prevVarTypes; enumVariants = prevEnums; // restore on early exit
+    recordLayouts = prevLayouts; recordVarTypes = prevVarTypes; enumVariants = prevEnums; currentReturnBase = prevReturnBase; // restore on early exit
     return null;
   }
 
@@ -2286,7 +2294,7 @@ export function emitWATFromFlowAST(
   const resultPosts = flowResultPostconditions(flowNode);
   const singleExit = resultPosts.length > 0;
   if (singleExit && bodyHasNestedReturn(blockNode)) {
-    recordLayouts = prevLayouts; recordVarTypes = prevVarTypes; enumVariants = prevEnums; // restore
+    recordLayouts = prevLayouts; recordVarTypes = prevVarTypes; enumVariants = prevEnums; currentReturnBase = prevReturnBase; // restore
     return null; // cannot capture-the-tail past an early return → interpreter enforces it
   }
   const RESULT_LOCAL = "$logicn_result";
@@ -2357,6 +2365,7 @@ export function emitWATFromFlowAST(
     recordLayouts = prevLayouts;
     recordVarTypes = prevVarTypes;
     enumVariants = prevEnums;
+    currentReturnBase = prevReturnBase;
   }
   if (postGates.length > 0) {
     bodyLines.push(`  ;; --- invariant post-conditions (LLN-INV-002 gate) ---`);

@@ -33,6 +33,8 @@ const CORPUS = [
   ["ovf",     [], [], [], "trap"],                                              // I64_MAX + 1 → Fork-A trap
   ["divMin",  ["d"], [i64(-1n)], [-1n], "trap"],                                // I64_MIN / -1 → trap
   ["remMin",  ["d"], [i64(-1n)], [-1n], 0n],                                    // I64_MIN % -1 → 0 (no trap) — div/rem asymmetry
+  ["bareRet", [], [], [], 9223372036854775807n],                               // bare `return <literal>` (no binding) — the last gap
+  ["bareSum", ["a", "b"], [int(2000000000), int(2000000000)], [2000000000, 2000000000], 4000000000n], // bare `return a + b` (i32 vars → i64)
 ];
 
 const SRC = `pure flow bigLit() -> Int64 contract { effects {} } { let x: Int64 = 9007199254740993  return x }
@@ -45,7 +47,9 @@ pure flow mixLit(a: Int64) -> Int64 contract { effects {} } { return a + 5000000
 pure flow addWiden(a: Int, b: Int) -> Int64 contract { effects {} } { let t: Int64 = a + b  return t }
 pure flow ovf() -> Int64 contract { effects {} } { let a: Int64 = 9223372036854775807  let b: Int64 = a + 1  return b }
 pure flow divMin(d: Int64) -> Int64 contract { effects {} } { let a: Int64 = -9223372036854775808  return a / d }
-pure flow remMin(d: Int64) -> Int64 contract { effects {} } { let a: Int64 = -9223372036854775808  return a % d }`;
+pure flow remMin(d: Int64) -> Int64 contract { effects {} } { let a: Int64 = -9223372036854775808  return a % d }
+pure flow bareRet() -> Int64 contract { effects {} } { return 9223372036854775807 }
+pure flow bareSum(a: Int, b: Int) -> Int64 contract { effects {} } { return a + b }`;
 
 test("0014 Int64 slice: walker ≡ WASM byte-exact over the (2^53,2^63) corpus (param + literal)", async () => {
   const prog = parseProgram(SRC, "i64-diff.lln");
