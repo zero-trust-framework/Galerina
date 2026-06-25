@@ -298,6 +298,10 @@ When an AI tool is generating LogicN code for this project:
 | Why wasn't "Secure Cryptographic Paging" used; what do we use instead? | `logicn-rd-photonic-quantum-paging-graph-grounding-2026-06-25.md` (Thread 3) |
 | Have we cloned the 40 classic TS security issues? | `logicn-self-audit-ts-40-issues-2026-06-25.md` |
 | Full worked governed flow using `substrate {}` + every contract clause | `logicn-substrate-worked-example.md` |
+| How is the quality of photonic-lane maths guaranteed? (self-check) | `logicn-photonic-maths-quality-self-check.md` |
+| What stops a death loop / runaway computation? (termination guards) | `logicn-termination-and-death-loop-guards.md` |
+| Which `substrate {}` fields should be inferred vs declared? (ergonomics) | `logicn-substrate-ergonomics-infer-vs-declare.md` |
+| Should we build a dev-tools observability/visualiser/replay graph? | `logicn-rd-devtools-observability-graph-2026-06-25.md` |
 | Can virtual-3D / "2-wave" photonics do high-value compute? | `rd-0114-virtual-3d-spatial-photonics-absorbed.md` |
 | What % is shippable / the current roadmap? | `logicn-percent-audit-roadmap-2026-06-25-v2.md` |
 | Which R&D is paper-worthy? | `logicn-rd-paper-ranking-0100-0113-2026-06-25.md` |
