@@ -2,13 +2,12 @@
 // Decimal arithmetic must be exact (never IEEE-754): 0.1 + 0.2 = "0.3", not 0.30000000000000004.
 // Computed on BigInt unscaled integers; malformed input fails closed; division stays unsupported.
 //
-// NOTE: this is the proven arithmetic LAYER only. Wiring it into the interpreter is deferred until the WASM
-// tier is made consistent — the wat-emitter currently lowers `Decimal` to f64, so wiring the exact tree-walker
-// path alone would make the tiers DIVERGE (tree-walker "0.3" vs WASM 0.30000000000000004). The complete fix
-// (wire tree-walker + make the fast tiers bail on Decimal arithmetic, never the f64 path) is the follow-up.
+// The layer is now WIRED into the tree-walker (divergence-free: the WASM emitter declines Decimal and the
+// fast tiers bail, so the walker is the sole executor of decimal arithmetic — see the e2e tests below).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { decAdd, decSub, decMul, decCompare, isDecTrap } from "../dist/decimal-arith.js";
+import { parseProgram, resolveSymbols, checkTypes, executeFlow } from "../dist/index.js";
 
 // ── the exactness oracle (vs the f64 trap) ──
 test("0.1 + 0.2 = 0.3 EXACTLY (the classic f64 failure, fixed)", () => {
@@ -48,4 +47,35 @@ test("malformed input fails closed (never a guessed value)", () => {
   assert.ok(isDecTrap(decAdd("1", "")));
   assert.ok(isDecTrap(decMul("1.2.3", "1")));
   assert.ok(isDecTrap(decCompare("1", "x")));
+});
+
+// ── end-to-end through the tree-walker (the wired fix) ──
+async function runDecimal(expr, ret = "Decimal") {
+  const SRC = `pure flow probe() -> ${ret} {\n  return ${expr}\n}`;
+  const parsed = parseProgram(SRC, "probe.lln");
+  try { resolveSymbols(parsed.ast); checkTypes(parsed.ast); } catch { /* type pass best-effort */ }
+  return await executeFlow("probe", new Map(), parsed.ast);
+}
+
+test("interpreter: Decimal + Decimal evaluates EXACTLY (was 'not supported' trap)", async () => {
+  const r = await runDecimal('Decimal("0.1") + Decimal("0.2")');
+  assert.equal(r.value.__tag, "decimal", `got ${JSON.stringify(r.value)}`);
+  assert.equal(r.value.value, "0.3");
+});
+
+test("interpreter: Decimal * Decimal exact (VAT-style 100.00 * 0.20)", async () => {
+  const r = await runDecimal('Decimal("100.00") * Decimal("0.20")');
+  assert.equal(r.value.__tag, "decimal");
+  assert.equal(r.value.value, "20.0000");
+});
+
+test("interpreter: Decimal - Decimal exact", async () => {
+  const r = await runDecimal('Decimal("0.30") - Decimal("0.10")');
+  assert.equal(r.value.value, "0.20");
+});
+
+test("interpreter: Decimal ordering compares by value ('0.1' < '0.10' is false)", async () => {
+  const r = await runDecimal('Decimal("0.1") < Decimal("0.10")', "Bool");
+  assert.equal(r.value.__tag, "bool");
+  assert.equal(r.value.value, false);
 });

@@ -17,6 +17,7 @@ import { buildExecutionGraph, getOrLoadGraph, storeGraph, executionGraphCacheKey
 import { compileToBytecode, runBytecode } from "./bytecode-vm.js";
 import { i32AddChecked, i32SubChecked, i32MulChecked, i32DivChecked, i32ModChecked, i32NegChecked, isI32Trap, type I32Result } from "./i32-arith.js";
 import { i64AddChecked, i64SubChecked, i64MulChecked, i64DivChecked, i64ModChecked, i64NegChecked, isI64Trap, type I64Result } from "./i64-arith.js";
+import { decAdd, decSub, decMul, decCompare, isDecTrap, type DecResult } from "./decimal-arith.js";
 import { numericBaseType, parseI64Literal, isI64LiteralError, flowDeclaresUnlowerable64 } from "./numeric-lowering.js";
 
 export type LogicNValue =
@@ -77,6 +78,17 @@ function i32R(r: I32Result): LogicNValue {
 /** Map a checked-i64 result to a LogicNValue: in-range → int64 (bigint); a trap → fail-closed runtimeError. */
 function i64R(r: I64Result): LogicNValue {
   return isI64Trap(r) ? { __tag: "runtimeError", message: r } : { __tag: "int64", value: r as bigint };
+}
+
+/** Map an exact-decimal result to a LogicNValue: the canonical string → decimal; malformed → fail-closed. */
+function decimalR(r: DecResult): LogicNValue {
+  return isDecTrap(r) ? { __tag: "runtimeError", message: `Malformed decimal operand` } : { __tag: "decimal", value: r as string };
+}
+
+/** Decimal ordering comparison → Bool, fail-closed: a malformed operand traps (never a silent `false`). */
+function decCmp(a: LogicNValue, b: LogicNValue, f: (c: number) => boolean): LogicNValue {
+  const c = decCompare((a as { value: string }).value, (b as { value: string }).value);
+  return isDecTrap(c) ? { __tag: "runtimeError", message: `Malformed decimal operand` } : { __tag: "bool", value: f(c as number) };
 }
 
 /**
@@ -251,6 +263,19 @@ export const BINARY_DISPATCH = new Map<number, _DispatchFn>([
   [dispatchKey("int64", "==", "int"),   (a, b) => boolVal((a.value as bigint) === BigInt(b.value as number))],
   [dispatchKey("int",   "!=", "int64"), (a, b) => boolVal(BigInt(a.value as number) !== (b.value as bigint))],
   [dispatchKey("int64", "!=", "int"),   (a, b) => boolVal((a.value as bigint) !== BigInt(b.value as number))],
+
+  // --- Decimal × Decimal — EXACT base-10 fixed-point (no float; the "wrong VAT" fix completed). Shared
+  // source of truth = decimal-arith.ts. Divergence-free: the WASM emitter DECLINES Decimal (14682d1) and the
+  // fast tiers BAIL (FAST_TIER_UNLOWERABLE += Decimal), so the tree-walker is the SOLE executor of decimal
+  // arithmetic — no tier disagreement. `/` and `%` stay unsupported (exact decimal division needs a rounding
+  // policy → fail-closed trap); `==`/`!=` keep the existing whole-value equality path.
+  [dispatchKey("decimal", "+", "decimal"), (a, b) => decimalR(decAdd(a.value as string, b.value as string))],
+  [dispatchKey("decimal", "-", "decimal"), (a, b) => decimalR(decSub(a.value as string, b.value as string))],
+  [dispatchKey("decimal", "*", "decimal"), (a, b) => decimalR(decMul(a.value as string, b.value as string))],
+  [dispatchKey("decimal", "<",  "decimal"), (a, b) => decCmp(a, b, (c) => c < 0)],
+  [dispatchKey("decimal", "<=", "decimal"), (a, b) => decCmp(a, b, (c) => c <= 0)],
+  [dispatchKey("decimal", ">",  "decimal"), (a, b) => decCmp(a, b, (c) => c > 0)],
+  [dispatchKey("decimal", ">=", "decimal"), (a, b) => decCmp(a, b, (c) => c >= 0)],
 ]);
 
 /**
