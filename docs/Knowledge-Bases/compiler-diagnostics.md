@@ -508,6 +508,32 @@ is `Tensor`) is not flagged either.
 LLN-NUMERIC-001   UnsupportedNumericWidth   Scalar Int64/UInt64 not yet faithfully lowered — the WASM backend would silently truncate it from 64 to 32 bits; rejected fail-closed until i64 lowering lands
 ```
 
+### Web fail-closed contract (canonical series: LLN-WEB-*) — RESERVED, RD-0100
+
+Reserved namespace for the deny-by-default `logicn-web-*` frontend contracts. The 6 packages are
+stubs today; these codes are the enforced fail-closed invariants their future implementation MUST
+emit (unknown → DENY). The full machine-readable contract lives in
+`governance/web-failclosed-contract.json` and is guarded by `scripts/audit-web-stub-guard.mjs`
+(an impl may not ship without its `*.failclosed.test` acceptance suite). Codes are RESERVED until
+implementation lands — no emitter exists yet, by design.
+
+```text
+LLN-WEB-001   UnsanitisedHtmlSink         HTML reaches a DOM sink without the logicn-data-html sanitiser (web-render R2; CWE-79/116)
+LLN-WEB-002   RawHtmlInProduction         RawHtml in a production render plan without a reviewed trusted override fails closed (web-render R3; CWE-79)
+LLN-WEB-003   SilentUnsafeRender          An unsafe-render decision (sanitiser drop / override) not recorded in the report (web-render R5)
+LLN-WEB-010   UntrustedStateLaundering    Untrusted source becomes typed state without an explicit validate→convert step (web-state S1; CWE-501)
+LLN-WEB-011   UnvalidatedRehydration      Serialized/persisted state trusted verbatim without re-validation (web-state S4; CWE-501)
+LLN-WEB-020   UnvalidatedRouteParam       A route param drives a fetch/render before typed-contract validation (web-router U1; CWE-20)
+LLN-WEB-021   OpenRedirect                Redirect/navigation target off the allowlist (web-router U2; CWE-601)
+LLN-WEB-022   UnsafeLinkScheme            Generated link uses javascript:/data:/vbscript: scheme (web-router U3; CWE-79)
+LLN-WEB-030   RawEventExposed             A raw browser Event object exposed to app logic instead of a typed payload (web-events E1; CWE-862)
+LLN-WEB-031   PrivilegedActionNoGesture   Privileged action (clipboard/geolocation/payment/…) without a verified user-gesture (web-events E2; CWE-862/1173)
+LLN-WEB-040   UnsanitisedSlotHtml         Slot/child content reaches a DOM HTML sink unsanitised (web-components C1; CWE-79)
+LLN-WEB-041   UntypedComponentProp        An untyped/any prop reaches a render sink (web-components C2; CWE-20)
+LLN-WEB-042   UndeclaredComponentEffect   An undeclared component side-effect (network/storage/navigation) denied (web-components C3; CWE-862)
+LLN-WEB-050   SanitiseStageSkipped        Render pipeline skips the sanitise stage for HTML content at the umbrella boundary (web umbrella U-1; CWE-79)
+```
+
 ### Name Resolution (canonical series: LLN-NAME-*)
 
 ```text

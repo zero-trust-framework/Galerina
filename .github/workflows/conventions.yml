@@ -166,3 +166,22 @@ jobs:
           node-version: "20"
       - name: Graph-integrity detectors self-test (build-free)
         run: node scripts/audit-graph-integrity.mjs --self-test
+
+  # web-stub-guard (build-free, zero-baseline, ENFORCING): the deny-by-default logicn-web-* contracts
+  # must be born fail-closed. Each README states "RawHtml deny / untrusted-until-typed / gesture-required /
+  # redirect-deny" in PROSE only — it fails OPEN the moment impl lands (CWE-79 XSS, CWE-601 open-redirect,
+  # CWE-501 trust-boundary, CWE-862 missing-authz). A STUB (no src/dist) is inert and passes; an
+  # IMPLEMENTED web-* package MUST also ship a *.failclosed/acceptance.test exercising its LLN-WEB-*
+  # invariants (governance/web-failclosed-contract.json). The --self-test proves the detectors fire; then
+  # the scan runs ENFORCING — the first PR that implements a web-* package is forced to add its tests.
+  web-stub-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Web fail-closed contract guard (self-test, then enforcing)
+        run: |
+          node scripts/audit-web-stub-guard.mjs --self-test
+          node scripts/audit-web-stub-guard.mjs

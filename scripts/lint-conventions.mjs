@@ -71,6 +71,11 @@ const CHECKS = [
     script: "scripts/audit-graph-integrity.mjs",
     desc: "RD-0121: structural validation of a GENERATED project graph — no dangling edge (from/to ref a real node), no duplicate node id, no stale sourcePath (node→nonexistent file), and the depends_on subgraph is a DAG (no cycle). Validate-IF-PRESENT: skips when build/graph/*.json (a ~3MB gitignored artifact) is absent, validates fail-closed when present. The detectors' --self-test runs ENFORCING in conventions.yml (build-free, anti-neuter).",
   },
+  {
+    name: "web-stub-guard",
+    script: "scripts/audit-web-stub-guard.mjs",
+    desc: "RD-0100: the deny-by-default logicn-web-* contracts must be born fail-closed. A STUB package (no src/dist) is inert and passes; an IMPLEMENTED web-* package MUST also ship a *.failclosed/acceptance.test exercising its LLN-WEB-* invariants (else the prose 'deny-by-default' fails OPEN the moment impl lands). The contract is governance/web-failclosed-contract.json. Zero-baseline (all 6 are stubs); also runs ENFORCING in conventions.yml.",
+  },
   // #218 (coverage cross-check) runs separately as `audit-coverage.mjs`.
 ];
 

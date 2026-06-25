@@ -1,0 +1,71 @@
+{
+  "$schema": "RD-0100 web-* fail-closed contract (enforced spec)",
+  "purpose": "The 6 logicn-web-* packages are deny-by-default by design, but every README states that rule in PROSE only — it fails OPEN the moment an implementation lands (CWE-79 XSS, CWE-601 open-redirect, CWE-501 trust-boundary, CWE-862 missing-authz). This contract makes the deny-by-default invariants a machine-readable, enforced spec BEFORE code exists. While a package is a stub (no src/ and no dist/) it is inert and cannot fail open; the contract is 'pending'. The moment a package gains an implementation it MUST ship the corresponding LLN-WEB-* fail-closed acceptance tests in the SAME change — enforced by scripts/audit-web-stub-guard.mjs (so an impl is born fail-closed, never fail-open).",
+  "enforcedBy": "scripts/audit-web-stub-guard.mjs",
+  "source": "LogicN-R-AND-D/_session-bridge/done/0100-prebuild-failclosed-web-stub-contracts.done.md (RD-0100)",
+  "failClosedDefault": "unknown -> DENY (No-Coercion: a derived value never widens trust beyond what validation proved)",
+  "reuseMandate": "web-* impls MUST consume the shipped deny-by-default machinery, NOT fork a parallel taint/sink engine: logicn-core-security (SecretTaint / combineTaint / checkSecretSink + the HTML/URL/log unsafe-sink list, generalised to WebTaint{trusted|untrusted-source|sanitised}) and logicn-data-html (the single SafeHtml sanitiser gate). If a future impl forks its own taint logic, re-audit — the invariant->primitive mapping assumes reuse.",
+  "acceptanceTestEvidence": "An implemented package (has src/ or dist/) MUST contain a committed test file whose name matches /(failclosed|acceptance)\\.test\\./i exercising the LLN-WEB-* invariants below, each asserting the unknown->DENY / fail-closed behaviour. The guard requires this file's PRESENCE; the test's own assertions enforce the behaviour at run time.",
+  "buildOrder": "web-render + web-state lead (every other package's safety is downstream of the render sanitiser gate and the state taint lattice); router/events/components are second wave; the web umbrella stays stub until children land.",
+  "packages": {
+    "logicn-web-render": {
+      "risk": "XSS (CWE-79) — HIGHEST",
+      "buildOrder": "BUILD-NEXT (lead)",
+      "invariants": [
+        { "id": "R1", "code": null, "cwe": "CWE-79", "rule": "Text interpolated into the DOM is HTML-escaped by default; an unescaped text path cannot exist without an explicit RawText override token." },
+        { "id": "R2", "code": "LLN-WEB-001", "cwe": "CWE-79,CWE-116", "rule": "HTML input is rendered ONLY after passing the logicn-data-html sanitiser; an unsanitised HTML string reaching a DOM sink is a build error." },
+        { "id": "R3", "code": "LLN-WEB-002", "cwe": "CWE-79", "rule": "RawHtml is DENIED unless an explicit, reviewed override with environmentScope != production OR trusted is present; a RawHtml in a production render plan fails closed." },
+        { "id": "R4", "code": null, "cwe": "CWE-20", "rule": "API data is schema-checked before it can be a render input (no untyped fetch -> render)." },
+        { "id": "R5", "code": "LLN-WEB-003", "cwe": null, "rule": "Every unsafe-render decision (sanitiser drop, override use) MUST appear in the web-render report; a silent unsafe render is a contract violation." },
+        { "id": "R6", "code": null, "cwe": "CWE-79", "rule": "Unknown content classification is treated as RawHtml and DENIED (unknown -> DENY)." }
+      ]
+    },
+    "logicn-web-state": {
+      "risk": "trust-boundary laundering (CWE-501) — feeds every other package",
+      "buildOrder": "BUILD-NEXT (lead, pair with render)",
+      "invariants": [
+        { "id": "S1", "code": "LLN-WEB-010", "cwe": "CWE-501", "rule": "Data from API/storage/URL/event/worker carries an untrusted taint and CANNOT become typed state except via an explicit validate->convert step." },
+        { "id": "S2", "code": null, "cwe": "CWE-20", "rule": "Validation failure produces an error/partial state, never a partially-trusted typed object (no 'validated-enough')." },
+        { "id": "S3", "code": null, "cwe": "CWE-501", "rule": "No-Coercion: the typed state derived from untrusted input is a SUBSET of what validation proved — laundering cannot widen trust." },
+        { "id": "S4", "code": "LLN-WEB-011", "cwe": "CWE-501", "rule": "Hydration/rehydration from storage re-validates; trusting serialized state verbatim (e.g. an attacker-set role) is denied." }
+      ]
+    },
+    "logicn-web-router": {
+      "risk": "open-redirect / unsafe-link (CWE-601, CWE-79-via-href)",
+      "buildOrder": "BUILD-SOON (second wave)",
+      "invariants": [
+        { "id": "U1", "code": "LLN-WEB-020", "cwe": "CWE-20", "rule": "Route params are validated against the typed route contract before use; an unvalidated param reaching a fetch/render is denied." },
+        { "id": "U2", "code": "LLN-WEB-021", "cwe": "CWE-601", "rule": "Navigation/redirect targets MUST resolve to an allowlisted (same-origin or explicitly allowlisted) destination; an externally-controlled redirect target fails closed." },
+        { "id": "U3", "code": "LLN-WEB-022", "cwe": "CWE-79", "rule": "Generated links reject javascript:/data:/vbscript: and other non-http(s) schemes by default." },
+        { "id": "U4", "code": null, "cwe": null, "rule": "Unknown/unparseable target -> DENY navigation (unknown -> DENY)." }
+      ]
+    },
+    "logicn-web-events": {
+      "risk": "gesture / permission gate bypass (CWE-862)",
+      "buildOrder": "BUILD-SOON (second wave)",
+      "invariants": [
+        { "id": "E1", "code": "LLN-WEB-030", "cwe": "CWE-862", "rule": "Raw browser Event objects are not exposed to app logic; only typed validated payloads cross the boundary." },
+        { "id": "E2", "code": "LLN-WEB-031", "cwe": "CWE-862,CWE-1173", "rule": "Privileged actions (clipboard/fullscreen/geolocation/file/payment/popup) require a verified user-gesture in the same task; a programmatic invocation without gesture is denied." },
+        { "id": "E3", "code": null, "cwe": "CWE-20", "rule": "Event payloads are schema-validated before becoming state input (ties to S1)." },
+        { "id": "E4", "code": null, "cwe": null, "rule": "Unknown event type -> no state transition (deny)." }
+      ]
+    },
+    "logicn-web-components": {
+      "risk": "unsanitised slot/child -> HTML XSS (CWE-79)",
+      "buildOrder": "BUILD-SOON (second wave, depends on render sanitiser gate)",
+      "invariants": [
+        { "id": "C1", "code": "LLN-WEB-040", "cwe": "CWE-79", "rule": "Slot/child content rendered as HTML goes through the same sanitiser gate as render R2; a prop/slot string cannot reach a DOM HTML sink unsanitised." },
+        { "id": "C2", "code": "LLN-WEB-041", "cwe": "CWE-20", "rule": "Component props are typed; an untyped/any prop reaching a render sink is a contract error." },
+        { "id": "C3", "code": "LLN-WEB-042", "cwe": "CWE-862", "rule": "Component effects must be DECLARED; an undeclared side-effect (network/storage/navigation) from a component is denied." },
+        { "id": "C4", "code": null, "cwe": "CWE-79", "rule": "Unknown slot content type -> escaped-text, never HTML." }
+      ]
+    },
+    "logicn-web": {
+      "risk": "composition only (umbrella)",
+      "buildOrder": "STAY-STUB until children land",
+      "invariants": [
+        { "id": "U-1", "code": "LLN-WEB-050", "cwe": "CWE-79", "rule": "The umbrella enforces the pipeline ORDER validate->type->sanitise->diff->render->report; a render plan that skips the sanitise stage for HTML content is rejected at the umbrella boundary (composes R2 + C1)." }
+      ]
+    }
+  }
+}
