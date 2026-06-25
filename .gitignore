@@ -55,6 +55,14 @@ build/kb-graph/*.json
 build/kb-graph/*.dot
 build/graph/*.dot
 
+# Per-package .graph/ (the Hardened Border): same philosophy. package-graph.json is the HEAVY
+# regenerated raw scan (node/edge dump, churns every `graph` run) and NOTHING reads the committed copy —
+# the #149 border gate + CI RE-SCAN from source (zero-trust). KEEP the two curated files: boundary-policy.json
+# (the allowlist the gate enforces — gitignoring it would fail-close the gate) and BOUNDARY.md (the small
+# human-readable border report for PR-diff review). Do NOT use a blanket **/.graph/* — it would untrack
+# boundary-policy.json and break the Hardened Border.
+**/.graph/package-graph.json
+
 # ── Nested-clone stopgap + sentinel scratch (RD-0124 hygiene; verified by adversarial audit ww6c274j4) ──
 # A stray nested git clone of the graph ENGINE lives here with its OWN .git/ and a PERSONAL remote.
 # `git add` on it would record a SUBMODULE GITLINK to a personal GitHub repo INSIDE the governed tree —
