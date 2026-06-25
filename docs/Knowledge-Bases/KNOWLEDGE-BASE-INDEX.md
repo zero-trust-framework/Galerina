@@ -294,6 +294,7 @@ When an AI tool is generating LogicN code for this project:
 | Does the .graph expose secrets? would a live runtime-updating graph help? | `logicn-rd-graph-secrets-and-runtime-graph-2026-06-25.md` |
 | Should we add honeypots? do they fit deny-by-default? | `logicn-rd-honeypots-2026-06-25.md` |
 | How do arrays/objects behave (typos, latency, memory, bugs)? | `logicn-rd-arrays-objects-2026-06-25.md` |
+| 7-axis syntax sweep (ZT fail-opens, free wins, compiler intelligence)? | `logicn-rd-syntax-7axis-sweep-2026-06-25.md` |
 | Why wasn't "Secure Cryptographic Paging" used; what do we use instead? | `logicn-rd-photonic-quantum-paging-graph-grounding-2026-06-25.md` (Thread 3) |
 | Have we cloned the 40 classic TS security issues? | `logicn-self-audit-ts-40-issues-2026-06-25.md` |
 | Full worked governed flow using `substrate {}` + every contract clause | `logicn-substrate-worked-example.md` |
