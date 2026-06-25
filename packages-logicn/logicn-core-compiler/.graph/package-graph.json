@@ -987,6 +987,10 @@
     },
     {
       "from": "src/value-state-checker.ts",
+      "to": "src/effect-checker.ts"
+    },
+    {
+      "from": "src/value-state-checker.ts",
       "to": "src/numeric-lowering.ts"
     },
     {
@@ -1087,7 +1091,15 @@
         "src/cli.ts",
         "src/execution-graph.ts",
         "src/module-registry.ts",
-        "src/package-resolver.ts"
+        "src/package-resolver.ts",
+        "src/stdlib.ts"
+      ]
+    },
+    {
+      "specifier": "node:fs/promises",
+      "kind": "node_core",
+      "importedBy": [
+        "src/stdlib.ts"
       ]
     },
     {
@@ -1095,6 +1107,13 @@
       "kind": "node_core",
       "importedBy": [
         "src/route-dispatcher.ts"
+      ]
+    },
+    {
+      "specifier": "node:module",
+      "kind": "node_core",
+      "importedBy": [
+        "src/stdlib.ts"
       ]
     },
     {
@@ -1128,9 +1147,9 @@
   ],
   "stats": {
     "fileCount": 87,
-    "internalEdgeCount": 228,
-    "externalDepCount": 11,
-    "nodeCoreCount": 5,
+    "internalEdgeCount": 229,
+    "externalDepCount": 13,
+    "nodeCoreCount": 7,
     "workspaceCount": 3,
     "thirdpartyCount": 3,
     "orphanCount": 10

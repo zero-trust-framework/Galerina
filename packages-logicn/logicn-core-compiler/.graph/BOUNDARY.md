@@ -12,9 +12,9 @@
 | Metric | Count |
 |---|---|
 | Files | 87 |
-| Internal edges | 228 |
-| External dependencies | 11 |
-| ├─ Node core | 5 |
+| Internal edges | 229 |
+| External dependencies | 13 |
+| ├─ Node core | 7 |
 | ├─ Workspace (@logicn/*) | 3 |
 | └─ Third-party | 3 |
 | Orphan files | 10 |
@@ -25,7 +25,9 @@
 - `node:child_process`
 - `node:crypto`
 - `node:fs`
+- `node:fs/promises`
 - `node:http`
+- `node:module`
 - `node:path`
 
 ### Workspace (@logicn/*)
