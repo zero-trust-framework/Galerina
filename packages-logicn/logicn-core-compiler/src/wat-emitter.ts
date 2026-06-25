@@ -363,6 +363,13 @@ let flowReturnTypes: ReadonlyMap<string, string> | null = null;
  *  (no binding) emits i64.const. Module-level (mirrors recordVarTypes); set per flow in emitWATFromFlowAST. */
 let currentReturnBase = "";
 
+/** 0115 (cross-flow literal arg): flowName → [param base type, …]. Lets a CALL SITE thread each callee
+ *  parameter's declared 64-bit base type as the argument's expectedType, so an Int64 literal argument
+ *  (`callee(x, 1000000000000)`) emits `(i64.const …)` instead of an out-of-i32-range `(i32.const …)` —
+ *  which wabt rejects → the assembleWAT minimal-encoder stub → an UNfaithful WASM tier (the lift-blocker
+ *  the worker's cross-flow spot-check found). Same shape as the bare-return-literal fix (3bf120a). */
+let flowParamBases: ReadonlyMap<string, readonly string[]> | null = null;
+
 /** Build the flowName → return-type registry from a program AST's flow decls.
  *  Flow node shape (parser): value = name; children = [...paramDecls, retTypeNode, …].
  *  The return-type node sits immediately after the parameter decls; its `value` is the
@@ -378,6 +385,31 @@ export function buildFlowReturnTypes(ast: AstNode | undefined): Map<string, stri
       const retNode = children[numParams];
       const rt = retNode?.value;
       if (name !== "" && typeof rt === "string" && rt.trim() !== "") out.set(name, rt.trim());
+    }
+    for (const c of n.children ?? []) walk(c);
+  };
+  walk(ast);
+  return out;
+}
+
+/** 0115: Build the flowName → [param base type, …] registry. Same flow-node shape as
+ *  buildFlowReturnTypes; each paramDecl.value is "name: Type". Each entry is the numericBaseType
+ *  of the declared parameter type, so a call site can detect an Int64/UInt64 parameter and thread it
+ *  as the argument's expectedType (only 64-bit params change anything — every other arg is unchanged). */
+export function buildFlowParamBases(ast: AstNode | undefined): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  if (ast === undefined) return out;
+  const walk = (n: AstNode): void => {
+    if (n.kind === "pureFlowDecl" || n.kind === "flowDecl" || n.kind === "secureFlowDecl") {
+      const name = (n.value ?? "").trim();
+      const bases = (n.children ?? [])
+        .filter((c) => c.kind === "paramDecl")
+        .map((c) => {
+          const raw = c.value ?? "";
+          const ty = raw.includes(":") ? raw.split(":")[1]!.trim() : "";
+          return numericBaseType(ty);
+        });
+      if (name !== "") out.set(name, bases);
     }
     for (const c of n.children ?? []) walk(c);
   };
@@ -1461,7 +1493,18 @@ export function emitWATExpr(
       }
 
       // Flow-to-flow calls within pure flows.
-      const args = children.map((c) => emitWATExpr(c, vars, staticConsts));
+      // 0115 lift-blocker fix: thread each callee parameter's 64-bit base type as the argument's
+      // expectedType, so an Int64 literal / const-expression / negation argument emits `(i64.const …)`
+      // instead of an out-of-i32-range `(i32.const …)` (which wabt rejects → the assembleWAT stub → an
+      // UNfaithful WASM tier). Only LITERAL-BEARING args to a genuinely 64-bit param thread a type — an
+      // identifier (already an i64 local) and every non-64-bit param are unchanged (zero behaviour drift).
+      const paramBases = flowParamBases?.get(name);
+      const args = children.map((c, i) => {
+        const pb = paramBases?.[i];
+        const literalBearing = c.kind === "numberLiteral" || c.kind === "binaryExpr" || c.kind === "unaryExpr";
+        const expected = pb !== undefined && INT64_WAT_TYPES.has(pb) && literalBearing ? pb : undefined;
+        return emitWATExpr(c, vars, staticConsts, expected);
+      });
       return `(call $${name} ${args.join(" ")})`.trimEnd();
     }
 
@@ -3024,6 +3067,10 @@ export function buildWATModule(
   // type-directed `.contains` / `+` lowering. Module-level for inferExprType; restored below.
   const prevFlowReturnTypes = flowReturnTypes;
   flowReturnTypes = buildFlowReturnTypes(gir.ast);
+  // 0115: flowName → param base types, so a call site threads a callee's Int64 param as the arg's
+  // expectedType (cross-flow Int64 literal-arg faithfulness). Module-level; restored below.
+  const prevFlowParamBases = flowParamBases;
+  flowParamBases = buildFlowParamBases(gir.ast);
   const functions: WATFunction[] = gir.flows.map((flow) => {
     const flowDeclaredEffects = getFlowEffects(flow);
     const isPureFlow = flow.qualifier === "pure" && flowDeclaredEffects.length === 0;
@@ -3175,6 +3222,7 @@ export function buildWATModule(
   }
 
   flowReturnTypes = prevFlowReturnTypes; // #160: restore module-level type context
+  flowParamBases = prevFlowParamBases;   // 0115: restore
 
   return {
     schemaVersion: "lln.wat.v1",
