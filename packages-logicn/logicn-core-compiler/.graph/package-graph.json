@@ -1,5 +1,12 @@
 {
   "packageName": "@logicn/core-compiler",
+  "scannedRoots": [
+    "src"
+  ],
+  "scannedExtensions": [
+    ".ts",
+    ".lln"
+  ],
   "nodes": [
     "src/attestation.ts",
     "src/audit-writer.ts",
@@ -62,6 +69,14 @@
     "src/sbom.ts",
     "src/security-policy.ts",
     "src/security-sink-monitor.ts",
+    "src/self-hosted/compiler.capabilities.lln",
+    "src/self-hosted/effect-checker.lln",
+    "src/self-hosted/gir-emitter.lln",
+    "src/self-hosted/governance-verifier.lln",
+    "src/self-hosted/lexer.lln",
+    "src/self-hosted/parser.lln",
+    "src/self-hosted/runtime.lln",
+    "src/self-hosted/type-checker.lln",
     "src/soa-arena.ts",
     "src/source-escape-checker.ts",
     "src/stage-b-report.ts",
@@ -997,6 +1012,13 @@
   ],
   "externalDeps": [
     {
+      "specifier": "@logicn/core-network",
+      "kind": "workspace",
+      "importedBy": [
+        "src/stdlib.ts"
+      ]
+    },
+    {
       "specifier": "@logicn/devtools-graph-algorithms",
       "kind": "workspace",
       "importedBy": [
@@ -1021,20 +1043,6 @@
       ]
     },
     {
-      "specifier": "${fn.name}",
-      "kind": "thirdparty",
-      "importedBy": [
-        "src/wat-emitter.ts"
-      ]
-    },
-    {
-      "specifier": "${imp.module}",
-      "kind": "thirdparty",
-      "importedBy": [
-        "src/wat-emitter.ts"
-      ]
-    },
-    {
       "specifier": "argon2",
       "kind": "thirdparty",
       "importedBy": [
@@ -1046,13 +1054,6 @@
       "kind": "thirdparty",
       "importedBy": [
         "src/stdlib.ts"
-      ]
-    },
-    {
-      "specifier": "memory",
-      "kind": "thirdparty",
-      "importedBy": [
-        "src/wat-emitter.ts"
       ]
     },
     {
@@ -1086,15 +1087,7 @@
         "src/cli.ts",
         "src/execution-graph.ts",
         "src/module-registry.ts",
-        "src/package-resolver.ts",
-        "src/stdlib.ts"
-      ]
-    },
-    {
-      "specifier": "node:fs/promises",
-      "kind": "node_core",
-      "importedBy": [
-        "src/stdlib.ts"
+        "src/package-resolver.ts"
       ]
     },
     {
@@ -1118,7 +1111,15 @@
   ],
   "orphans": [
     "src/governance-mode.ts",
-    "src/plugin-schema.ts"
+    "src/plugin-schema.ts",
+    "src/self-hosted/compiler.capabilities.lln",
+    "src/self-hosted/effect-checker.lln",
+    "src/self-hosted/gir-emitter.lln",
+    "src/self-hosted/governance-verifier.lln",
+    "src/self-hosted/lexer.lln",
+    "src/self-hosted/parser.lln",
+    "src/self-hosted/runtime.lln",
+    "src/self-hosted/type-checker.lln"
   ],
   "entryPoints": [
     "src/cli.ts",
@@ -1126,12 +1127,12 @@
     "src/runtime/index.ts"
   ],
   "stats": {
-    "fileCount": 79,
+    "fileCount": 87,
     "internalEdgeCount": 228,
-    "externalDepCount": 14,
-    "nodeCoreCount": 6,
-    "workspaceCount": 2,
-    "thirdpartyCount": 6,
-    "orphanCount": 2
+    "externalDepCount": 11,
+    "nodeCoreCount": 5,
+    "workspaceCount": 3,
+    "thirdpartyCount": 3,
+    "orphanCount": 10
   }
 }

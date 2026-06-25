@@ -5,11 +5,13 @@
 
 **Status:** ✅ PASS
 
+**Scanned scope:** roots [`src`] · extensions [`.ts`, `.lln`]
+
 ## Summary
 
 | Metric | Count |
 |---|---|
-| Files | 0 |
+| Files | 1 |
 | Internal edges | 0 |
 | External dependencies | 0 |
 | ├─ Node core | 0 |
@@ -35,4 +37,4 @@ No boundary violations. All external imports are within the allowlist.
 _none_ — every file is reachable from an internal import or entry point.
 
 ## Entry Points
-_none detected_
+- `src/index.lln`

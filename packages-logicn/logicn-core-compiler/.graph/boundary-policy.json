@@ -1,15 +1,12 @@
 {
   "packageName": "@logicn/core-compiler",
   "allowedExternal": [
-    "${fn.name}",
-    "${imp.module}",
     "@logicn/core-network",
     "@logicn/devtools-graph-algorithms",
     "@logicn/substrate-math",
     "@noble/post-quantum/ml-dsa.js",
     "argon2",
     "bcryptjs",
-    "memory",
     "node:child_process",
     "node:crypto",
     "node:dns/promises",

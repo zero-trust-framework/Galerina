@@ -26,6 +26,8 @@ export interface ExternalDep {
 
 export interface PackageGraph {
   readonly packageName: string;
+  readonly scannedRoots: readonly string[];       // source roots actually scanned (those present on disk)
+  readonly scannedExtensions: readonly string[];  // source extensions scanned
   readonly nodes: readonly string[];        // all package-relative file paths
   readonly internalEdges: readonly InternalEdge[];
   readonly externalDeps: readonly ExternalDep[];
@@ -42,15 +44,24 @@ export interface PackageGraph {
   };
 }
 
-const ENTRY_BASENAMES = new Set(["index.ts", "cli.ts"]);
+// Conventional entry-point basenames (matched case-insensitively). Entry points are
+// never orphans: nothing in a package is required to import its top-level runnable. This
+// covers the TS host entries (index/cli/server/main) AND the LogicN composition roots
+// (index.lln, main.lln, App.lln) so scanning host/ + .lln does not flag them as orphans.
+const ENTRY_BASENAMES = new Set([
+  "index.ts", "cli.ts", "server.ts", "main.ts",
+  "index.lln", "main.lln", "app.lln",
+]);
 
-/** Resolve a relative import specifier to a package-relative .ts path (best effort). */
+/** Resolve a relative import specifier to a package-relative source path (best effort). */
 function resolveInternal(fromFile: string, specifier: string): string | null {
   const baseDir = dirname(fromFile);
   let target = normalize(join(baseDir, specifier)).split(sep).join("/");
-  // Imports use ".js" (ESM/NodeNext) but the source is ".ts".
+  // TS imports use ".js" (ESM/NodeNext) but the source is ".ts". LogicN ".lln" imports
+  // already name the source file, so they are left as-is; an extensionless TS import
+  // (rare) falls back to ".ts".
   if (target.endsWith(".js")) target = target.slice(0, -3) + ".ts";
-  else if (!target.endsWith(".ts")) target = target + ".ts";
+  else if (!target.endsWith(".ts") && !target.endsWith(".lln")) target = target + ".ts";
   return target;
 }
 
@@ -83,7 +94,7 @@ export function buildGraph(scan: ScanResult): PackageGraph {
   }
 
   const entryPoints = nodes.filter((n) => {
-    const base = n.split("/").pop() ?? n;
+    const base = (n.split("/").pop() ?? n).toLowerCase();
     return ENTRY_BASENAMES.has(base);
   });
   const entrySet = new Set(entryPoints);
@@ -101,6 +112,8 @@ export function buildGraph(scan: ScanResult): PackageGraph {
 
   return {
     packageName: scan.packageName,
+    scannedRoots: scan.roots,
+    scannedExtensions: scan.extensions,
     nodes,
     internalEdges,
     externalDeps,

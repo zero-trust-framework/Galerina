@@ -46,7 +46,12 @@ function main(): void {
   // ── Console summary ────────────────────────────────────────────────────────
   console.log(`\n  Package Boundary — ${graph.packageName}`);
   console.log(`  ${"─".repeat(50)}`);
+  console.log(`  Scanned roots:      ${graph.scannedRoots.join(", ") || "(none present)"} ` +
+    `[${graph.scannedExtensions.join(", ")}]`);
   console.log(`  Files:              ${graph.stats.fileCount}`);
+  if (graph.stats.fileCount === 0) {
+    console.log(`  ⚠ zero files scanned — empty border means NOTHING was inspected, not "no deps".`);
+  }
   console.log(`  Internal edges:     ${graph.stats.internalEdgeCount}`);
   console.log(`  External deps:      ${graph.stats.externalDepCount} ` +
     `(node:${graph.stats.nodeCoreCount} · @logicn:${graph.stats.workspaceCount} · 3rd-party:${graph.stats.thirdpartyCount})`);

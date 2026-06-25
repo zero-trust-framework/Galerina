@@ -1,5 +1,11 @@
 {
   "packageName": "@logicn/framework-example-app",
-  "allowedExternal": [],
+  "allowedExternal": [
+    "@logicn/framework-api-server",
+    "@logicn/framework-app-kernel",
+    "node:fs",
+    "node:path",
+    "node:url"
+  ],
   "note": "Baseline auto-generated. Edit allowedExternal to widen/narrow the border. `--check` fails if an import appears that is not listed here."
 }

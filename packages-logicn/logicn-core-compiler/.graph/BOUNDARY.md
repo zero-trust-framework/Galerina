@@ -5,17 +5,19 @@
 
 **Status:** ✅ PASS
 
+**Scanned scope:** roots [`src`] · extensions [`.ts`, `.lln`]
+
 ## Summary
 
 | Metric | Count |
 |---|---|
-| Files | 79 |
+| Files | 87 |
 | Internal edges | 228 |
-| External dependencies | 14 |
-| ├─ Node core | 6 |
-| ├─ Workspace (@logicn/*) | 2 |
-| └─ Third-party | 6 |
-| Orphan files | 2 |
+| External dependencies | 11 |
+| ├─ Node core | 5 |
+| ├─ Workspace (@logicn/*) | 3 |
+| └─ Third-party | 3 |
+| Orphan files | 10 |
 
 ## External Dependencies (the Border)
 
@@ -23,21 +25,18 @@
 - `node:child_process`
 - `node:crypto`
 - `node:fs`
-- `node:fs/promises`
 - `node:http`
 - `node:path`
 
 ### Workspace (@logicn/*)
+- `@logicn/core-network`
 - `@logicn/devtools-graph-algorithms`
 - `@logicn/substrate-math`
 
 ### Third-party
 - `@noble/post-quantum/ml-dsa.js`
-- `${fn.name}`
-- `${imp.module}`
 - `argon2`
 - `bcryptjs`
-- `memory`
 
 ## Governance
 No boundary violations. All external imports are within the allowlist.
@@ -45,6 +44,14 @@ No boundary violations. All external imports are within the allowlist.
 ## Orphaned Files
 - `src/governance-mode.ts`
 - `src/plugin-schema.ts`
+- `src/self-hosted/compiler.capabilities.lln`
+- `src/self-hosted/effect-checker.lln`
+- `src/self-hosted/gir-emitter.lln`
+- `src/self-hosted/governance-verifier.lln`
+- `src/self-hosted/lexer.lln`
+- `src/self-hosted/parser.lln`
+- `src/self-hosted/runtime.lln`
+- `src/self-hosted/type-checker.lln`
 
 ## Entry Points
 - `src/cli.ts`

@@ -1,12 +1,23 @@
 {
   "packageName": "@logicn/api-protocol-rest",
-  "nodes": [],
+  "scannedRoots": [
+    "src"
+  ],
+  "scannedExtensions": [
+    ".ts",
+    ".lln"
+  ],
+  "nodes": [
+    "src/index.lln"
+  ],
   "internalEdges": [],
   "externalDeps": [],
   "orphans": [],
-  "entryPoints": [],
+  "entryPoints": [
+    "src/index.lln"
+  ],
   "stats": {
-    "fileCount": 0,
+    "fileCount": 1,
     "internalEdgeCount": 0,
     "externalDepCount": 0,
     "nodeCoreCount": 0,

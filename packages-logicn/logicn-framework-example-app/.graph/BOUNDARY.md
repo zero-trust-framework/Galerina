@@ -5,25 +5,30 @@
 
 **Status:** ✅ PASS
 
+**Scanned scope:** roots [`src`, `host`] · extensions [`.ts`, `.lln`]
+
 ## Summary
 
 | Metric | Count |
 |---|---|
-| Files | 0 |
-| Internal edges | 0 |
-| External dependencies | 0 |
-| ├─ Node core | 0 |
-| ├─ Workspace (@logicn/*) | 0 |
+| Files | 4 |
+| Internal edges | 1 |
+| External dependencies | 5 |
+| ├─ Node core | 3 |
+| ├─ Workspace (@logicn/*) | 2 |
 | └─ Third-party | 0 |
-| Orphan files | 0 |
+| Orphan files | 1 |
 
 ## External Dependencies (the Border)
 
 ### Node core
-_none_
+- `node:fs`
+- `node:path`
+- `node:url`
 
 ### Workspace (@logicn/*)
-_none_
+- `@logicn/framework-api-server`
+- `@logicn/framework-app-kernel`
 
 ### Third-party
 _none_
@@ -32,7 +37,8 @@ _none_
 No boundary violations. All external imports are within the allowlist.
 
 ## Orphaned Files
-_none_ — every file is reachable from an internal import or entry point.
+- `src/flows/greeting.lln`
 
 ## Entry Points
-_none detected_
+- `host/server.ts`
+- `src/App.lln`
