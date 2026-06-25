@@ -1094,6 +1094,10 @@ export function emitWATExpr(
   node: AstNode,
   vars: ReadonlyMap<string, string>,
   staticConsts: ReadonlyMap<string, number> = new Map(),
+  /** Step 3g: the type the surrounding context expects (an Int64 binding / return / Int64-operand
+   *  sibling), so a typed integer LITERAL emits i64.const instead of an invalid/truncating i32.const.
+   *  Only Int64 is honoured today; undefined → the historical i32/f64 literal behaviour (unchanged). */
+  expectedType?: string,
 ): string {
   switch (node.kind) {
     case "identifier": {
@@ -1167,17 +1171,28 @@ export function emitWATExpr(
       if (isFloat) {
         return `(f64.const ${raw})`;
       }
+      // Step 3g: an Int64-typed integer literal emits i64.const — an i32.const is INVALID for a >2^31
+      // literal and a silent truncation for a smaller one in an i64 context.
+      if (expectedType !== undefined && INT64_WAT_TYPES.has(numericBaseType(expectedType))) {
+        return `(i64.const ${raw})`;
+      }
       return `(i32.const ${raw})`;
     }
 
     case "binaryExpr": {
       const op = node.value ?? "";
+      const wantI64 = expectedType !== undefined && INT64_WAT_TYPES.has(numericBaseType(expectedType));
       // AOT #1 (R&D 0036): const-expression folding — if both operands are compile-time int constants
       // and the arithmetic doesn't trap, emit the folded literal instead of the runtime op. foldToInt
       // returns null for non-int / string / comparison operands and for any TRAPPING const op (so those
       // fall through unchanged and stay fail-closed).
-      const foldedConst = foldToInt(node, staticConsts);
-      if (foldedConst !== null) return `(i32.const ${foldedConst})`;
+      // Step 4d (R2): do NOT fold an Int64-context expression in 32-bit space — foldToInt uses i32
+      // arithmetic + emits an i32.const, which truncates / mismatches an i64 result. Skip folding when the
+      // context wants i64; the runtime i64 op below stays exact (BigInt-equivalent, traps on overflow).
+      if (!wantI64) {
+        const foldedConst = foldToInt(node, staticConsts);
+        if (foldedConst !== null) return `(i32.const ${foldedConst})`;
+      }
       const watOp = BINARY_OP_TO_WAT.get(op);
       const children = node.children ?? [];
       const left  = children[0] ? emitWATExpr(children[0], vars, staticConsts) : "(i32.const 0)";
@@ -1225,11 +1240,19 @@ export function emitWATExpr(
       // by a real flow until lift; exercised by the upcoming wat2wasm milestone test.)
       const lInt64 = INT64_WAT_TYPES.has(lty ?? "");
       const rInt64 = INT64_WAT_TYPES.has(rty ?? "");
-      if (lInt64 || rInt64) {
+      if (lInt64 || rInt64 || wantI64) {
         const iOp = INT64_ARITH_WAT[op] ?? INT64_CMP_WAT[op];
         if (iOp !== undefined) {
-          const L = lInt64 ? left : `(i64.extend_i32_s ${left})`;
-          const R = rInt64 ? right : `(i64.extend_i32_s ${right})`;
+          // An operand is i64 if it is Int64-typed, the whole expr is in an Int64 context (wantI64), or it
+          // is a LITERAL sibling of an Int64 operand (the literal takes the i64 context → i64.const, no
+          // truncation). A genuine i32 operand (an Int variable) is sign-extended. Re-emit each operand
+          // with the right expected type so a literal becomes (i64.const …) rather than an invalid i32.const.
+          const li = lInt64 || wantI64 || children[0]?.kind === "numberLiteral";
+          const ri = rInt64 || wantI64 || children[1]?.kind === "numberLiteral";
+          const Lx = children[0] ? emitWATExpr(children[0], vars, staticConsts, li ? "Int64" : undefined) : "(i64.const 0)";
+          const Rx = children[1] ? emitWATExpr(children[1], vars, staticConsts, ri ? "Int64" : undefined) : "(i64.const 0)";
+          const L = li ? Lx : `(i64.extend_i32_s ${Lx})`;
+          const R = ri ? Rx : `(i64.extend_i32_s ${Rx})`;
           return `(${iOp} ${L} ${R})`;
         }
         // an i32-only op (e.g. bitwise) over an Int64 operand has no i64 lowering here — fail-closed.
@@ -1690,20 +1713,24 @@ function emitBlockStatements(
             if (ty !== undefined && ty !== "") recordVarTypes.set(varName, ty);
           }
         }
-        const initExpr = initNode ? emitWATExpr(initNode, vars, staticConsts) : "(i32.const 0)";
+        // Step 3g: thread the binding's declared type so an Int64 literal init emits i64.const (an i32.const
+        // would be invalid for a >2^31 literal / a silent truncation). Non-Int64 annotations are inert here.
+        const bindAnnoType = rawName.includes(":") ? (rawName.split(":")[1] ?? "").trim() : "";
+        const initExpr = initNode ? emitWATExpr(initNode, vars, staticConsts, bindAnnoType) : "(i32.const 0)";
 
         if (vars.has(varName)) {
           // Variable already declared — this is a mutation (e.g. let x = x + 1 inside a loop).
           // Do NOT add a second (local $x) declaration — just set the existing one.
           bodyLines.push(`(local.set ${watLocal} ${initExpr})`);
         } else {
-          // New variable: declare at function top + initialise inline.
-          // #165: a float binding (`let y: Float = x * 2.0`) holds an f64 — the local MUST be f64
-          // or the (local.set $y <f64>) is a type error. An explicit float annotation wins; else the
-          // local takes the type its initialiser leaves on the stack (watStackType). Non-float bindings
-          // (Int/Bool/records/strings) stay i32, unchanged.
-          const annoType = rawName.includes(":") ? (rawName.split(":")[1] ?? "").trim() : "";
-          const localVal: WATValType = FLOAT_WAT_TYPES.has(annoType) ? "f64" : watStackType(initExpr);
+          // New variable: declare at function top + initialise inline. #165: a float binding holds an f64;
+          // Step 3h: an Int64 binding holds an i64 — the local MUST match or the (local.set $y <val>) is a
+          // type error. An explicit float/Int64 annotation wins; else the local takes the type its
+          // initialiser leaves on the stack (watStackType). Non-float/Int64 bindings stay i32, unchanged.
+          const localVal: WATValType =
+            FLOAT_WAT_TYPES.has(bindAnnoType) ? "f64" :
+            INT64_WAT_TYPES.has(numericBaseType(bindAnnoType)) ? "i64" :
+            watStackType(initExpr);
           vars.set(varName, watLocal);
           localDecls.push(`(local ${watLocal} ${localVal})`);
           bodyLines.push(`(local.set ${watLocal} ${initExpr})`);
@@ -1717,7 +1744,8 @@ function emitBlockStatements(
         const varName  = (stmt.value ?? "").trim();
         const watLocal = vars.get(varName) ?? `$${varName}`;
         const exprNode = stmt.children?.[0];
-        const exprStr  = exprNode ? emitWATExpr(exprNode, vars, staticConsts) : "(i32.const 0)";
+        // Step 3g: thread the assigned binding's declared type so `total = <Int64 literal>` emits i64.const.
+        const exprStr  = exprNode ? emitWATExpr(exprNode, vars, staticConsts, recordVarTypes?.get(varName)) : "(i32.const 0)";
         if (!vars.has(varName)) {
           // Declare it now if somehow not in scope (defensive). #165: match the assigned value's
           // stack type so a float assignment to an undeclared local is f64, not a mistyped i32.

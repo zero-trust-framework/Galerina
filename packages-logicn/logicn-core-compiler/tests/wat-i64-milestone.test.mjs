@@ -19,7 +19,10 @@ const I64_MIN = -9223372036854775808n;
 
 const SRC = `pure flow add64(a: Int64, b: Int64) -> Int64 contract { effects {} } { return a + b }
 pure flow sub64(a: Int64, b: Int64) -> Int64 contract { effects {} } { return a - b }
-pure flow mul64(a: Int64, b: Int64) -> Int64 contract { effects {} } { return a * b }`;
+pure flow mul64(a: Int64, b: Int64) -> Int64 contract { effects {} } { return a * b }
+pure flow bigLit() -> Int64 contract { effects {} } { let x: Int64 = 9223372036854775807  return x }
+pure flow foldSafe() -> Int64 contract { effects {} } { let p: Int64 = 1000000 * 1000  return p }
+pure flow mixLit(a: Int64) -> Int64 contract { effects {} } { return a + 5000000000 }`;
 
 test("emitter 2b milestone: a fused Int64 module assembles under wabt + runs exact (i64, not truncated)", async () => {
   const prog = parseProgram(SRC, "i64-milestone.lln");
@@ -56,4 +59,14 @@ test("emitter 2b milestone: a fused Int64 module assembles under wabt + runs exa
   assert.throws(() => instance.exports.add64(I64_MAX, 1n), "I64_MAX + 1 must trap, not wrap");
   assert.throws(() => instance.exports.sub64(I64_MIN, 1n), "I64_MIN - 1 must trap");
   assert.throws(() => instance.exports.mul64(I64_MAX, 2n), "I64_MAX * 2 must trap");
+
+  // Step 3g: literal origination in the emitter.
+  // bare >2^31 Int64 literal init → i64.const (an i32.const would be an invalid module).
+  assert.equal(instance.exports.bigLit(), I64_MAX);
+  // const-fold must NOT happen in 32-bit space for an Int64 binding (R2): 1000000*1000 fits i64, and the
+  // result is exact — had foldToInt run, it would have emitted an i32.const (1000000000 fits i32 here, but
+  // the local is i64 → a type mismatch / the larger sibling case truncates).
+  assert.equal(instance.exports.foldSafe(), 1000000000n);
+  // mixed Int64 param + a >2^31 literal: the literal takes the i64 context (i64.const), not an invalid i32.const.
+  assert.equal(instance.exports.mixLit(7n), 5000000007n);
 });
