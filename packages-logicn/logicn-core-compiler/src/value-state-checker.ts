@@ -1902,6 +1902,18 @@ class ValueStateChecker {
     if (node.kind === "callExpr" && isRedactCall(node)) return;
 
     if (node.kind === "identifier") {
+      // A record-literal field `{ email: redact(email) }` and a named argument `f(email: redact(email))`
+      // are BOTH kind:"identifier" with value = the FIELD/LABEL name and children = the value expression.
+      // The label is NOT a value reference — so check the field VALUE, not the field name. Without this:
+      //   • FALSE POSITIVE — `{ email: redact(email) }` (the canonical PII-redaction pattern) was rejected
+      //     because the field name "email" was looked up as the protected binding, ignoring the redact() wrap;
+      //   • FALSE NEGATIVE — `{ other: email }` was MISSED because the field name "other" is not a binding, so
+      //     the protected `email` value escaped unchecked (a real PII leak). Recursing into the field value
+      //     wrapped in redact() discharges it; a bare protected value in any field still fails closed.
+      if ((node.children?.length ?? 0) > 0) {
+        for (const child of node.children!) this.checkArgForProtectedAtAuditLog(child, sinkName, location);
+        return;
+      }
       const binding = this.lookupBinding(node.value ?? "");
       if (binding !== undefined) {
         // Check if this is a protected value (typeName is "protected" — the first token
