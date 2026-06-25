@@ -215,12 +215,22 @@ export class TPLSimulator {
 
   // ── Guard-page integrity ───────────────────────────────────────────────────
 
-  /** Verify the guard-page canaries are intact. Throws TPLIntegrityFault if not. */
+  /** Verify the guard-page canaries are intact. Throws TPLIntegrityFault if not.
+   *  RD-0112 R2 (erase-on-DETECTED-corruption): a corrupt canary means a buffer overflow/underflow
+   *  may have just touched secret-bearing trit state — a detected integrity violation is precisely
+   *  when to wipe. We `erase()` (atomic; re-stamps the canaries) BEFORE unwinding so a detected
+   *  corruption never leaves COMMIT residue in the (exported) buffer. This must hold for EXTERNAL
+   *  callers too: `verifyIntegrity()` is a public attestation check, not only reached via the
+   *  `eraseOnTrap` mutator wrapper (the gap the wrapper alone left open). `erase()` is idempotent
+   *  and does not call back into `verifyIntegrity`, so a double-wipe via an enclosing `eraseOnTrap`
+   *  is harmless and there is no recursion. Fail-closed: corruption erases, it never preserves. */
   verifyIntegrity(): void {
     if (this.mem[0] !== CANARY) {
+      this.erase();
       throw new TPLIntegrityFault("leading guard page corrupted (underflow)");
     }
     if (this.mem[this.canaryTailIdx] !== CANARY) {
+      this.erase();
       throw new TPLIntegrityFault("trailing guard page corrupted (overflow)");
     }
   }

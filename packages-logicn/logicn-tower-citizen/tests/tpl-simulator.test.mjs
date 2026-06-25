@@ -144,6 +144,22 @@ test("guard pages: verifyIntegrity passes on a clean buffer", () => {
   assert.doesNotThrow(() => sim.verifyIntegrity());
 });
 
+test("guard pages (RD-0112 R2): a DETECTED canary corruption erases secret state before throwing", () => {
+  const { sim } = makeSim(16);
+  sim.setTrit(5, 1); // a secret COMMIT
+  assert.equal(sim.getTrit(5), TritState.COMMIT);
+  // Model a buffer overflow that strays past the trit region and corrupts the trailing guard page.
+  // (TS `private` is compile-time only; the runtime field is reachable — this stands in for the
+  // memory corruption a real overflow would cause, which is exactly what verifyIntegrity detects.)
+  sim.mem[sim.canaryTailIdx] = 0;
+  assert.throws(() => sim.verifyIntegrity(), /trailing guard page corrupted/);
+  // The detected corruption wiped the secret to the REJECT pole BEFORE unwinding — no COMMIT residue
+  // survives in the (exported) buffer — and the canary was re-stamped so the simulator stays usable.
+  assert.notEqual(sim.getTrit(5), TritState.COMMIT, "secret COMMIT must NOT survive a detected integrity fault");
+  assert.equal(sim.getTrit(5), -1, "wiped to the REJECT pole");
+  assert.doesNotThrow(() => sim.verifyIntegrity(), "canary re-stamped by the erase");
+});
+
 test("hard erasure: wipes state but preserves guard pages", () => {
   const { sim } = makeSim(16);
   sim.loadWeights([1, 1, 1, 1, 1]);
