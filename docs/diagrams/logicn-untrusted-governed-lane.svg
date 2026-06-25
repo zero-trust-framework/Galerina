@@ -1,0 +1,71 @@
+<svg width="100%" viewBox="0 0 720 540" xmlns="http://www.w3.org/2000/svg" role="img" font-family="ui-sans-serif, system-ui, sans-serif">
+<title>LogicN — the Untrusted Governed Lane (Govern-Don't-Absorb)</title>
+<desc>The small exact trusted core keeps the decision (verdict, crypto, determinism); fast exotic untrusted work runs in a governed lane admitted by a signed predicate and combined back by No-Coercion min so it can only lower a verdict, never raise it.</desc>
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<text x="36" y="28" font-size="16" font-weight="700" fill="#1c2128">LogicN — the Untrusted Governed Lane</text>
+<text x="36" y="47" font-size="11" fill="#5a6470">Govern-Don't-Absorb · keep the DECISION exact in the core, offload the WORK to the untrusted lane · teal = trusted core · amber = untrusted lane · purple = invariant</text>
+
+<!-- TRUSTED CORE -->
+<rect x="60" y="64" width="600" height="118" rx="10" fill="#e3f5f2" stroke="#2b8a7e" stroke-width="1.8"/>
+<text x="360" y="86" text-anchor="middle" font-size="13.5" font-weight="700" fill="#14534b">TRUSTED CORE — small · exact · digital · bit-reproducible · fail-closed</text>
+<rect x="80" y="98" width="170" height="68" rx="7" fill="#d3ede8" stroke="#2b8a7e" stroke-width="1.2"/>
+<text x="165" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="#14534b">Verdict v ∈ {−1,0,+1}</text>
+<text x="165" y="137" text-anchor="middle" font-size="10" fill="#1f6b60">DENY · UNKNOWN · ALLOW</text>
+<text x="165" y="153" text-anchor="middle" font-size="10" fill="#1f6b60">exact, never probabilistic</text>
+<rect x="265" y="98" width="190" height="68" rx="7" fill="#d3ede8" stroke="#2b8a7e" stroke-width="1.2"/>
+<text x="360" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="#14534b">Crypto + determinism</text>
+<text x="360" y="137" text-anchor="middle" font-size="10" fill="#1f6b60">SHA-256 + hybrid sig</text>
+<text x="360" y="153" text-anchor="middle" font-size="10" fill="#1f6b60">reproducible proofs</text>
+<rect x="470" y="98" width="170" height="68" rx="7" fill="#d3ede8" stroke="#2b8a7e" stroke-width="1.2"/>
+<text x="555" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="#14534b">Capability registry</text>
+<text x="555" y="137" text-anchor="middle" font-size="10" fill="#1f6b60">revocations.json</text>
+<text x="555" y="153" text-anchor="middle" font-size="10" fill="#1f6b60">deny-by-default</text>
+
+<!-- IN seam: signed admission -->
+<path d="M200 182 L200 250" fill="none" stroke="#3b6fd4" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="70" y="198" width="260" height="40" rx="7" fill="#e8effb" stroke="#3b6fd4" stroke-width="1.4"/>
+<text x="200" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#1f3a6b">IN seam — signed admission  A = 1</text>
+<text x="200" y="230" text-anchor="middle" font-size="9.5" fill="#3a5285">pin(hash) ∧ verifySig ∧ ¬revoked ∧ capBounded · any UNKNOWN ⇒ A=0</text>
+
+<!-- OUT seam: No-Coercion min -->
+<path d="M520 250 L520 182" fill="none" stroke="#7a5bb0" stroke-width="2" marker-end="url(#arr)"/>
+<rect x="392" y="198" width="268" height="40" rx="7" fill="#efeaf7" stroke="#7a5bb0" stroke-width="1.4"/>
+<text x="526" y="214" text-anchor="middle" font-size="11" font-weight="700" fill="#43306b">OUT seam — No-Coercion  vAnd(v,t)=min(v,t) ≤ v</text>
+<text x="526" y="230" text-anchor="middle" font-size="9.5" fill="#5a4584">t can only LOWER v · false-DENY possible, false-ALLOW impossible</text>
+
+<!-- UNTRUSTED GOVERNED LANE -->
+<rect x="60" y="252" width="600" height="150" rx="10" fill="#fcf0d9" stroke="#c08a2e" stroke-width="1.8"/>
+<text x="360" y="274" text-anchor="middle" font-size="13.5" font-weight="700" fill="#6b4e15">UNTRUSTED GOVERNED LANE — fast · exotic · external (never trusted, always checked)</text>
+<rect x="80" y="288" width="172" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="166" y="307" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">Photonic / analog T-MAC</text>
+<text x="166" y="323" text-anchor="middle" font-size="9.5" fill="#7d5e1d">executedNatively=false</text>
+<rect x="266" y="288" width="172" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="352" y="307" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">GPU/NPU inference</text>
+<text x="352" y="323" text-anchor="middle" font-size="9.5" fill="#7d5e1d">heavy compute</text>
+<rect x="452" y="288" width="188" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="546" y="307" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">AI reasoning worker</text>
+<text x="546" y="323" text-anchor="middle" font-size="9.5" fill="#7d5e1d">proposes, cannot grant</text>
+<rect x="80" y="342" width="172" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="166" y="361" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">Storage substrate</text>
+<text x="166" y="377" text-anchor="middle" font-size="9.5" fill="#7d5e1d">verify-on-read</text>
+<rect x="266" y="342" width="172" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="352" y="361" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">3rd-party / JIT code</text>
+<text x="352" y="377" text-anchor="middle" font-size="9.5" fill="#7d5e1d">signed-admission only</text>
+<rect x="452" y="342" width="188" height="44" rx="7" fill="#f8e4bf" stroke="#c08a2e" stroke-width="1.1"/>
+<text x="546" y="358" text-anchor="middle" font-size="11" font-weight="600" fill="#6b4e15">produces  R + trit t</text>
+<text x="546" y="374" text-anchor="middle" font-size="9.5" fill="#7d5e1d">checked at the border</text>
+
+<!-- cheap-verify loop -->
+<path d="M360 402 C 300 440, 420 440, 360 402" fill="none" stroke="#2b8a7e" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="210" y="418" width="300" height="40" rx="7" fill="#e3f5f2" stroke="#2b8a7e" stroke-width="1.3" stroke-dasharray="5 4"/>
+<text x="360" y="434" text-anchor="middle" font-size="11" font-weight="700" fill="#14534b">cheap-verify R in the core (Freivalds)</text>
+<text x="360" y="450" text-anchor="middle" font-size="9.5" fill="#1f6b60">accept C iff A·(B·r)==C·r — O(n²) check of an O(n³) product</text>
+
+<!-- non-negotiables -->
+<rect x="60" y="476" width="600" height="46" rx="9" fill="#f3eefa" stroke="#7a5bb0" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="360" y="495" text-anchor="middle" font-size="11.5" font-weight="700" fill="#43306b">The line that never moves — crypto + bit-exact determinism stay digital · verdicts stay exact + fail-closed · no unsigned code</text>
+<text x="360" y="512" text-anchor="middle" font-size="10" fill="#5a4584">make LogicN better by governing MORE tech (more lanes), never by trusting more tech (lowering the core)</text>
+</svg>
