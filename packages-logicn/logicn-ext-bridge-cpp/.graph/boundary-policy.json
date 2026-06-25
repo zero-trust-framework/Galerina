@@ -4,6 +4,7 @@
     "@logicn/inference-bridge-contract",
     "@logicn/tower-citizen",
     "node:child_process",
+    "node:crypto",
     "node:fs",
     "node:module",
     "node:os",

@@ -2,6 +2,8 @@
   "packageName": "@logicn/tower-citizen",
   "allowedExternal": [
     "@logicn/inference-bridge-contract",
+    "@logicn/substrate-math",
+    "@noble/post-quantum/ml-dsa.js",
     "node:crypto",
     "node:fs",
     "node:path"
