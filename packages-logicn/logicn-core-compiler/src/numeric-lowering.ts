@@ -16,14 +16,35 @@ import { I64_MIN, I64_MAX } from "./i64-arith.js";
 import { type AstNode } from "./parser.js";
 
 /**
- * The scalar 64-bit widths the current backend cannot lower without silently truncating 64→32 (CWE-704).
- * SINGLE SOURCE OF TRUTH for "what is unlowerable": the LLN-NUMERIC-001 gate (value-state-checker), the
- * bytecode-VM bail, and the sync fast-path bail all consult this set, so the gate and the fast-tier bails
- * can never disagree about which flows must be routed to the faithful tree-walker / rejected. Int8/Int16
- * widen to i32 and Float32 widens to f64 (no value loss) — deliberately NOT here. Int64 is being lifted
- * incrementally (faithful tree-walker first); UInt64 stays gated until its own unsigned layer lands.
+ * The scalar 64-bit widths the LLN-NUMERIC-001 GATE rejects: a value the *compile/admit* pipeline cannot
+ * carry faithfully, so declaring one fails closed at check / build / governed-run (value-state-checker).
+ *
+ * Int64 has been LIFTED (owner-gated, 2026-06-25): the WASM emitter now lowers it faithfully (i64.const /
+ * checked $lln_*_i64 / native i64.div_s|rem_s / i64 comparisons) and the tree-walker carries it as a
+ * bigint — proven byte-exact, walker ≡ WASM, over the full (2^53,2^63) corpus (wat-i64-differential). So
+ * the gate no longer rejects Int64; only UInt64 remains, because faithful *unsigned* 64-bit arithmetic
+ * (u64 div/compare/overflow differ from the signed i64.* ops) has no layer yet. Int8/Int16 widen to i32
+ * and Float32 widens to f64 (no value loss) — deliberately NOT here.
+ *
+ * DELIBERATELY SPLIT from FAST_TIER_UNLOWERABLE_SCALAR below: the two concerns diverged at the lift. The
+ * GATE asks "can the pipeline as a whole carry this width?" (Int64: yes, via WASM/walker). The fast-tier
+ * bail asks "can the *i32-only* fast tiers carry it?" (Int64: NO — they would silently truncate). Folding
+ * them back into one set would either re-gate Int64 or let a fast tier truncate it — both fail-open.
  */
-export const BACKEND_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set(["Int64", "UInt64"]);
+export const BACKEND_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set(["UInt64"]);
+
+/**
+ * The scalar 64-bit widths the i32-only FAST execution tiers (bytecode VM, sync fast-path) cannot carry —
+ * they store into a JS `number` / an Int32Array and would SILENTLY TRUNCATE 64→32 (CWE-704). A flow
+ * declaring any of these (param, return, OR an internal `let y: Int64` the bytecode per-param check misses)
+ * bails to the faithful tree-walker (which carries int64 as a bigint) / the i64-faithful WASM emitter.
+ *
+ * SUPERSET of the gate set above: it ALSO pins Int64, which is no longer GATE-rejected (WASM + walker lower
+ * it faithfully) but is still unsafe on the i32-only tiers. `flowDeclaresUnlowerable64` consults THIS set;
+ * the LLN-NUMERIC-001 gate consults BACKEND_UNLOWERABLE_SCALAR. Keep them in sync only on UInt64: anything
+ * the gate rejects is also fast-tier-unsafe, so it must appear in both.
+ */
+export const FAST_TIER_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set(["Int64", "UInt64"]);
 
 /**
  * Base type identifier from a type-annotation string: strips leading governance/safety qualifiers
@@ -103,10 +124,11 @@ function bindingDeclaredBase(bindingValue: string): string {
  * Does a flow DECLARE any unlowerable 64-bit scalar (param, return, or a binding anywhere in its body)?
  * The fast execution tiers (bytecode VM, sync fast-path) are i32-only and would SILENTLY TRUNCATE such a
  * value — so they bail on a `true` here and defer to the faithful tree-walker (which carries int64 as a
- * bigint). Uses the SAME `BACKEND_UNLOWERABLE_SCALAR` + `numericBaseType` as the LLN-NUMERIC-001 gate, so a
- * flow the gate would reject is exactly a flow the fast tiers refuse to run. Param Int64 already bails in
- * the bytecode VM via its INTEGER_TYPES check; this also catches an INTERNAL `let y: Int64` in an int-param
- * flow (the silent-truncation gap, the verified plan's R1).
+ * bigint). Consults `FAST_TIER_UNLOWERABLE_SCALAR` (NOT the LLN-NUMERIC-001 gate set): post-lift, Int64 is
+ * admitted by the gate (WASM + walker lower it faithfully) yet STILL must bail off the i32-only fast tiers,
+ * so the bail set is a superset of the gate set. Param Int64 already bails in the bytecode VM via its
+ * INTEGER_TYPES check; this also catches an INTERNAL `let y: Int64` in an int-param flow (the
+ * silent-truncation gap, the verified plan's R1) that the per-param check does NOT see.
  */
 // Memoized per flow node — the result is pure over a stable AST, and this runs on the HOT sync fast-path
 // entry (once per nested-flow call); an uncached per-call AST walk would regress tight call-chain loops.
@@ -123,18 +145,18 @@ export function flowDeclaresUnlowerable64(flowNode: AstNode): boolean {
 function scanFlowFor64(flowNode: AstNode): boolean {
   for (const c of flowNode.children ?? []) {
     // Return type = a direct typeRef child of the flow.
-    if (c.kind === "typeRef" && typeof c.value === "string" && BACKEND_UNLOWERABLE_SCALAR.has(numericBaseType(c.value))) return true;
+    if (c.kind === "typeRef" && typeof c.value === "string" && FAST_TIER_UNLOWERABLE_SCALAR.has(numericBaseType(c.value))) return true;
     // Param type = the typeRef nested in a paramDecl.
     if (c.kind === "paramDecl") {
       const tr = (c.children ?? []).find((t) => t.kind === "typeRef");
-      if (typeof tr?.value === "string" && BACKEND_UNLOWERABLE_SCALAR.has(numericBaseType(tr.value))) return true;
+      if (typeof tr?.value === "string" && FAST_TIER_UNLOWERABLE_SCALAR.has(numericBaseType(tr.value))) return true;
     }
   }
   // Bindings anywhere in the body.
   let found = false;
   const visit = (n: AstNode | undefined): void => {
     if (n === undefined || found) return;
-    if (NUMERIC_BIND_KINDS.has(n.kind) && typeof n.value === "string" && BACKEND_UNLOWERABLE_SCALAR.has(bindingDeclaredBase(n.value))) {
+    if (NUMERIC_BIND_KINDS.has(n.kind) && typeof n.value === "string" && FAST_TIER_UNLOWERABLE_SCALAR.has(bindingDeclaredBase(n.value))) {
       found = true;
       return;
     }

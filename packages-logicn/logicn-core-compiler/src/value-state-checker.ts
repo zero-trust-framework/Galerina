@@ -2050,15 +2050,19 @@ class ValueStateChecker {
 // ---------------------------------------------------------------------------
 // LLN-NUMERIC-001 — backend numeric-lowering safety gate (fail-closed, UNCONDITIONAL)
 //
-// A scalar Int64/UInt64 type-checks (it is a valid LogicN type, and logicNTypeToWAT maps
-// it to i64), but the WASM emitter's value sites (return type, local decl, binary-op) only
-// special-case the float set and DEFAULT everything else to i32 — so a scalar `: Int64` is
-// SILENTLY TRUNCATED 64→32 bit (CWE-704), and the run fallback (tree-walker) holds the value
-// in a JS `number` that loses precision above 2^53. Either way the author asked for 64 bits
-// and silently got 32 — a fail-OPEN correctness/security hazard (e.g. a financial
-// `amount: Int64` wrapping at 2^31). Per "always make the most secure choice", we fail CLOSED:
-// the governed runtime and the production build (both run checkValueStates) reject such a flow
-// rather than emit a truncating module, until faithful i64 lowering lands.
+// A scalar 64-bit width that the WASM emitter cannot lower faithfully would be SILENTLY TRUNCATED
+// 64→32 bit (CWE-704), and the run fallback (tree-walker) would hold the value in a JS `number`
+// that loses precision above 2^53 — either way the author asked for 64 bits and silently got 32,
+// a fail-OPEN correctness/security hazard (e.g. a financial `amount` wrapping at 2^31). Per
+// "always make the most secure choice", we fail CLOSED: the governed runtime and the production
+// build (both run checkValueStates) reject such a flow rather than emit a truncating module.
+//
+// Int64 has been LIFTED from this gate (owner-gated, 2026-06-25): the emitter now lowers it
+// faithfully (i64.const, checked $lln_*_i64, native i64.div_s|rem_s, i64 comparisons) and the
+// tree-walker carries it as a bigint — proven byte-exact (walker ≡ WASM) over the (2^53,2^63)
+// corpus. So only UInt64 remains gated, until a faithful *unsigned* 64-bit arithmetic layer lands
+// (u64 div/compare/overflow differ from the signed i64.* ops the emitter currently uses). The set
+// of gated widths is BACKEND_UNLOWERABLE_SCALAR in ./numeric-lowering.ts.
 //
 // UNCONDITIONAL (not mode-gated): silent truncation is always wrong, and the governed runtime
 // calls checkValueStates with the default development mode — gating on production would leave
@@ -2066,8 +2070,10 @@ class ValueStateChecker {
 // and Float32 widens to f64 (no value loss), so they are deliberately NOT gated. The base type
 // is matched EXACTLY, so a generic position like Tensor<Int64,[4]> / Array<UInt64> (an opaque
 // i32 handle whose base is "Tensor"/"Array") is correctly NOT flagged.
-// BACKEND_UNLOWERABLE_SCALAR is now shared in ./numeric-lowering.ts so the gate, the bytecode-VM bail,
-// and the sync fast-path bail all agree on which 64-bit scalars must be rejected / routed to the walker.
+//
+// NOTE the gate set (BACKEND_UNLOWERABLE_SCALAR, consulted here) is now a STRICT SUBSET of the
+// fast-tier bail set (FAST_TIER_UNLOWERABLE_SCALAR, consulted by flowDeclaresUnlowerable64): post-lift
+// Int64 is admitted HERE but still routes off the i32-only bytecode-VM / sync fast-path to the walker.
 const NUMERIC_FLOW_KINDS = new Set(["flowDecl", "secureFlowDecl", "pureFlowDecl", "guardedFlowDecl"]);
 const NUMERIC_BIND_KINDS = new Set(["letDecl", "mutDecl", "readonlyDecl"]);
 
