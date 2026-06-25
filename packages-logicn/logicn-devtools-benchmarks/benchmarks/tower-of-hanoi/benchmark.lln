@@ -1,0 +1,30 @@
+/// tower-of-hanoi benchmark — LogicN governed runtime
+/// 3-peg Tower of Hanoi with a THREADED move-checksum. Unlike the trivial 2^n-1 closed form, every one of
+/// the 2^n-1 moves is actually executed and folded into a rolling checksum:
+///     acc = (acc * 31 + moveCode) % 65521
+/// The checksum is i32-OVERFLOW-SAFE by construction — acc < 65521, so acc*31 < 2,031,151 < 2^31, so no
+/// intermediate ever trips the Fork-A overflow trap (unlike a wrapping hash, which would TRAP in LogicN).
+/// It is also cross-language-identical (every runtime computes the same value). This stresses deep recursion
+/// (2^n call frames) + per-call governed arithmetic — a genuinely harder benchmark than naive recursion.
+
+pure flow hanoi(n: Int, from: Int, to: Int, aux: Int, acc: Int) -> Int
+contract { effects {} }
+{
+  if n == 0 {
+    return acc
+  }
+  // move n-1 disks  from -> aux  (using `to` as spare)
+  let a1: Int = hanoi(n - 1, from, aux, to, acc)
+  // record the move of disk n  from -> to  into the checksum
+  let moveCode: Int = n * 36 + from * 6 + to
+  let mixed: Int = (a1 * 31 + moveCode) % 65521
+  // move n-1 disks  aux -> to  (using `from` as spare)
+  return hanoi(n - 1, aux, to, from, mixed)
+}
+
+pure flow main() -> Int
+contract { effects {} }
+{
+  // n=16 → 65,535 moves per call. Peg encoding: 0=source, 2=target, 1=auxiliary. Seed checksum 0.
+  return hanoi(16, 0, 2, 1, 0)
+}

@@ -23,6 +23,10 @@ const BENCHMARKS = [
   { id: "six-digit-guess",      dir: "six-digit-guess",      logicnOpsPerRun: null,                   passiveCallCount: 3  },
   { id: "record-allocation",    dir: "record-allocation",    logicnOpsPerRun: 10000,                  passiveCallCount: 20 },
   { id: "fibonacci-recursive",  dir: "fibonacci-recursive",  logicnOpsPerRun: 1,                      passiveCallCount: 5  },
+  // Tower of Hanoi (n=16) with a threaded move-checksum — 65,535 moves/call, deep recursion + per-move
+  // governed arithmetic. logicnOpsPerRun = moves/call so the LogicN column reports moves/sec like the others;
+  // `result` (=42452 at n=16) is the cross-language checksum oracle (all runtimes must agree).
+  { id: "tower-of-hanoi",       dir: "tower-of-hanoi",       logicnOpsPerRun: 65535,                  passiveCallCount: 2  },
   { id: "collection-pipeline",  dir: "collection-pipeline",  logicnOpsPerRun: 10000,                  passiveCallCount: 30 },
   { id: "governance-cost",      dir: "governance-cost",      logicnOpsPerRun: 1,                      passiveCallCount: 100 },
   { id: "hardware-targets",     dir: "hardware-targets",     logicnOpsPerRun: 1,                      passiveCallCount: 1000 },
