@@ -9,8 +9,12 @@
 // that handles the subset of YAML used in package.logicn.yaml files.
 // =============================================================================
 
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+/** Max bytes for a package manifest — uniform pre-governance read-size guard (#38). Manifests are tiny YAML;
+ *  an oversize one is a malformed/hostile package and is refused (fail-safe: treated as no manifest). */
+const MAX_MANIFEST_BYTES = 1 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -686,6 +690,9 @@ export function loadPackageManifest(packagePath: string): PackageManifest | unde
 
   let text: string;
   try {
+    // #38 uniform read-size guard: stat before the read so an oversize/hostile manifest fails fast
+    // (fail-safe — an unreadably large manifest is treated as absent, same as a parse failure below).
+    if (statSync(manifestPath).size > MAX_MANIFEST_BYTES) return undefined;
     text = readFileSync(manifestPath, "utf8");
   } catch {
     return undefined;
