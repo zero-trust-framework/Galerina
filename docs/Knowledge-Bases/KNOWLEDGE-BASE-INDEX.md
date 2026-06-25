@@ -289,6 +289,8 @@ When an AI tool is generating LogicN code for this project:
 | How do Int8/Int/Int64/Float lower to WASM? The i32/i64 maths? | `logicn-integer-types-and-lowering.md` |
 | How is fast/exotic/external work run *without* trusting it? | `untrusted-governed-lane.md` (+ `docs/diagrams/logicn-untrusted-governed-lane.svg`) |
 | Does a graph (GraphCast-style) help WASM / photonic / virtual-3D? | `logicn-rd-graph-wasm-photonic-2026-06-25.md` |
+| Is "Graph + WASM" a measured production win? (benchmark) | `logicn-rd-graph-wasm-admission-benchmark-2026-06-25.md` |
+| Why wasn't "Secure Cryptographic Paging" used; what do we use instead? | `logicn-rd-photonic-quantum-paging-graph-grounding-2026-06-25.md` (Thread 3) |
 | Can virtual-3D / "2-wave" photonics do high-value compute? | `rd-0114-virtual-3d-spatial-photonics-absorbed.md` |
 | What % is shippable / the current roadmap? | `logicn-percent-audit-roadmap-2026-06-25-v2.md` |
 | Which R&D is paper-worthy? | `logicn-rd-paper-ranking-0100-0113-2026-06-25.md` |
