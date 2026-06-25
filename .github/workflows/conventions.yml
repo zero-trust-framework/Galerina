@@ -185,3 +185,27 @@ jobs:
         run: |
           node scripts/audit-web-stub-guard.mjs --self-test
           node scripts/audit-web-stub-guard.mjs
+
+  # hardened-border (#149, ENFORCING): re-scan EVERY package FROM SOURCE and enforce its committed
+  # .graph/boundary-policy.json allowlist (the Hardened Border). Unlike the build-free gates above, this
+  # one BUILDS the package-graph scanner first — it is pure TypeScript with ZERO runtime deps, so the
+  # build is a scoped `npm install` of just typescript + @types/node (no package-tree install) then tsc.
+  # That lets the gate RE-DERIVE each package's external import surface from source rather than trust the
+  # committed .graph/package-graph.json (the very artifact a drift-introducer controls) — zero-trust. It
+  # FAILS a PR that: imports an external past the border, deletes a boundary-policy.json (delete-to-launder),
+  # or ships a malformed allowlist (unknown → deny). The gate's own --self-test proves it still FIRES (on an
+  # unlisted external AND a missing policy) before the enforcing sweep — a defanged border gate is a fail-open.
+  hardened-border:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build the package-graph scanner (pure TS, no runtime deps)
+        working-directory: packages-logicn/logicn-devtools-package-graph
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Hardened Border — re-scan from source, enforce every package's policy (self-test, then enforcing)
+        run: node scripts/audit-package-border.mjs
