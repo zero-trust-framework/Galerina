@@ -69,6 +69,17 @@ describe("0040 output post-conditions — fail-closed enforcement at flow exit",
     assert.equal(lo.ok, true, "result == lower bound holds");
   });
 
+  it("#33 item 3: a BARE-TAIL body (no explicit return → void) gives a CLEAR missing-return message, not a misleading 'violated'", async () => {
+    // The walker does not return a bare tail expression (only an explicit `return` or a tail `match`).
+    // A flow ending in `{ 5 }` produces void; the post-condition then can't be checked. The old message
+    // falsely blamed the predicate ("violated ensure result > 0"); now it points to the missing return.
+    const src = `pure flow tail() -> Int\ncontract { effects {} invariant { ensure result > 0 } }\n{ 5 }`;
+    const r = await run(src, "t.lln", "tail", new Map());
+    assert.equal(r.value?.__tag, "runtimeError", "void result fails closed");
+    assert.match(r.value?.message ?? "", /produced NO return value/, "the message points to the missing return");
+    assert.doesNotMatch(r.value?.message ?? "", /violated output post-condition/, "must NOT misleadingly blame the predicate");
+  });
+
   it("a post-condition may reference a parameter as well as `result` (mixed predicate)", async () => {
     const src = `
 pure flow atLeast(a: Int, floor: Int) -> Int

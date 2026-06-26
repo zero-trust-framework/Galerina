@@ -1397,6 +1397,13 @@ class Interpreter {
   ): Promise<string | undefined> {
     const ensures = extractOutputPostconditions(flowNode);
     if (ensures.length === 0) return undefined;
+    // #33 item 3: a flow with an output post-condition over `result` that produced NO value (returned void —
+    // e.g. a bare tail expression `{ 5 }` or a tail `if … else …`, neither of which is returned by the walker;
+    // only an explicit `return` or a tail `match` yields a value) cannot be checked. Replace the MISLEADING
+    // "violated post-condition" (which falsely blamed the predicate) with a clear pointer to the missing return.
+    if (result.__tag === "void") {
+      return `[Flow '${flowName}'] declares an output post-condition ('ensure ${describeEnsureExpr(ensures[0]!)}') but produced NO return value — add an explicit \`return <expr>\` (a bare tail expression / tail \`if\` is not returned). Fail-closed (LLN-INV-002).`;
+    }
     this.pushScope();
     try {
       for (const [name, val] of args) this.declare(name, val, false);
