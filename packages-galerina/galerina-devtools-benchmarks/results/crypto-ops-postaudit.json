@@ -145,7 +145,7 @@
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 3.01,
         "execMs": 4.96,
@@ -176,7 +176,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.33,
         "execMs": 0.22,
@@ -207,7 +207,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.631,
         "warmMs": 5.932,

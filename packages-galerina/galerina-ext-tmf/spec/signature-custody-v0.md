@@ -3,8 +3,8 @@
 **Status:** Spec **FROZEN v0** (byte format + custody + FIPS-204 verification semantics); structural golden
 vector reproduces (`gen_sig_block.py`, confirmed byte-for-byte); real signing/verification **impl Blocked**
 (needs a vetted FIPS-204/Ed25519 library — we do **not** hand-roll or fake crypto). **Directly consumable by
-LogicN task #34** — see §2.1. This fully specifies the signature block from
-[`tmf-container-v0.md`](tmf-container-v0.md) §5 and the key-custody lifecycle, reusing the LogicN
+Galerina task #34** — see §2.1. This fully specifies the signature block from
+[`tmf-container-v0.md`](tmf-container-v0.md) §5 and the key-custody lifecycle, reusing the Galerina
 `BridgeManifest` / `BridgeAttestation` idiom. A **structural** golden vector (placeholder keys, real sizes)
 is in [`_vectors/gen_sig_block.py`](_vectors/gen_sig_block.py).
 
@@ -38,7 +38,7 @@ do not reimplement it — a vetted library does (that's the Blocked dependency).
 
 **Sizes (FIPS 204, ML-DSA-65):** public key **1952 B**, signature **3309 B**, secret key 4032 B.
 
-### 2.1 The construction is generic: "hybrid Ed25519 + ML-DSA-65 over a 32-byte digest" (= LogicN #34)
+### 2.1 The construction is generic: "hybrid Ed25519 + ML-DSA-65 over a 32-byte digest" (= Galerina #34)
 
 This block is **not `.tmf`-specific**. It signs a **32-byte digest** with the hybrid pair; only *which* digest
 changes per use:
@@ -46,9 +46,9 @@ changes per use:
 | Use | 32-byte signing input | Digest function |
 |---|---|---|
 | `.tmf` (this spec) | `integrity_root` | TMX-256 (SHAKE256 tree) |
-| **LogicN task #34** | `.lmanifest` body digest | **SHA-256** |
+| **Galerina task #34** | `.lmanifest` body digest | **SHA-256** |
 
-Freezing this spec therefore **directly unblocks LogicN #34** (ML-DSA-65 over the SHA-256 digest, hybrid with
+Freezing this spec therefore **directly unblocks Galerina #34** (ML-DSA-65 over the SHA-256 digest, hybrid with
 Ed25519): #34 is the *same* construction with `digest = SHA-256(canonical_body)` — zero crypto-invention.
 
 **FIPS-204 precision (the easy-to-get-wrong parts):**
@@ -56,14 +56,14 @@ Ed25519): #34 is the *same* construction with `digest = SHA-256(canonical_body)`
   *HashML-DSA* (the pre-hash variant is for large messages; here the message *is* already a digest).
 - **MUST pass a distinct per-surface domain-separation context** `ctx` (FIPS-204 binds `ctx` into `μ`), one per
   digest-type, so a key signing one surface cannot be cross-protocol-confused with another: e.g.
-  `ctx = "tmf-root-v0"` for a `.tmf` TMX root vs a distinct `ctx` (e.g. `"logicn-manifest-v0"`) for a LogicN
+  `ctx = "tmf-root-v0"` for a `.tmf` TMX root vs a distinct `ctx` (e.g. `"galerina-manifest-v0"`) for a Galerina
   manifest's SHA-256 digest. A bare 32-byte value is otherwise ambiguous between the two; the per-surface `ctx`
   removes the ambiguity. (A distinct *key* per surface is also acceptable; a distinct `ctx` is the cheaper
   default.)
   - **Empirically verified** (`..\..\tri-encription\bench\ctx-binding.mjs`): with `@noble` ML-DSA-65, a
     signature made under `ctx="tmf-root-v0"` verifies `true` under the same ctx but `false` under a different
     ctx **and** `false` under no ctx — the context genuinely binds. The **working reference implementation** is
-    the deployed per-surface-`ctx` signer in the LogicN attestation surface (owner's flow #6).
+    the deployed per-surface-`ctx` signer in the Galerina attestation surface (owner's flow #6).
 - Verification is the two-check form above (norm bound **and** `c̃ == H(μ ‖ w₁')`), with `μ` binding `M` and `ctx`.
 
 ---
@@ -126,7 +126,7 @@ verify (no lib, either profile) -> AuthError: no vetted verifier wired -> reject
 
 - **Default `sig_count = 2`, algs `{Ed25519, ML-DSA-65}`.** Verification is **AND** — *both* must verify.
   Rationale: you stay authentic if *either* primitive holds (Ed25519 covers a hypothetical ML-DSA
-  implementation flaw today; ML-DSA covers the quantum future). This mirrors LogicN's own posture
+  implementation flaw today; ML-DSA covers the quantum future). This mirrors Galerina's own posture
   (Ed25519 live, ML-DSA-65 migration on cold paths).
 - A pure-PQ profile (`{ML-DSA-65}`) is allowed; `flags.signed` + the algs are bound under the signed root, so
   the profile cannot be silently downgraded.
@@ -164,17 +164,17 @@ carries the key only so the verifier knows *which* key to check against the trus
 
 ## 7. Key custody lifecycle (reuse `BridgeManifest` / `BridgeAttestation`)
 
-Custody is the genuinely hard part (it is LogicN's open blocker #34/#107-109 too). v0 reuses the existing
+Custody is the genuinely hard part (it is Galerina's open blocker #34/#107-109 too). v0 reuses the existing
 attestation idiom rather than inventing a `.tmf`-specific PKI.
 
 - **Identity:** every signing key has a `key_id`, e.g. `tmf-key-YYYY-MM` (one active signing key per period;
   finer granularity allowed). The `key_id` is recorded in the `BridgeManifest`/attestation, not invented per-file.
 - **Private-key custody:** signing keys live in an **HSM/KMS**, never in the repo, never in a `.tmf`, never
   in source. (Matches the "no secrets/private keys committed" rule.) The signer is a **vetted FIPS-204/Ed25519
-  library invoked through the LogicN governance/capability boundary** (a host call — crypto cannot live in
-  `.lln`: `logicn check` rejects even bitwise `^`, see `..\..\tri-encription\lln\probe-no-bitwise.lln`); the key
-  never enters governed `.lln` code, and the engine language is **not** assumed to be Rust (directive: prefer
-  LogicN + a host crypto lib over a Rust engine, which is unusable in the main project).
+  library invoked through the Galerina governance/capability boundary** (a host call — crypto cannot live in
+  `.spore`: `galerina check` rejects even bitwise `^`, see `..\..\tri-encription\spore\probe-no-bitwise.spore`); the key
+  never enters governed `.spore` code, and the engine language is **not** assumed to be Rust (directive: prefer
+  Galerina + a host crypto lib over a Rust engine, which is unusable in the main project).
 - **Public-key distribution:** published via the **Trust Capsule** (the SPIFFE/Sigstore-style attestation
   surface) or a keys endpoint (e.g. `keys.../tmf/{key_id}`). Verifiers resolve `key_id → trusted pubkey`
   there; the in-file pubkey must match the registry entry.
@@ -193,10 +193,10 @@ attestation idiom rather than inventing a `.tmf`-specific PKI.
 ---
 
 ## 8. Status & what unblocks it
-- **Blocked on:** a vetted FIPS-204 (ML-DSA-65) + Ed25519 implementation, invoked through the LogicN
-  governance/capability boundary (a host/native lib — **not** assumed Rust; directive #1 prefers LogicN over a
-  Rust engine, unusable in the main project). For LogicN #34 the natural path is its existing attestation
-  host-call surface: **`@noble/post-quantum` `ml_dsa65` + `ed25519`** are already a LogicN dependency, so #34
+- **Blocked on:** a vetted FIPS-204 (ML-DSA-65) + Ed25519 implementation, invoked through the Galerina
+  governance/capability boundary (a host/native lib — **not** assumed Rust; directive #1 prefers Galerina over a
+  Rust engine, unusable in the main project). For Galerina #34 the natural path is its existing attestation
+  host-call surface: **`@noble/post-quantum` `ml_dsa65` + `ed25519`** are already a Galerina dependency, so #34
   needs no new crate and no Rust.
 - **Until then:** the format and custody lifecycle are fully specified; readers **reject** all `flags.signed=1`
   files (no silent downgrade). No placeholder is ever shipped as if it were a real signature.
@@ -215,4 +215,4 @@ attestation idiom rather than inventing a `.tmf`-specific PKI.
 - FIPS 204, *Module-Lattice-Based Digital Signature Standard (ML-DSA)* — https://csrc.nist.gov/pubs/fips/204/final
 - FIPS 205, *Stateless Hash-Based Digital Signature Standard (SLH-DSA)* — https://csrc.nist.gov/pubs/fips/205/final
 - RFC 8032, *Edwards-Curve Digital Signature Algorithm (EdDSA)* — https://www.rfc-editor.org/rfc/rfc8032
-- LogicN KB: `logicn-governance-signature.md`, `logicn-signed-attestation.md`, `logicn-post-quantum-hardware-security.md` (custody #34/#107-109)
+- Galerina KB: `galerina-governance-signature.md`, `galerina-signed-attestation.md`, `galerina-post-quantum-hardware-security.md` (custody #34/#107-109)

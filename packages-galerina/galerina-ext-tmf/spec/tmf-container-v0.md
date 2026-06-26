@@ -80,7 +80,7 @@ verifies them) but their semantics are application-defined. `kind` is bound into
 `DATA→INDEX` relabel breaks verification.
 
 ### 4.2 `modality` (payload plane) — u16, mirrors the data model
-`0`=Vector · `1`=Graph · `2`=Attribute · `3`=Blob · `4`=Relation (matches `entity.lln`). Bound into the leaf.
+`0`=Vector · `1`=Graph · `2`=Attribute · `3`=Blob · `4`=Relation (matches `entity.spore`). Bound into the leaf.
 **Modality selects the payload codec; TMX hashes the bytes opaquely either way.**
 
 ### 4.3 Modality codecs (informative) — where NVFP4 fits, as an *option*
@@ -112,7 +112,7 @@ then sig_count entries, each:
 
 - **Sign over the root** (TMX §6). Recommended transition form: `sig_count=2`, `{Ed25519, ML-DSA-65}`
   (secure if either holds) — the shared `BridgeManifest`/`BridgeAttestation` idiom, custody gated on
-  LogicN #34/#107-109.
+  Galerina #34/#107-109.
 - Trust in `pubkey` comes from the **Trust Capsule / out-of-band PKI**, not from the file itself.
 - The block is *not* covered by `integrity_root` (it signs the root); but `flags.signed` **is** in
   `header_core`, so signed↔unsigned cannot be flipped under a valid signature.

@@ -106,7 +106,7 @@ payload bytes (any modality/codec)
    └─ confidentiality:  KEM-DEM seal  (encryption §2–4; STREAM for large media §4)      → ciphertext
         └─ integrity:   TMX-256 leaf over the CIPHERTEXT bytes (codec-agnostic)         → root
              └─ authenticity: ML-DSA-65 / level-5 {ML-DSA-87, SLH-DSA} over the root     → signature
-                  └─ governance: K3 verify-before-decrypt gate (k3-policy.lln)           → release
+                  └─ governance: K3 verify-before-decrypt gate (k3-policy.spore)           → release
 ```
 A new codec touches only the top line. This is why the codec registry is a v0 *addition*, not a breaking
 change: the container's golden vector, the TMX root construction, the signature block, and the KEM-DEM

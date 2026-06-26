@@ -93,12 +93,12 @@
           "heapUsedDelta": 39216
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (133 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (133 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 31.6ms. Execution: pure WASM, no JS tree-walker."
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.4,
         "execMs": 2.72,
@@ -129,7 +129,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.29,
         "execMs": 0.94,
@@ -160,7 +160,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 2.079,
         "warmMs": 2.509,

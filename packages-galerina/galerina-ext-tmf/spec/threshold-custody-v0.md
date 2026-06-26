@@ -49,7 +49,7 @@ signatures than required is harmless; removing them only makes it *less* likely 
   signers.
 - **K3 governance encoding (the genuine "Tri" fit):** the quorum is a three-valued decision —
   `count(distinct, valid, registered, non-revoked signers) ≥ k → allow` ; `< k → deny` ;
-  `registry/revocation status unknown → deny` (fail-closed `collapse(0)=deny`, matching `k3-policy.lln`).
+  `registry/revocation status unknown → deny` (fail-closed `collapse(0)=deny`, matching `k3-policy.spore`).
 - **Composition:** each entry may itself be a hybrid (e.g. each signer signs with `{Ed25519, ML-DSA-65}`
   AND-internally), so axis A (quorum across signers) and the per-signer PQ hybrid are independent and stack.
 

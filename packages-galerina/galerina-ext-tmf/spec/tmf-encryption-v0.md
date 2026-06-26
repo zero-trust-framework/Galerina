@@ -4,7 +4,7 @@
 reproduced by a stdlib generator; the KEM/AEAD ciphertext bytes are **Blocked on a vetted lib** and shown as
 labelled placeholders — same posture as [`signature-custody-v0.md`](signature-custody-v0.md)). This is the
 **v1 confidentiality layer** deferred by [`tmf-container-v0.md`](tmf-container-v0.md) §10, now promoted from
-the [`LLN-AMD-024`](../../tri-encription/research/LLN-AMD-024-tmf-confidentiality.md) blueprint into the
+the [`SPORE-AMD-024`](../../tri-encription/research/SPORE-AMD-024-tmf-confidentiality.md) blueprint into the
 oracle-backed spec track. Companion: the integrity core [`tmx-256-construction-v0.md`](tmx-256-construction-v0.md)
 and authenticity [`signature-custody-v0.md`](signature-custody-v0.md) (the gate this layer sits **under**).
 
@@ -41,7 +41,7 @@ only the *payload* a section carries. This layer therefore composes cleanly as a
 
 ## 2. Three orthogonal selector axes (the sketch's `0x01/0x02` collision, resolved)
 
-The [`LLN-AMD-024`](../../tri-encription/research/LLN-AMD-024-tmf-confidentiality.md) sketch overloaded
+The [`SPORE-AMD-024`](../../tri-encription/research/SPORE-AMD-024-tmf-confidentiality.md) sketch overloaded
 `0x01`/`0x02` across **three different axes** — KEM profile (§2.1), DEM single-shot-vs-STREAM (§2.3), and
 (after the 2026-06-16 ratification) the AEAD suite. A byte-precise format cannot keep them collapsed. v0
 splits them into **three independent selector bytes**, each with its own registry:
@@ -126,7 +126,7 @@ key_commit= SHAKE256( LP("tmf-dem-commit-v0") ‖ LP(K_aead) )                  
 
 ---
 
-## 4. AAD-committing AEAD + the 36-byte AAD context (resolves LLN-AMD-024 Q5)
+## 4. AAD-committing AEAD + the 36-byte AAD context (resolves SPORE-AMD-024 Q5)
 
 AES-256-GCM (and ChaCha20-Poly1305) are **not key-committing** — a single ciphertext can be made to decrypt
 under two different keys. To close that, the **key commitment is bound into the AEAD associated data**:
@@ -160,7 +160,7 @@ metadata, so tampering with any field changes the AAD and fails the tag.
 | 34 | 2 | reserved u16 | MUST be 0 |
 
 This binds `TVCID ‖ modality ‖ crypto-profile ‖ epoch` into every tag, so a ciphertext section cannot be
-lifted/replanted into another context or decrypted under the wrong profile — closing LLN-AMD-024 open
+lifted/replanted into another context or decrypted under the wrong profile — closing SPORE-AMD-024 open
 question #5.
 
 ---
@@ -400,5 +400,5 @@ committing/nonce layers; the generator count is **9**.
   https://www.usenix.org/conference/usenixsecurity21/presentation/len (why non-committing AEAD is exploitable.)
 - Yevgeniy Dodis, Paul Grubbs, Thomas Ristenpart, Joanne Woodage, *Fast Message Franking: From Invisible
   Salamanders to Encryptment*, CRYPTO 2018 — https://eprint.iacr.org/2019/016 (the original two-key GCM collision.)
-- Blueprint: [`LLN-AMD-024-tmf-confidentiality.md`](../../tri-encription/research/LLN-AMD-024-tmf-confidentiality.md) ·
+- Blueprint: [`SPORE-AMD-024-tmf-confidentiality.md`](../../tri-encription/research/SPORE-AMD-024-tmf-confidentiality.md) ·
   measured bench: [`tri-encription/bench/README.md`](../../tri-encription/bench/README.md)

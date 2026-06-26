@@ -6,9 +6,9 @@ with the code and the golden-vector conformance survives any cleanup of the scra
 
 | | |
 |---|---|
-| **Upstream (authoring repo)** | `C:\wwwprojects\LogicN-R-AND-D\tmf\spec\` |
+| **Upstream (authoring repo)** | `C:\wwwprojects\Galerina-R-AND-D\tmf\spec\` |
 | **Pinned at R&D commit** | `fb68d06` — "threshold (M-of-N) custody spec + reference; absorb hub handoff into state" (2026-06-16) |
-| **Direction of truth** | R&D **authors** the spec; LogicN **consumes** it. Edit upstream, then re-vendor here — do **not** fork these copies. |
+| **Direction of truth** | R&D **authors** the spec; Galerina **consumes** it. Edit upstream, then re-vendor here — do **not** fork these copies. |
 | **Binding conformance** | the inline golden vectors in `../tests/*.test.mjs` (e.g. the 203-byte container `89544d46…`, root `43386e64…685212`). The TS engine is verified byte-for-byte against them. |
 
 ## What was vendored, and the slice it backs
@@ -29,7 +29,7 @@ with the code and the golden-vector conformance survives any cleanup of the scra
 ## Deliberately **not** vendored (stay R&D-only)
 
 - `research/*`, `notes/*`, `storage-and-query-v0.md` (DB/MeshQL — gated), and the photonic-lane research.
-  These are absorbed into the KB instead — see `docs/Knowledge-Bases/logicn-rd-absorption-catalog.md`.
+  These are absorbed into the KB instead — see `docs/Knowledge-Bases/galerina-rd-absorption-catalog.md`.
 - `spec/_vectors/*.py` — the Python reference generators. They remain the upstream **authoring oracle**;
   the binding conformance for this package is the inline golden hex in `../tests/`. (Known residual: if
   the R&D repo is removed you cannot *re-derive* the vectors from scratch, but the pinned hex + the TS

@@ -127,7 +127,7 @@
         "throughputUnit": "mix-ops/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.4,
         "execMs": 3.65,
@@ -159,7 +159,7 @@
         "throughputUnit": "mix-ops/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.39,
         "execMs": 0.37,
@@ -191,7 +191,7 @@
         "throughputUnit": "mix-ops/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.82,
         "warmMs": 0.533,
@@ -332,7 +332,7 @@
         "runtime": "wasm"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.22,
         "execMs": 0.55,
@@ -362,7 +362,7 @@
         }
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.28,
         "execMs": 0.36,
@@ -392,7 +392,7 @@
         }
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.667,
         "warmMs": 0.341,
@@ -555,12 +555,12 @@
           "heapUsedDelta": 19024
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (377 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (377 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 3.5ms. Execution: pure WASM, no JS tree-walker."
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.41,
         "execMs": 863.52,
@@ -591,7 +591,7 @@
         "logicnOpsPerRun": 42069
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.35,
         "execMs": 831.8,
@@ -622,7 +622,7 @@
         "logicnOpsPerRun": 42069
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.135,
         "warmMs": 0.185,
@@ -754,14 +754,14 @@
           "heapUsedDelta": 30720
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (201 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (201 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 0.8ms. Execution: pure WASM, no JS tree-walker."
         ],
         "normThroughput": 600885200,
         "throughputUnit": "records/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.1,
         "execMs": 4.18,
@@ -792,7 +792,7 @@
         "throughputUnit": "records/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.2,
         "execMs": 1.51,
@@ -823,7 +823,7 @@
         "throughputUnit": "records/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.438,
         "warmMs": 0.365,
@@ -961,12 +961,12 @@
           "heapUsedDelta": 2944
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (171 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (171 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.4ms. Execution: pure WASM, no JS tree-walker."
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.12,
         "execMs": 61.94,
@@ -997,7 +997,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.19,
         "execMs": 71.79,
@@ -1028,7 +1028,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.457,
         "warmMs": 0.09,
@@ -1128,7 +1128,7 @@
         "iterationsPerSecond": 3794.02
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.3,
         "execMs": 668.45,
@@ -1159,7 +1159,7 @@
         "logicnOpsPerRun": 65535
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.4,
         "execMs": 598.25,
@@ -1190,7 +1190,7 @@
         "logicnOpsPerRun": 65535
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.818,
         "warmMs": 0.064,
@@ -1326,14 +1326,14 @@
           "heapUsedDelta": 3464
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (233 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (233 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 0.8ms. Execution: pure WASM, no JS tree-walker."
         ],
         "normThroughput": 226949900,
         "throughputUnit": "elements/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.13,
         "execMs": 4.06,
@@ -1364,7 +1364,7 @@
         "throughputUnit": "elements/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.21,
         "execMs": 3.41,
@@ -1395,7 +1395,7 @@
         "throughputUnit": "elements/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.41,
         "warmMs": 0.369,
@@ -1539,12 +1539,12 @@
           "heapUsedDelta": 103856
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (201 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (201 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.5ms. Execution: pure WASM, no JS tree-walker."
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.13,
         "execMs": 1.29,
@@ -1575,7 +1575,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.19,
         "execMs": 0.89,
@@ -1606,7 +1606,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.647,
         "warmMs": 1.841,
@@ -1721,12 +1721,12 @@
           "heapUsedDelta": 70696
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (266 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (266 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.3ms. Execution: pure WASM, no JS tree-walker."
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.16,
         "execMs": 0.25,
@@ -1757,7 +1757,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.22,
         "execMs": 0.24,
@@ -1788,7 +1788,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.693,
         "warmMs": 12.357,
@@ -1949,7 +1949,7 @@
           "bytesPerOperation": 0
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (292 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (292 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.6ms. Execution: pure WASM, no JS tree-walker.",
           "Bytes/op: 0.00 (target: ~0 — WASM Int32Array, no JS object boxing)"
         ],
@@ -1957,7 +1957,7 @@
         "throughputUnit": "items/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.36,
         "execMs": 70.96,
@@ -1988,7 +1988,7 @@
         "throughputUnit": "items/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.46,
         "execMs": 72.68,
@@ -2019,7 +2019,7 @@
         "throughputUnit": "items/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.3,
         "warmMs": 0.663,
@@ -2180,10 +2180,10 @@
           "heapUsedDelta": 1696
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (284 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (284 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.1ms. Execution: pure WASM, no JS tree-walker.",
-          "LogicN real result: map-reduce compiled to WASM, executed on CPU.",
-          "LogicN GPU execution pending Phase 38 — no GPU number is shown (gpu-plan.ts is a stub)."
+          "Galerina real result: map-reduce compiled to WASM, executed on CPU.",
+          "Galerina GPU execution pending Phase 38 — no GPU number is shown (gpu-plan.ts is a stub)."
         ],
         "device": "cpu (wasm)",
         "normThroughput": 518679000,
@@ -2211,7 +2211,7 @@
         "throughputUnit": "kernel-evals/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.16,
         "execMs": 263.45,
@@ -2242,7 +2242,7 @@
         "throughputUnit": "kernel-evals/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.24,
         "execMs": 252.83,
@@ -2273,7 +2273,7 @@
         "throughputUnit": "kernel-evals/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.679,
         "warmMs": 0.194,
@@ -2419,9 +2419,9 @@
           "heapUsedDelta": 2632
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (388 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (388 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 1.5ms. Execution: pure WASM, no JS tree-walker.",
-          "LogicN integer matmul (scaled ×1000) compiled to WASM"
+          "Galerina integer matmul (scaled ×1000) compiled to WASM"
         ],
         "normThroughput": 460608963,
         "throughputUnit": "mul-adds/s"
@@ -2443,7 +2443,7 @@
         "throughputUnit": "mul-adds/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.28,
         "execMs": 49.07,
@@ -2474,7 +2474,7 @@
         "throughputUnit": "mul-adds/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.34,
         "execMs": 46.72,
@@ -2505,7 +2505,7 @@
         "throughputUnit": "mul-adds/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.056,
         "warmMs": 0.144,
@@ -2723,7 +2723,7 @@
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.48,
         "execMs": 2.86,
@@ -2754,7 +2754,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.24,
         "execMs": 0.29,
@@ -2785,7 +2785,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.648,
         "warmMs": 6.235,
@@ -2988,7 +2988,7 @@
         ]
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.33,
         "execMs": 0.92,
@@ -3019,7 +3019,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.33,
         "execMs": 0.36,
@@ -3050,7 +3050,7 @@
         "logicnOpsPerRun": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 0.959,
         "warmMs": 1.839,
@@ -3272,7 +3272,7 @@
           "heapUsedDelta": 1280
         },
         "notes": [
-          "Phase 27: LogicN → WAT → binary WASM (403 bytes) → WebAssembly.instantiate",
+          "Phase 27: Galerina → WAT → binary WASM (403 bytes) → WebAssembly.instantiate",
           "Compile (one-time): 2.2ms. Execution: pure WASM, no JS tree-walker.",
           "Kleene AND = i32.min_s, OR = i32.max_s, NOT = i32.sub(0,a) in WAT",
           "Zero branching overhead — should match or beat branchless Node.js"
@@ -3283,7 +3283,7 @@
         "rawThroughput": 156529466.24
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.22,
         "execMs": 827.23,
@@ -3315,7 +3315,7 @@
         "rawThroughput": 1
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.49,
         "execMs": 793.41,
@@ -3347,7 +3347,7 @@
         "rawThroughput": 1
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.252,
         "warmMs": 1.791,
@@ -3387,7 +3387,7 @@
       "comparable": false,
       "unit": "trit-ops/s",
       "status": "FLAGGED",
-      "reason": "incomparable workloads — LogicN main()=runBulkTri(100000) (100k triples / 300k trit-ops); node/python/rust run nested 9-element truth-table micro-benches plus a separate 10M bulk; logicnOpsPerRun=27000 (≈27 truth-table combos ×1000) corresponds to none of these. Needs a common bulk-N trit-op path on every runtime.",
+      "reason": "incomparable workloads — Galerina main()=runBulkTri(100000) (100k triples / 300k trit-ops); node/python/rust run nested 9-element truth-table micro-benches plus a separate 10M bulk; logicnOpsPerRun=27000 (≈27 truth-table combos ×1000) corresponds to none of these. Needs a common bulk-N trit-op path on every runtime.",
       "problems": []
     }
   },
@@ -3456,7 +3456,7 @@
         "notes": [
           "Dataset: 1000 records, 7 fields each",
           "Simulates typical governed data queries in financial/medical/government domains",
-          "LogicN taint checker would flag unvalidated filters as Tainted<String>"
+          "Galerina taint checker would flag unvalidated filters as Tainted<String>"
         ],
         "normThroughput": null,
         "throughputUnit": "records/s"
@@ -3522,7 +3522,7 @@
         "throughputUnit": "records/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.41,
         "execMs": 9.43,
@@ -3554,7 +3554,7 @@
         "rawThroughput": 106
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.51,
         "execMs": 8.28,
@@ -3586,7 +3586,7 @@
         "rawThroughput": 121
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.271,
         "warmMs": 0.996,
@@ -3626,7 +3626,7 @@
       "comparable": false,
       "unit": "records/s",
       "status": "FLAGGED",
-      "reason": "incomparable — LogicN main()=filterAndCount(1000)+groupByCategory(1000)=2000 record-scans (but logicnOpsPerRun=1000 undercounts); node/python run 7 separate query micro-benches nested under results.* with no single representative. Needs a main() recount + a chosen representative query before the numbers compare.",
+      "reason": "incomparable — Galerina main()=filterAndCount(1000)+groupByCategory(1000)=2000 record-scans (but logicnOpsPerRun=1000 undercounts); node/python run 7 separate query micro-benches nested under results.* with no single representative. Needs a main() recount + a chosen representative query before the numbers compare.",
       "problems": []
     }
   },
@@ -3689,7 +3689,7 @@
         "throughputUnit": "chains/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.33,
         "execMs": 1353.78,
@@ -3721,7 +3721,7 @@
         "throughputUnit": "chains/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.36,
         "execMs": 1317.5,
@@ -3753,7 +3753,7 @@
         "throughputUnit": "chains/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.04,
         "warmMs": 6162.293,
@@ -3819,7 +3819,7 @@
           "heapUsedDelta": 29896
         },
         "notes": [
-          "Scaled-integer N-body — checksum matches Python and LogicN bit-for-bit"
+          "Scaled-integer N-body — checksum matches Python and Galerina bit-for-bit"
         ],
         "normThroughput": 121793978,
         "throughputUnit": "force-evals/s"
@@ -3841,13 +3841,13 @@
           "tracemallocPeak": 624
         },
         "notes": [
-          "Scaled-integer N-body — checksum matches Node and LogicN bit-for-bit"
+          "Scaled-integer N-body — checksum matches Node and Galerina bit-for-bit"
         ],
         "normThroughput": 1738049,
         "throughputUnit": "force-evals/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.74,
         "execMs": 458.7,
@@ -3878,7 +3878,7 @@
         "throughputUnit": "force-evals/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.59,
         "execMs": 461.98,
@@ -3909,7 +3909,7 @@
         "throughputUnit": "force-evals/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.805,
         "warmMs": 0.209,
@@ -3983,8 +3983,8 @@
         },
         "notes": [
           "Records: 500 key:value records of 5 fields each",
-          "checksum = N × (5 fields + 20 value-chars) via split/length — matches LogicN and Python",
-          "splitScan mirrors the .lln kernel; jsonParse is the native JSON.parse path for reference"
+          "checksum = N × (5 fields + 20 value-chars) via split/length — matches Galerina and Python",
+          "splitScan mirrors the .spore kernel; jsonParse is the native JSON.parse path for reference"
         ],
         "normThroughput": 3393000,
         "throughputUnit": "records/s"
@@ -4019,13 +4019,13 @@
         },
         "notes": [
           "Records: 500 key:value records",
-          "checksum = N x (5 fields + 20 value-chars) via split/len — matches LogicN and Node"
+          "checksum = N x (5 fields + 20 value-chars) via split/len — matches Galerina and Node"
         ],
         "normThroughput": 748500,
         "throughputUnit": "records/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.65,
         "execMs": 85.77,
@@ -4056,7 +4056,7 @@
         "throughputUnit": "records/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.61,
         "execMs": 76.93,
@@ -4087,7 +4087,7 @@
         "throughputUnit": "records/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.353,
         "warmMs": 0.466,
@@ -4151,7 +4151,7 @@
           "heapUsedDelta": 453512
         },
         "notes": [
-          "Scaled-integer Mandelbrot escape-time — checksum matches Python, Rust and LogicN bit-for-bit"
+          "Scaled-integer Mandelbrot escape-time — checksum matches Python, Rust and Galerina bit-for-bit"
         ],
         "normThroughput": 6239481,
         "throughputUnit": "pixels/s"
@@ -4171,7 +4171,7 @@
           "tracemallocPeak": 3632
         },
         "notes": [
-          "Scaled-integer Mandelbrot escape-time — checksum matches Node, Rust and LogicN bit-for-bit"
+          "Scaled-integer Mandelbrot escape-time — checksum matches Node, Rust and Galerina bit-for-bit"
         ],
         "normThroughput": 252037,
         "throughputUnit": "pixels/s"
@@ -4188,7 +4188,7 @@
         "throughputUnit": "pixels/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.5,
         "execMs": 2018.86,
@@ -4219,7 +4219,7 @@
         "throughputUnit": "pixels/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.58,
         "execMs": 1977.36,
@@ -4250,7 +4250,7 @@
         "throughputUnit": "pixels/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.695,
         "warmMs": 0.196,
@@ -4427,7 +4427,7 @@
         "throughputUnit": "nodes/s"
       },
       "logicnGoverned": {
-        "runtime": "logicn-governed",
+        "runtime": "galerina-governed",
         "mode": "governed",
         "parseMs": 0.36,
         "execMs": 32.5,
@@ -4458,7 +4458,7 @@
         "throughputUnit": "nodes/s"
       },
       "logicnManifest": {
-        "runtime": "logicn-manifest",
+        "runtime": "galerina-manifest",
         "mode": "manifest",
         "parseMs": 0.22,
         "execMs": 29.48,
@@ -4489,7 +4489,7 @@
         "throughputUnit": "nodes/s"
       },
       "logicnPassive": {
-        "runtime": "logicn-passive",
+        "runtime": "galerina-passive",
         "mode": "passive",
         "setupMs": 1.107,
         "warmMs": 0.082,
@@ -4538,7 +4538,7 @@
       "nodejs": {
         "runtime": "nodejs",
         "benchmark": "tmf-container-v1",
-        "note": "Node.js column = @logicn/ext-tmf engine (the shipped LogicN artifact)",
+        "note": "Node.js column = @galerina/ext-tmf engine (the shipped Galerina artifact)",
         "iterations": 300000,
         "containerBytes": 203,
         "integrityRoot": "43386e644c7b53aa0900cda21c15acd15f30b3fdf997950e39e7dd3dbc685212",
@@ -4577,7 +4577,7 @@
           "tracemallocPeak": 5823
         },
         "notes": [
-          "Python reference impl (hashlib.shake_256) — byte-identical to the LogicN engine"
+          "Python reference impl (hashlib.shake_256) — byte-identical to the Galerina engine"
         ],
         "normThroughput": 87003,
         "throughputUnit": "containers/s"
@@ -4664,7 +4664,7 @@
       "nodejs": {
         "benchmark": "naming-check",
         "runtime": "node",
-        "description": "LLN-NAMING checker over auth-service corpus (27 files)",
+        "description": "SPORE-NAMING checker over auth-service corpus (27 files)",
         "iterations": 100,
         "filesPerIteration": 31,
         "elapsedMs": 286,

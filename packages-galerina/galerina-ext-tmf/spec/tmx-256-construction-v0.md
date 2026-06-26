@@ -174,7 +174,7 @@ ok        = ML-DSA-65.Verify(pk, root, signature)
   needs a vetted FIPS-204 implementation. Do **not** ship a hand-rolled ML-DSA. Until a vetted
   library is wired, mark signing **Blocked** rather than faking it (a fake placeholder must be
   explicitly labelled non-cryptographic and rejected in any non-test profile).
-- LogicN's own posture matches this: Ed25519 is live today, ML-DSA-65 is the migration target
+- Galerina's own posture matches this: Ed25519 is live today, ML-DSA-65 is the migration target
   on cold/build paths (gated on key custody) — see the architecture report. A **hybrid**
   `Ed25519 + ML-DSA-65` dual-signature is the recommended transition form.
 

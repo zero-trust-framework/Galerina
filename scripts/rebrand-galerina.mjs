@@ -76,7 +76,9 @@ function transformPath(p) {
     .replace(/(^|[\/._-])LLN([\/._-]|$)/g, "$1SPORE$2")
     .replace(/(^|[\/._-])lln([\/._-]|$)/g, "$1spore$2");
 }
-const isBinary = (buf) => { const n = Math.min(buf.length, 8000); for (let i = 0; i < n; i++) if (buf[i] === 0) return true; return false; };
+// Binary = a HIGH null-byte ratio (real binaries are >>1% nulls). A source file with a stray \x00
+// (e.g. a "\0" literal) round-trips safely through utf8 read→transform→write, so don't skip it.
+const isBinary = (buf) => { const n = Math.min(buf.length, 8000); let z = 0; for (let i = 0; i < n; i++) if (buf[i] === 0) z++; return z > n * 0.01; };
 
 const renames = [];     // {from,to,kind}
 const edits = [];       // {path, n}

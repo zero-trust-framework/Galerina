@@ -8,7 +8,7 @@ and fixes JWT's known failure modes with the **digital** primitive already built
 appears only where it is real (Lanes C/D/ANN), always *around* the digital signature, never as it.
 
 > **Crypto-on-core (the hard line, inherited).** The Capsule is signed by the **digital** hybrid
-> Ed25519 + ML-DSA-65 over a 32-byte digest (signature-custody-v0 §2.1 = LogicN #34). No photonic/analog
+> Ed25519 + ML-DSA-65 over a 32-byte digest (signature-custody-v0 §2.1 = Galerina #34). No photonic/analog
 > computation is the signature. PUF/QRNG/ANN are bound *around* it (§9), under it, never replacing it.
 
 Builds on: [`signature-custody-v0.md`](signature-custody-v0.md) (the #34 hybrid sig + per-surface ctx),
@@ -72,9 +72,9 @@ sig_mldsa     = ML-DSA.Sign(M, sk_mldsa, ctx="")         ; pure ML-DSA, EMPTY ct
 ML-DSA `ctx` parameter cannot carry the per-surface label #34 used. Instead the Capsule binds the surface into
 the **signed `body_protected` header** (a `surface` label = `"tmf-trust-capsule-v0"`) **and** the `external_aad`
 (§5) — both sit inside the `Sig_structure`, hence are signed — so a Capsule signature still cannot be
-cross-protocol-confused with a `.tmf`-root or LogicN-manifest signature under the same key. This achieves #34's
+cross-protocol-confused with a `.tmf`-root or Galerina-manifest signature under the same key. This achieves #34's
 domain-separation goal while staying RFC-9964-interoperable.
-**Relation to #34 / `.tmf`.** The `.tmf`-root and LogicN-#34-manifest surfaces are *not* COSE objects and keep
+**Relation to #34 / `.tmf`.** The `.tmf`-root and Galerina-#34-manifest surfaces are *not* COSE objects and keep
 the #34 construction verbatim (pure ML-DSA over a 32-byte digest with a per-surface `ctx`, signature-custody
 §2.1). The Capsule is the **COSE surface** of the same `{Ed25519, ML-DSA-65}` AND-hybrid, encoded per RFC 9964
 (direct `Sig_structure`, empty ctx). Signing the `Sig_structure` directly (not a SHA-256 pre-hash) means there
