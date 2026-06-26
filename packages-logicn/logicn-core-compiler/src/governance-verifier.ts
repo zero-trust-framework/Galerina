@@ -45,6 +45,7 @@ import { HARDWARE_TRUST_PROFILES, ProofLevel } from "./type-registry.js";
 import { checkResilienceViolations, checkFaultHandlerViolations } from "./resilience-inference.js";
 import { checkObservabilityWarnings } from "./observability-inference.js";
 import { checkSubstrateViolations } from "./substrate-inference.js";
+import { isRecognizedLimitDecl } from "./runtime/limitPolicy.js";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -369,12 +370,13 @@ export const LLN_SUBSTRATE_005 = {
 // LLN-ACCESS-002  access {} grants capability not declared in flow's effects {}.
 //                 Default Deny means grants must be consistent with the flow's own effects.
 
-/** LLN-GOV-019: A `limits {}` block contains an unrecognised field name (likely a typo). */
+/** LLN-GOV-019: A `limits {}` block declares a limit the runtime does not enforce (typo, or an intentional
+ *  business limit like `rate …`/`max amount …` that has no runtime enforcer — warn so it isn't relied on). */
 export const LLN_GOV_019 = {
   code: "LLN-GOV-019",
   name: "LIMITS_UNKNOWN_FIELD",
   severity: "warning" as const,
-  message: "Unrecognised field in limits {} block. Possible typo — check against known fields: memory, request_time, max_request_size, max_response_size.",
+  message: "Limit is not recognised by the runtime enforcer and will NOT be enforced at runtime. Runtime-enforced forms: max request size N <bytes|kb|mb|gb>, max batch size N, max memory N <bytes|kb|mb|gb>, max prompt N chars. Enforce other limits explicitly in the flow body.",
 } as const;
 
 /** LLN-GOV-020: authority block uses 'requires *' or 'requires all' — overly broad grant. */
@@ -999,22 +1001,27 @@ function isContextFieldAccessed(flowNode: AstNode, fieldName: string): boolean {
 // Phase 2 — LLN-GOV-019: limits {} field name validation
 // ---------------------------------------------------------------------------
 
-/** Known field names accepted in a `limits {}` contract sub-block. */
+/**
+ * Legacy snake_case field names historically accepted in a `limits {}` block. Kept for backward-compat ONLY;
+ * the authoritative grammar is the runtime's space-separated phrase form, recognised via isRecognizedLimitDecl
+ * (runtime/limitPolicy.ts). A decl is accepted if EITHER matches — see verifyLimitsBlock. (RD-0121/CWE-1287:
+ * this allowlist previously disagreed with the runtime parser, false-firing GOV-019 on `max request size N MB`.)
+ */
 const KNOWN_LIMITS_FIELDS = new Set([
   "memory", "request_time", "max_request_size", "max_response_size",
 ]);
 
 /**
- * Extracts the `limits {}` block children from a flow's contractDecl and
- * returns an array of declared field names (the first token on each decl line).
+ * Extracts the `limits {}` block children from a flow's contractDecl and returns, per decl line, the full decl
+ * text plus its first token (for the legacy snake_case allowlist) and source location.
  *
  * The AST structure is:
  *   contractDecl → identifier { value: "limits:block" }
- *     → identifier { value: "decl:memory 64mb" }
- *     → identifier { value: "decl:request_time 500ms" }
+ *     → identifier { value: "decl:max request size 5 MB" }
+ *     → identifier { value: "decl:max memory 256 MB" }
  *     ...
  */
-function extractLimitsFields(flowNode: AstNode): Array<{ field: string; location?: SourceLocation }> {
+function extractLimitsFields(flowNode: AstNode): Array<{ field: string; decl: string; location?: SourceLocation }> {
   const contractNode = (flowNode.children ?? []).find((c) => c.kind === "contractDecl");
   if (contractNode === undefined) return [];
 
@@ -1023,14 +1030,14 @@ function extractLimitsFields(flowNode: AstNode): Array<{ field: string; location
   );
   if (limitsBlock === undefined) return [];
 
-  const fields: Array<{ field: string; location?: SourceLocation }> = [];
+  const fields: Array<{ field: string; decl: string; location?: SourceLocation }> = [];
   for (const child of limitsBlock.children ?? []) {
     if (child.kind === "identifier" && (child.value ?? "").startsWith("decl:")) {
       const decl = (child.value ?? "").slice("decl:".length).trim();
       const firstToken = decl.split(/\s+/)[0];
       if (firstToken !== undefined && firstToken.length > 0) {
         const locPart = child.location !== undefined ? { location: child.location } : {};
-        fields.push({ field: firstToken, ...locPart });
+        fields.push({ field: firstToken, decl, ...locPart });
       }
     }
   }
@@ -2745,18 +2752,24 @@ class GovernanceVerifier {
 
   private verifyLimitsBlock(flowNode: AstNode, flowName: string): void {
     const fields = extractLimitsFields(flowNode);
-    for (const { field, location } of fields) {
-      if (!KNOWN_LIMITS_FIELDS.has(field)) {
-        this.diagnostics.push(makeGovDiag(
-          "LLN-GOV-019",
-          "LIMITS_UNKNOWN_FIELD",
-          "warning",
-          `Flow '${flowName}' limits block contains unrecognised field '${field}'. ` +
-          `Known fields: ${[...KNOWN_LIMITS_FIELDS].join(", ")}. This may be a typo.`,
-          location,
-          `Recognised fields: memory | request_time | max_request_size | max_response_size`,
-        ));
-      }
+    for (const { field, decl, location } of fields) {
+      // Accept a decl iff the runtime parser+enforcer recognises it (single source of truth:
+      // runtime/limitPolicy.ts) OR it uses a legacy snake_case field name. Anything else is NOT enforced at
+      // runtime — flag it honestly: it is either a typo OR an intentional business limit (e.g. `rate …`,
+      // `max amount …`) that the runtime does not yet enforce. Silently accepting it would be a fail-open
+      // (the author believes the limit is in force when it is decorative). (RD-0121/CWE-1287.)
+      if (isRecognizedLimitDecl(decl) || KNOWN_LIMITS_FIELDS.has(field)) continue;
+      this.diagnostics.push(makeGovDiag(
+        "LLN-GOV-019",
+        "LIMITS_UNKNOWN_FIELD",
+        "warning",
+        `Flow '${flowName}' limit '${decl}' is not recognised by the runtime enforcer and will NOT be ` +
+        `enforced at runtime. If this is an intentional limit, enforce it explicitly in the flow body; ` +
+        `if it is a typo, correct it to a runtime-enforced form.`,
+        location,
+        `Runtime-enforced limits: max request size N <bytes|kb|mb|gb> | max batch size N | ` +
+        `max memory N <bytes|kb|mb|gb> | max prompt N chars`,
+      ));
     }
   }
 
