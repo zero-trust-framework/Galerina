@@ -13,6 +13,7 @@
  * precise fail-open. `BigInt` is exact across the whole i64 range.
  */
 import { I64_MIN, I64_MAX } from "./i64-arith.js";
+import { U64_MIN, U64_MAX } from "./u64-arith.js";
 import { type AstNode } from "./parser.js";
 
 /**
@@ -27,11 +28,16 @@ import { type AstNode } from "./parser.js";
  * and Float32 widens to f64 (no value loss) — deliberately NOT here.
  *
  * DELIBERATELY SPLIT from FAST_TIER_UNLOWERABLE_SCALAR below: the two concerns diverged at the lift. The
- * GATE asks "can the pipeline as a whole carry this width?" (Int64: yes, via WASM/walker). The fast-tier
- * bail asks "can the *i32-only* fast tiers carry it?" (Int64: NO — they would silently truncate). Folding
- * them back into one set would either re-gate Int64 or let a fast tier truncate it — both fail-open.
+ * GATE asks "can the pipeline as a whole carry this width?" The fast-tier bail asks "can the *i32-only* fast
+ * tiers carry it?" (Int64/UInt64: NO — they would silently truncate). Folding them back into one set would
+ * either re-gate the 64-bit types or let a fast tier truncate one — both fail-open.
+ *
+ * NOW EMPTY (UInt64 lifted, owner-authorized): the tree-walker carries UInt64 as a NON-NEGATIVE bigint via
+ * the exact-trapping u64-arith layer (overflow/underflow/÷0 TRAP, no silent 2^64 wrap), and the fast tiers
+ * still bail on it (it stays in FAST_TIER_UNLOWERABLE_SCALAR). Int64 was lifted earlier (0cb6190); both 64-bit
+ * scalars now compile and run faithfully on the walker. A future i64/u64 WASM emitter would lower them too.
  */
-export const BACKEND_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set(["UInt64"]);
+export const BACKEND_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set([]);
 
 /**
  * The scalar 64-bit widths the i32-only FAST execution tiers (bytecode VM, sync fast-path) cannot carry —
@@ -39,10 +45,11 @@ export const BACKEND_UNLOWERABLE_SCALAR: ReadonlySet<string> = new Set(["UInt64"
  * declaring any of these (param, return, OR an internal `let y: Int64` the bytecode per-param check misses)
  * bails to the faithful tree-walker (which carries int64 as a bigint) / the i64-faithful WASM emitter.
  *
- * SUPERSET of the gate set above: it ALSO pins Int64, which is no longer GATE-rejected (WASM + walker lower
- * it faithfully) but is still unsafe on the i32-only tiers. `flowDeclaresUnlowerable64` consults THIS set;
- * the LLN-NUMERIC-001 gate consults BACKEND_UNLOWERABLE_SCALAR. Keep them in sync only on UInt64: anything
- * the gate rejects is also fast-tier-unsafe, so it must appear in both.
+ * SUPERSET of the (now-empty) gate set above: it pins Int64 AND UInt64, neither of which is GATE-rejected
+ * any longer (the walker lowers both faithfully via the exact bigint i64/u64 layers) but both are still
+ * unsafe on the i32-only tiers. `flowDeclaresUnlowerable64` consults THIS set; the LLN-NUMERIC-001 gate
+ * consults BACKEND_UNLOWERABLE_SCALAR. Invariant: anything the gate rejects must also be here (fast-tier
+ * unsafe) — vacuously true now the gate is empty, but it must hold if a width is ever re-gated.
  */
 // `Decimal` is here too (but NOT in the gate set — Decimal is a valid type, it must still compile): the
 // fast i32-only tiers and the WASM f64 path cannot represent exact base-10 money, so a Decimal flow must
@@ -110,6 +117,35 @@ export function parseI64Literal(rawText: string): I64LiteralResult {
   const value = neg ? -magnitude : magnitude;
   if (value < I64_MIN || value > I64_MAX) return "OutOfRange";
   return value;
+}
+
+/**
+ * Parse an integer literal's RAW SOURCE TEXT to an exact bigint in [U64_MIN, U64_MAX] (UNSIGNED), or a
+ * fail-closed reason. Mirrors parseI64Literal but unsigned: a leading '-' on a NONZERO magnitude is
+ * "OutOfRange" (a negative cannot be a UInt64; '-0' is 0). Same `_` / `0x`/`0o`/`0b` handling; a
+ * fractional/scientific form is "NotIntegral". NEVER uses parseInt/Number (the >2^53 precision fail-open).
+ */
+export function parseU64Literal(rawText: string): I64LiteralResult {
+  let s = rawText.trim();
+  if (s.length === 0) return "NotIntegral";
+  let neg = false;
+  if (s[0] === "+" || s[0] === "-") { neg = s[0] === "-"; s = s.slice(1).trim(); }
+  s = s.replace(/_/g, "");
+  if (s.length === 0) return "NotIntegral";
+  if (/[.eE]/.test(s) && !/^0[xX]/.test(s)) return "NotIntegral";
+  let magnitude: bigint;
+  try {
+    if (/^0[xX][0-9a-fA-F]+$/.test(s)) magnitude = BigInt(s);
+    else if (/^0[oO][0-7]+$/.test(s)) magnitude = BigInt(s);
+    else if (/^0[bB][01]+$/.test(s)) magnitude = BigInt(s);
+    else if (/^[0-9]+$/.test(s)) magnitude = BigInt(s);
+    else return "NotIntegral";
+  } catch {
+    return "NotIntegral";
+  }
+  if (neg && magnitude !== 0n) return "OutOfRange";       // unsigned: a negative literal is out of range
+  if (magnitude < U64_MIN || magnitude > U64_MAX) return "OutOfRange";
+  return magnitude;
 }
 
 const NUMERIC_BIND_KINDS: ReadonlySet<string> = new Set(["letDecl", "mutDecl", "readonlyDecl"]);

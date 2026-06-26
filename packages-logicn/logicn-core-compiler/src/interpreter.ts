@@ -17,14 +17,16 @@ import { buildExecutionGraph, getOrLoadGraph, storeGraph, executionGraphCacheKey
 import { compileToBytecode, runBytecode } from "./bytecode-vm.js";
 import { i32AddChecked, i32SubChecked, i32MulChecked, i32DivChecked, i32ModChecked, i32NegChecked, isI32Trap, type I32Result } from "./i32-arith.js";
 import { i64AddChecked, i64SubChecked, i64MulChecked, i64DivChecked, i64ModChecked, i64NegChecked, isI64Trap, type I64Result } from "./i64-arith.js";
+import { u64AddChecked, u64SubChecked, u64MulChecked, u64DivChecked, u64ModChecked, u64NegChecked, isU64Trap, type U64Result } from "./u64-arith.js";
 import { decAdd, decSub, decMul, decCompare, isDecTrap, decDiv, decRem, isRoundMode, type DecResult } from "./decimal-arith.js";
-import { numericBaseType, parseI64Literal, isI64LiteralError, flowDeclaresUnlowerable64 } from "./numeric-lowering.js";
+import { numericBaseType, parseI64Literal, parseU64Literal, isI64LiteralError, flowDeclaresUnlowerable64 } from "./numeric-lowering.js";
 
 export type LogicNValue =
   | { readonly __tag: "int";       readonly value: number }
   // BUILD: Int64 — a JS number cannot hold the i64 range exactly above 2^53, so int64 carries a bigint
   // (no silent precision loss). Routed through the checked i64-arith layer; see i64-arith.ts.
   | { readonly __tag: "int64";     readonly value: bigint }
+  | { readonly __tag: "uint64";    readonly value: bigint }
   | { readonly __tag: "float";     readonly value: number }
   | { readonly __tag: "decimal";   readonly value: string }
   | { readonly __tag: "string";    readonly value: string }
@@ -80,6 +82,13 @@ function i64R(r: I64Result): LogicNValue {
   return isI64Trap(r) ? { __tag: "runtimeError", message: r } : { __tag: "int64", value: r as bigint };
 }
 
+/** Map a checked-u64 result to a LogicNValue: in-range → uint64 (NON-NEGATIVE bigint); a trap (overflow /
+ * unsigned underflow / ÷0) → fail-closed runtimeError. Sibling of i64R; the message is whitelisted in
+ * isCheckedTrap ("IntegerOverflow"/"DivisionByZero") so it propagates fail-closed up the expression. */
+function u64R(r: U64Result): LogicNValue {
+  return isU64Trap(r) ? { __tag: "runtimeError", message: r } : { __tag: "uint64", value: r as bigint };
+}
+
 /** Map an exact-decimal result to a LogicNValue: the canonical string → decimal; malformed → fail-closed. */
 function decimalR(r: DecResult): LogicNValue {
   return isDecTrap(r) ? { __tag: "runtimeError", message: `Malformed decimal operand` } : { __tag: "decimal", value: r as string };
@@ -123,26 +132,53 @@ function literalI64FromNode(node: AstNode | undefined): bigint | "OutOfRange" | 
   return undefined;
 }
 
+/** UInt64 sibling of literalI64FromNode — re-reads the raw literal text exactly via parseU64Literal (a
+ * negative literal is OutOfRange for unsigned). */
+function literalU64FromNode(node: AstNode | undefined): bigint | "OutOfRange" | "NotIntegral" | undefined {
+  if (node === undefined) return undefined;
+  if (node.kind === "numberLiteral" && typeof node.value === "string") return parseU64Literal(node.value);
+  if (node.kind === "unaryExpr" && node.value === "-") {
+    const operand = node.children?.[0];
+    if (operand?.kind === "numberLiteral" && typeof operand.value === "string") return parseU64Literal("-" + operand.value);
+  }
+  return undefined;
+}
+
 /**
- * Coerce an evaluated value to a declared scalar Int64 (the faithful tree-walker's int64 origination
- * hook — Step 1a). Only acts when the declared base is exactly "Int64" (UInt64 stays gated; other types
- * pass through untouched). A literal init is re-parsed from raw text (exact, fail-closed on
- * out-of-range/non-integral); an already-int64 value passes through; a small `int` widens exactly
- * (an i32 value is ≤ 2^31, lossless in BigInt); a checked trap propagates. Anything else assigned to an
- * Int64 slot is a fail-closed type error (the type-checker should have rejected it pre-lift).
+ * Coerce an evaluated value to a declared scalar 64-bit type (the faithful tree-walker's int64/uint64
+ * origination hook). Acts on "Int64" and "UInt64" (both lifted; #52); other types pass through untouched.
+ * A literal init is re-parsed from raw text (exact, fail-closed on out-of-range/non-integral); an already-
+ * 64-bit value passes through; a small `int` widens exactly (an i32 value is ≤ 2^31, lossless in BigInt —
+ * UInt64 additionally rejects a NEGATIVE i32, fail-closed); a checked trap propagates. Anything else
+ * assigned to a 64-bit slot is a fail-closed type error (the type-checker should have rejected it).
  */
 function coerceToDeclaredNumeric(declaredBase: string, value: LogicNValue, initNode: AstNode | undefined): LogicNValue {
-  if (declaredBase !== "Int64") return value;
-  const lit = literalI64FromNode(initNode);
-  if (lit !== undefined) {
-    if (isI64LiteralError(lit)) {
-      return { __tag: "runtimeError", message: lit === "OutOfRange" ? "IntegerOverflow" : `Int64 literal is not an integer` };
+  if (declaredBase === "Int64") {
+    const lit = literalI64FromNode(initNode);
+    if (lit !== undefined) {
+      if (isI64LiteralError(lit)) {
+        return { __tag: "runtimeError", message: lit === "OutOfRange" ? "IntegerOverflow" : `Int64 literal is not an integer` };
+      }
+      return { __tag: "int64", value: lit };
     }
-    return { __tag: "int64", value: lit };
+    if (value.__tag === "int64" || value.__tag === "runtimeError") return value;
+    if (value.__tag === "int") return { __tag: "int64", value: BigInt(value.value) };
+    return { __tag: "runtimeError", message: `cannot represent ${value.__tag} as Int64` };
   }
-  if (value.__tag === "int64" || value.__tag === "runtimeError") return value;
-  if (value.__tag === "int") return { __tag: "int64", value: BigInt(value.value) };
-  return { __tag: "runtimeError", message: `cannot represent ${value.__tag} as Int64` };
+  if (declaredBase === "UInt64") {
+    const lit = literalU64FromNode(initNode);
+    if (lit !== undefined) {
+      if (isI64LiteralError(lit)) {
+        return { __tag: "runtimeError", message: lit === "OutOfRange" ? "IntegerOverflow" : `UInt64 literal is not a non-negative integer` };
+      }
+      return { __tag: "uint64", value: lit };
+    }
+    if (value.__tag === "uint64" || value.__tag === "runtimeError") return value;
+    // a non-negative i32 widens exactly; a NEGATIVE i32 cannot be unsigned → fail-closed underflow trap.
+    if (value.__tag === "int") return value.value >= 0 ? { __tag: "uint64", value: BigInt(value.value) } : { __tag: "runtimeError", message: "IntegerOverflow" };
+    return { __tag: "runtimeError", message: `cannot represent ${value.__tag} as UInt64` };
+  }
+  return value;
 }
 
 /** Singleton booleans — avoids allocating { __tag: "bool", value: ... } on every comparison. */
@@ -200,8 +236,8 @@ const OP_IDS: Record<string, number> = {
 // proving every int×int arithmetic key is present is what makes the sync raw-arith
 // fallback (interpreter.ts ~:498) provably unreachable for int×int — the R&D-0112 hazard.
 export function dispatchKey(leftTag: string, op: string, rightTag: string): number {
-  const l = leftTag  === "int"    ? 1 : leftTag  === "float" ? 2 : leftTag  === "string" ? 3 : leftTag  === "bool" ? 4 : leftTag  === "int64" ? 5 : 0;
-  const r = rightTag === "int"    ? 1 : rightTag === "float" ? 2 : rightTag === "string" ? 3 : rightTag === "bool" ? 4 : rightTag === "int64" ? 5 : 0;
+  const l = leftTag  === "int"    ? 1 : leftTag  === "float" ? 2 : leftTag  === "string" ? 3 : leftTag  === "bool" ? 4 : leftTag  === "int64" ? 5 : leftTag  === "uint64" ? 6 : 0;
+  const r = rightTag === "int"    ? 1 : rightTag === "float" ? 2 : rightTag === "string" ? 3 : rightTag === "bool" ? 4 : rightTag === "int64" ? 5 : rightTag === "uint64" ? 6 : 0;
   const o = OP_IDS[op] ?? 0;
   return (l << 8) | (o << 4) | r;
 }
@@ -309,6 +345,45 @@ export const BINARY_DISPATCH = new Map<number, _DispatchFn>([
   [dispatchKey("int64", "==", "int"),   (a, b) => boolVal((a.value as bigint) === BigInt(b.value as number))],
   [dispatchKey("int",   "!=", "int64"), (a, b) => boolVal(BigInt(a.value as number) !== (b.value as bigint))],
   [dispatchKey("int64", "!=", "int"),   (a, b) => boolVal((a.value as bigint) !== BigInt(b.value as number))],
+
+  // --- UInt64 × UInt64 — EXACT unsigned 64-bit (NON-NEGATIVE bigint); u64-arith.ts is the single source of
+  // truth. Overflow (> 2^64-1), unsigned underflow (< 0), and ÷0 TRAP (Fork A) — no silent 2^64 wrap. UInt64
+  // never lowers to the i32 fast tiers (FAST_TIER_UNLOWERABLE) — the tree-walker is the sole executor. (#52.)
+  [dispatchKey("uint64", "+",  "uint64"), (a, b) => u64R(u64AddChecked(a.value as bigint, b.value as bigint))],
+  [dispatchKey("uint64", "-",  "uint64"), (a, b) => u64R(u64SubChecked(a.value as bigint, b.value as bigint))],
+  [dispatchKey("uint64", "*",  "uint64"), (a, b) => u64R(u64MulChecked(a.value as bigint, b.value as bigint))],
+  [dispatchKey("uint64", "/",  "uint64"), (a, b) => u64R(u64DivChecked(a.value as bigint, b.value as bigint))],
+  [dispatchKey("uint64", "%",  "uint64"), (a, b) => u64R(u64ModChecked(a.value as bigint, b.value as bigint))],
+  [dispatchKey("uint64", "<",  "uint64"), (a, b) => boolVal((a.value as bigint) <  (b.value as bigint))],
+  [dispatchKey("uint64", "<=", "uint64"), (a, b) => boolVal((a.value as bigint) <= (b.value as bigint))],
+  [dispatchKey("uint64", ">",  "uint64"), (a, b) => boolVal((a.value as bigint) >  (b.value as bigint))],
+  [dispatchKey("uint64", ">=", "uint64"), (a, b) => boolVal((a.value as bigint) >= (b.value as bigint))],
+  [dispatchKey("uint64", "==", "uint64"), (a, b) => boolVal((a.value as bigint) === (b.value as bigint))],
+  [dispatchKey("uint64", "!=", "uint64"), (a, b) => boolVal((a.value as bigint) !== (b.value as bigint))],
+  // UInt64 × Int (mixed): the int widens to bigint; a NEGATIVE int operand in arithmetic naturally TRAPS via
+  // the unsigned checked op (underflow/overflow) — fail-closed. Comparisons compare the exact bigints.
+  [dispatchKey("uint64", "+", "int"),   (a, b) => u64R(u64AddChecked(a.value as bigint, BigInt(b.value as number)))],
+  [dispatchKey("int",    "+", "uint64"), (a, b) => u64R(u64AddChecked(BigInt(a.value as number), b.value as bigint))],
+  [dispatchKey("uint64", "-", "int"),   (a, b) => u64R(u64SubChecked(a.value as bigint, BigInt(b.value as number)))],
+  [dispatchKey("int",    "-", "uint64"), (a, b) => u64R(u64SubChecked(BigInt(a.value as number), b.value as bigint))],
+  [dispatchKey("uint64", "*", "int"),   (a, b) => u64R(u64MulChecked(a.value as bigint, BigInt(b.value as number)))],
+  [dispatchKey("int",    "*", "uint64"), (a, b) => u64R(u64MulChecked(BigInt(a.value as number), b.value as bigint))],
+  [dispatchKey("uint64", "/", "int"),   (a, b) => u64R(u64DivChecked(a.value as bigint, BigInt(b.value as number)))],
+  [dispatchKey("int",    "/", "uint64"), (a, b) => u64R(u64DivChecked(BigInt(a.value as number), b.value as bigint))],
+  [dispatchKey("uint64", "%", "int"),   (a, b) => u64R(u64ModChecked(a.value as bigint, BigInt(b.value as number)))],
+  [dispatchKey("int",    "%", "uint64"), (a, b) => u64R(u64ModChecked(BigInt(a.value as number), b.value as bigint))],
+  [dispatchKey("uint64", "<",  "int"),   (a, b) => boolVal((a.value as bigint) <  BigInt(b.value as number))],
+  [dispatchKey("int",    "<",  "uint64"), (a, b) => boolVal(BigInt(a.value as number) <  (b.value as bigint))],
+  [dispatchKey("uint64", "<=", "int"),   (a, b) => boolVal((a.value as bigint) <= BigInt(b.value as number))],
+  [dispatchKey("int",    "<=", "uint64"), (a, b) => boolVal(BigInt(a.value as number) <= (b.value as bigint))],
+  [dispatchKey("uint64", ">",  "int"),   (a, b) => boolVal((a.value as bigint) >  BigInt(b.value as number))],
+  [dispatchKey("int",    ">",  "uint64"), (a, b) => boolVal(BigInt(a.value as number) >  (b.value as bigint))],
+  [dispatchKey("uint64", ">=", "int"),   (a, b) => boolVal((a.value as bigint) >= BigInt(b.value as number))],
+  [dispatchKey("int",    ">=", "uint64"), (a, b) => boolVal(BigInt(a.value as number) >= (b.value as bigint))],
+  [dispatchKey("uint64", "==", "int"),   (a, b) => boolVal((a.value as bigint) === BigInt(b.value as number))],
+  [dispatchKey("int",    "==", "uint64"), (a, b) => boolVal(BigInt(a.value as number) === (b.value as bigint))],
+  [dispatchKey("uint64", "!=", "int"),   (a, b) => boolVal((a.value as bigint) !== BigInt(b.value as number))],
+  [dispatchKey("int",    "!=", "uint64"), (a, b) => boolVal(BigInt(a.value as number) !== (b.value as bigint))],
 
   // --- Decimal × Decimal — EXACT base-10 fixed-point (no float; the "wrong VAT" fix completed). Shared
   // source of truth = decimal-arith.ts. Divergence-free: the WASM emitter DECLINES Decimal (14682d1) and the
@@ -716,6 +791,7 @@ class SyncInterpreter {
         // #0021: checked i32 unary-minus on the SYNC fast path too (traps -INT32_MIN, canonicalizes -0).
         if (op === "-" && operand.__tag === "int")   return i32R(i32NegChecked(operand.value as number));
         if (op === "-" && operand.__tag === "int64")  return i64R(i64NegChecked(operand.value as bigint));
+        if (op === "-" && operand.__tag === "uint64") return u64R(u64NegChecked(operand.value as bigint)); // unsigned: traps for any x>0
         if (op === "-" && operand.__tag === "float")  return mkFloat(-(operand.value as number));
         if (op === "!" && operand.__tag === "bool")   return boolVal(!(operand.value as boolean));
         throw new SyncNotSupported(`unary ${op} on ${operand.__tag}`);
@@ -1428,6 +1504,15 @@ class Interpreter {
       // the walker == the emitter's wantI64 routing (the 0014 Int64 differential).
       if (initNode !== undefined) return this.evalExprAsInt64(initNode);
     }
+    if (declBase === "UInt64") {
+      const lit = literalU64FromNode(initNode);
+      if (lit !== undefined) {
+        return isI64LiteralError(lit)
+          ? { __tag: "runtimeError", message: lit === "OutOfRange" ? "IntegerOverflow" : "UInt64 literal is not a non-negative integer" }
+          : { __tag: "uint64", value: lit };
+      }
+      if (initNode !== undefined) return this.evalExprAsUInt64(initNode);
+    }
     const v = initNode !== undefined ? await this.evalExpr(initNode) : LLN_VOID;
     return isCheckedTrap(v) ? v : coerceToDeclaredNumeric(declBase, v, initNode);
   }
@@ -1469,6 +1554,43 @@ class Interpreter {
     return isCheckedTrap(v) ? v : coerceToDeclaredNumeric("Int64", v, node);
   }
 
+  /**
+   * UInt64 sibling of evalExprAsInt64 (#52): evaluate `node` in a UInt64 context so int literals/operands
+   * promote to uint64 and arithmetic runs through the exact, trapping u64 dispatch. A negative literal /
+   * an out-of-range value / unsigned underflow surfaces as a fail-closed runtimeError.
+   */
+  private async evalExprAsUInt64(node: AstNode): Promise<LogicNValue> {
+    const lit = literalU64FromNode(node);
+    if (lit !== undefined) {
+      return isI64LiteralError(lit)
+        ? { __tag: "runtimeError", message: lit === "OutOfRange" ? "IntegerOverflow" : "UInt64 literal is not a non-negative integer" }
+        : { __tag: "uint64", value: lit };
+    }
+    if (node.kind === "binaryExpr") {
+      const op = node.value ?? "";
+      const l = node.children?.[0], r = node.children?.[1];
+      if (l !== undefined && r !== undefined) {
+        const lv = await this.evalExprAsUInt64(l);
+        if (lv.__tag === "runtimeError") return lv;
+        const rv = await this.evalExprAsUInt64(r);
+        if (rv.__tag === "runtimeError") return rv;
+        const fn = BINARY_DISPATCH.get(dispatchKey(lv.__tag, op, rv.__tag));
+        if (fn !== undefined) return fn(lv, rv);
+      }
+    }
+    if (node.kind === "unaryExpr" && node.value === "-") {
+      const operand = node.children?.[0];
+      if (operand !== undefined) {
+        const ov = await this.evalExprAsUInt64(operand);
+        if (ov.__tag === "runtimeError") return ov;
+        if (ov.__tag === "uint64") return u64R(u64NegChecked(ov.value));
+        if (ov.__tag === "int")    return u64R(u64NegChecked(BigInt(ov.value)));
+      }
+    }
+    const v = await this.evalExpr(node);
+    return isCheckedTrap(v) ? v : coerceToDeclaredNumeric("UInt64", v, node);
+  }
+
   private async executeStatement(node: AstNode): Promise<LogicNValue | undefined> {
     switch (node.kind) {
       case "letDecl":
@@ -1480,7 +1602,7 @@ class Interpreter {
         // 0038 fail-closed: a checked-op trap (overflow/div0) must FAIL THE FLOW where it occurs, not be
         // bound + silently discarded. Soft runtimeErrors (e.g. missing field) keep value semantics. A bad
         // Int64 literal (Step 1b) also fails closed. (Non-Int64 behaviour is unchanged.)
-        if (isCheckedTrap(initVal) || (letDeclBase === "Int64" && initVal.__tag === "runtimeError")) return initVal;
+        if (isCheckedTrap(initVal) || ((letDeclBase === "Int64" || letDeclBase === "UInt64") && initVal.__tag === "runtimeError")) return initVal;
         const wrappedVal = wrapGovernedValue(initVal, rawType);
         // R1C: Soft-tag governed values with a non-enumerable _governed property (Phase 11D)
         if (rawType.startsWith("protected ") || rawType.startsWith("redacted ")) {
@@ -1495,7 +1617,7 @@ class Interpreter {
         const { name, safetyPrefix, typeName, rawType } = parseBindingValue(node.value ?? "");
         const mutDeclBase = numericBaseType(typeName);
         const initVal = await this.evalBindingInit(initNode, mutDeclBase);
-        if (isCheckedTrap(initVal) || (mutDeclBase === "Int64" && initVal.__tag === "runtimeError")) return initVal;
+        if (isCheckedTrap(initVal) || ((mutDeclBase === "Int64" || mutDeclBase === "UInt64") && initVal.__tag === "runtimeError")) return initVal;
         const value = wrapGovernedValue(initVal, rawType);
         // R1C: Soft-tag governed values with a non-enumerable _governed property (Phase 11D)
         if (rawType.startsWith("protected ") || rawType.startsWith("redacted ")) {
@@ -1514,7 +1636,9 @@ class Interpreter {
         if (retExpr === undefined) return LLN_VOID;
         // Step 3g: a bare `return <expr>` in an Int64 flow evaluates in an Int64 context (i64 type-directed),
         // so a large literal / int-product return is exact, matching the emitter's return-base threading.
-        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr) : await this.evalExpr(retExpr);
+        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr)
+          : this.flowReturnBase === "UInt64" ? await this.evalExprAsUInt64(retExpr)
+          : await this.evalExpr(retExpr);
       }
 
       case "ifStmt": {
@@ -1665,7 +1789,9 @@ class Interpreter {
         if (retExpr === undefined) return LLN_VOID;
         // Step 3g: a bare `return <expr>` in an Int64 flow evaluates in an Int64 context (i64 type-directed),
         // so a large literal / int-product return is exact, matching the emitter's return-base threading.
-        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr) : await this.evalExpr(retExpr);
+        return this.flowReturnBase === "Int64" ? await this.evalExprAsInt64(retExpr)
+          : this.flowReturnBase === "UInt64" ? await this.evalExprAsUInt64(retExpr)
+          : await this.evalExpr(retExpr);
       }
 
       case "stringLiteral": {
@@ -1765,6 +1891,7 @@ class Interpreter {
         if (op === "-" && operand.__tag === "int") return i32R(i32NegChecked(operand.value));
         // Step 1e: int64 negation through the checked layer so -INT64_MIN TRAPS (it overflows i64).
         if (op === "-" && operand.__tag === "int64") return i64R(i64NegChecked(operand.value));
+        if (op === "-" && operand.__tag === "uint64") return u64R(u64NegChecked(operand.value)); // unsigned: traps for any x>0
         if (op === "-" && operand.__tag === "float") return mkFloat(-operand.value);
         return { __tag: "runtimeError", message: `Unary '${op}' not valid for ${operand.__tag}` };
       }
@@ -2610,6 +2737,7 @@ function safeDisplay(value: LogicNValue): string {
     case "char": return value.value;
     case "int":
     case "int64":
+    case "uint64":
     case "float":
     case "byte": return String(value.value);
     case "bytes": return `[${value.value.byteLength} bytes]`;

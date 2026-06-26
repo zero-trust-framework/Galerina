@@ -1312,6 +1312,14 @@ export function emitWATExpr(
         // (CWE-704). Fail-closed TRAP instead (inline-safe block comment).
         return `(unreachable) (; #165: i32-only op over float operand — fail-closed ;)`;
       }
+      // UInt64 is NOT yet faithfully lowered to WASM: unsigned semantics need i64.div_u / i64.lt_u + unsigned
+      // overflow/underflow helpers, which DIFFER from the signed Int64 ops below (i64.div_s/lt_s would compute
+      // a WRONG value for any operand ≥ 2^63, and the signed overflow checks don't match unsigned). Until a
+      // faithful u64 WASM emitter lands, DECLINE any UInt64 operand so the WASM tier bails to the exact
+      // tree-walker (u64-arith) — never a silent signed lowering. (#52: walker-only unlock; WASM is a follow-up.)
+      if (numericBaseType(lty ?? "") === "UInt64" || numericBaseType(rty ?? "") === "UInt64") {
+        return `(unreachable) (; UInt64 '${op}' not yet u64-faithful in WASM — emitter declines; exact unsigned arithmetic is the walker's (#52) ;)`;
+      }
       // Step 4c: native i64 lowering for Int64 operands — AFTER the float check (so an Int64+Float type
       // error infers Float → invalid module → walker fallback, fail-SAFE). `+`/`-`/`*` trap via the checked
       // i64 helpers, `/`/`%` use native i64.div_s/rem_s, comparisons yield an i32 bool. A mixed int operand

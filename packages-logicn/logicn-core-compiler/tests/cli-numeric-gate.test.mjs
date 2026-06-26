@@ -49,16 +49,14 @@ after(() => {
   }
 });
 
-const U64 = `pure flow wideU(n: Int) -> UInt64 contract { effects {} } { return n }\n`;
+const U64 = `pure flow wideU() -> UInt64 contract { effects {} } { let x: UInt64 = 42  return x }\n`;
 const I64 = `pure flow wideI(n: Int) -> Int64 contract { effects {} } { return n }\n`;
 
-test("check: a still-gated width (UInt64) REPORTS an error and exits non-zero (HOLE #2 fixed)", () => {
+test("check: a LIFTED width (UInt64) is admitted — no LLN-NUMERIC-001, exit 0 (#52 unlock)", () => {
   const f = fixture("__numgate_u64.lln", U64);
   const r = cli("check", f);
-  assert.match(r.out, /LLN-NUMERIC-001/, "check must surface the fail-closed numeric-truncation error");
-  assert.match(r.out, /UInt64/, "the diagnostic must name the gated width");
-  assert.doesNotMatch(r.out, /0 errors, 0 governance warnings/, "check must NOT falsely report success");
-  assert.equal(r.status, 1, `check must exit non-zero on a value-state error\n${r.out}`);
+  assert.doesNotMatch(r.out, /LLN-NUMERIC-001/, "UInt64 must NOT be gated post-unlock");
+  assert.equal(r.status, 0, `check of a UInt64 flow must succeed\n${r.out}`);
 });
 
 test("check: a LIFTED width (Int64) is admitted — clean, exit 0 (no false rejection)", () => {
@@ -69,13 +67,11 @@ test("check: a LIFTED width (Int64) is admitted — clean, exit 0 (no false reje
   assert.equal(r.status, 0, `check of an Int64 flow must succeed\n${r.out}`);
 });
 
-test("build: a still-gated width (UInt64) fails closed REGARDLESS of profile (HOLE #1 / fix c)", () => {
+test("build: a LIFTED width (UInt64) is admitted in the default profile (walker-only; WASM declines)", () => {
   const f = fixture("__numgate_u64.lln", U64);
-  // Default/unset profile — the build path used to skip checkValueStates entirely here.
   const r = cli("build", f, { LOGICN_PROFILE: "" });
-  assert.match(r.out, /LLN-NUMERIC-001/, "default build must run the value-state gate");
-  assert.match(r.out, /fail-closed/i, "and announce the fail-closed rejection");
-  assert.equal(r.status, 1, `default build of a UInt64 flow must fail\n${r.out}`);
+  assert.doesNotMatch(r.out, /LLN-NUMERIC-001/, "UInt64 must NOT be rejected by the build gate (it is unlocked)");
+  assert.equal(r.status, 0, `default build of a UInt64 flow must succeed (walker carries it; WASM declines)\n${r.out}`);
 });
 
 test("build: a LIFTED width (Int64) builds in the default profile (lift end-to-end)", () => {

@@ -2,16 +2,18 @@
  * Int64 gate-lift REGRESSION GUARD — pins the POST-lift state (owner-gated, 2026-06-25).
  *
  * The Int64 WASM lowering is faithful + proven byte-exact (see wat-i64-differential.test.mjs: walker ≡ WASM
- * over the full (2^53,2^63) corpus), so the `LLN-NUMERIC-001` gate has been LIFTED for Int64: declaring a
- * scalar Int64 in a real check/build/run now SUCCEEDS. UInt64 stays gated (no faithful unsigned-64 arith).
+ * over the full (2^53,2^63) corpus), so the `LLN-NUMERIC-001` gate was LIFTED for Int64. UInt64 has now ALSO
+ * been lifted (#52): the tree-walker carries it as a NON-NEGATIVE bigint via the exact-trapping u64-arith
+ * layer, and the WASM emitter DECLINES it (walker-only — unsigned ≠ signed i64). So both 64-bit scalars now
+ * compile/build/run faithfully.
  *
- * The crux of the lift is a DELIBERATE SET SPLIT that this guard pins:
- *   • BACKEND_UNLOWERABLE_SCALAR  (the LLN-NUMERIC-001 GATE)        = { UInt64 }          — Int64 admitted
- *   • FAST_TIER_UNLOWERABLE_SCALAR (the bytecode-VM / sync bail)    = { Int64, UInt64 }   — Int64 STILL bails
- * Int64 is admitted by the gate (the WASM emitter + tree-walker carry it faithfully) yet MUST still route
- * off the i32-only fast tiers, which would silently truncate it. Folding the two back together would either
- * re-gate Int64 or let a fast tier truncate it — both fail-open. This test FAILS LOUDLY if either invariant
- * regresses (Int64 silently re-gated, UInt64 accidentally lifted, or the fast-tier bail dropped for Int64).
+ * The crux is a DELIBERATE SET SPLIT that this guard pins:
+ *   • BACKEND_UNLOWERABLE_SCALAR  (the LLN-NUMERIC-001 GATE)        = { }                          — empty (both lifted)
+ *   • FAST_TIER_UNLOWERABLE_SCALAR (the bytecode-VM / sync bail)    = { Int64, UInt64, Decimal }   — all STILL bail
+ * The 64-bit widths are admitted by the gate (walker + WASM/u64-walker carry them) yet MUST still route off
+ * the i32-only fast tiers, which would silently truncate them. Folding the two sets together would either
+ * re-gate a working width or let a fast tier truncate one — both fail-open. This test FAILS LOUDLY if either
+ * invariant regresses (a 64-bit width silently re-gated, or the fast-tier bail dropped).
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -30,23 +32,22 @@ test("Int64 is LIFTED: a scalar Int64 flow is ADMITTED by the gate (return / par
   assert.equal(gateDiags("pure flow f() -> Int contract { effects {} } { let x: Int64 = 1  return 0 }").length, 0, "Int64 LOCAL must be admitted");
 });
 
-test("UInt64 STAYS gated: a scalar UInt64 flow still fails closed (return / param / local)", () => {
-  const ret = gateDiags("pure flow f(n: Int) -> UInt64 contract { effects {} } { return n }");
-  assert.ok(ret.length >= 1 && ret.every((d) => d.severity === "error"), "UInt64 RETURN must fail closed");
-  const par = gateDiags("pure flow f(a: UInt64) -> Int contract { effects {} } { return 1 }");
-  assert.ok(par.length >= 1 && par.every((d) => d.severity === "error"), "UInt64 PARAM must fail closed");
-  const loc = gateDiags("pure flow f() -> Int contract { effects {} } { let x: UInt64 = 1  return 0 }");
-  assert.ok(loc.length >= 1 && loc.every((d) => d.severity === "error"), "UInt64 LOCAL must fail closed");
+test("UInt64 is LIFTED: a scalar UInt64 flow is ADMITTED by the gate (return / param / local all clean) (#52)", () => {
+  assert.equal(gateDiags("pure flow f() -> UInt64 contract { effects {} } { let x: UInt64 = 1  return x }").length, 0, "UInt64 RETURN must be admitted");
+  assert.equal(gateDiags("pure flow f(a: UInt64) -> Int contract { effects {} } { return 1 }").length, 0, "UInt64 PARAM must be admitted");
+  assert.equal(gateDiags("pure flow f() -> Int contract { effects {} } { let x: UInt64 = 1  return 0 }").length, 0, "UInt64 LOCAL must be admitted");
 });
 
-test("set split is intact: gate set = {UInt64}; fast-tier bail set = {Int64, UInt64} (a superset)", () => {
-  // The GATE no longer rejects Int64; only UInt64 (needs u64-arith). If this re-adds Int64, the lift regressed.
+test("set split: gate set is now EMPTY (UInt64 lifted); fast-tier bail set still pins {Int64, UInt64, Decimal}", () => {
+  // The GATE rejects nothing now — Int64 (0cb6190) AND UInt64 (#52) are both lifted. If this re-adds either,
+  // the lift regressed (a silent re-gate of a working width).
   assert.ok(!BACKEND_UNLOWERABLE_SCALAR.has("Int64"), "Int64 must be LIFTED from the gate set");
-  assert.ok(BACKEND_UNLOWERABLE_SCALAR.has("UInt64"), "UInt64 stays gated (needs u64-arith)");
-  // The FAST-TIER bail must keep BOTH — the i32-only tiers truncate Int64 even though the gate now admits it.
+  assert.ok(!BACKEND_UNLOWERABLE_SCALAR.has("UInt64"), "UInt64 must be LIFTED from the gate set (#52)");
+  assert.equal(BACKEND_UNLOWERABLE_SCALAR.size, 0, "the gate set is empty post-lift (dormant but intact)");
+  // The FAST-TIER bail must keep BOTH 64-bit widths — the i32-only tiers truncate them even though the gate admits.
   assert.ok(FAST_TIER_UNLOWERABLE_SCALAR.has("Int64"), "Int64 must STILL bail off the i32-only fast tiers");
-  assert.ok(FAST_TIER_UNLOWERABLE_SCALAR.has("UInt64"), "UInt64 must bail off the fast tiers");
-  // The bail set is a strict superset of the gate set: everything gated is also fast-tier-unsafe.
+  assert.ok(FAST_TIER_UNLOWERABLE_SCALAR.has("UInt64"), "UInt64 must STILL bail off the fast tiers (walker-only)");
+  // Invariant: the bail set is a superset of the gate set (everything gated is also fast-tier-unsafe) — vacuous now.
   for (const w of BACKEND_UNLOWERABLE_SCALAR) assert.ok(FAST_TIER_UNLOWERABLE_SCALAR.has(w), `${w} must be in the bail set too`);
 });
 

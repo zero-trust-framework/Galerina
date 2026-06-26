@@ -165,6 +165,7 @@ function safeDisplay(v: LogicNValue): string {
       return v.value;
     case "int":
     case "int64":
+    case "uint64":
     case "float":
     case "byte":
       return String(v.value);

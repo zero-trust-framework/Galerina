@@ -6,11 +6,12 @@
 // not mode-gated) so the governed runtime and the production build — both of which run
 // checkValueStates — refuse to emit a truncating module.
 //
-// Int64 has been LIFTED (owner-gated, 2026-06-25): the emitter now lowers it faithfully (i64,
-// checked traps, walker ≡ WASM byte-exact), so a scalar Int64 is ADMITTED. Only UInt64 remains
-// gated, until a faithful unsigned-64 arithmetic layer lands. Int8/Int16 widen to i32 and
-// Float32 widens to f64 (no value loss); a generic position like Tensor<Int64,…> (base "Tensor")
-// must NOT be flagged.
+// Int64 was LIFTED 2026-06-25; UInt64 has now ALSO been LIFTED (owner-authorized, #52): the tree-walker
+// carries it as a NON-NEGATIVE bigint via the exact-trapping u64-arith layer (overflow/underflow/÷0 TRAP,
+// no silent 2^64 wrap), and the WASM emitter DECLINES it so it stays walker-only (no signed-i64 divergence).
+// So BOTH 64-bit scalars are now ADMITTED and the BACKEND_UNLOWERABLE_SCALAR gate set is EMPTY (the gate
+// machinery is dormant-but-intact — it fires again if any width is ever re-gated). Int8/Int16 widen to i32
+// and Float32 widens to f64 (no value loss); a generic position like Tensor<Int64,…> (base "Tensor") is fine.
 // =============================================================================
 
 import assert from "node:assert/strict";
@@ -24,19 +25,15 @@ const numericDiags = (src) => {
   return (result.diagnostics ?? []).filter((d) => d.code === "LLN-NUMERIC-001");
 };
 
-describe("LLN-NUMERIC-001: still-gated 64-bit width (UInt64) fails closed", () => {
-  it("flags a scalar UInt64 RETURN type", () => {
+describe("LLN-NUMERIC-001: UInt64 is LIFTED — admitted faithfully (the gate set is now empty)", () => {
+  it("does NOT flag a scalar UInt64 RETURN type (#52 unlock)", () => {
     const diags = numericDiags(`pure flow widePay() -> UInt64 {\n  let amount: Int = 5\n  return amount\n}\n`);
-    assert.equal(diags.length, 1, "expected exactly one LLN-NUMERIC-001 for the UInt64 return");
-    assert.equal(diags[0].severity, "error", "the gate must be fail-closed (severity error)");
-    assert.equal(diags[0].name, "UnsupportedNumericWidth");
-    assert.match(diags[0].message, /UInt64/);
+    assert.equal(diags.length, 0, `UInt64 is unlocked — no LLN-NUMERIC-001 expected, got ${diags.length}`);
   });
 
-  it("flags a scalar UInt64 PARAMETER and a scalar UInt64 LOCAL (two diagnostics)", () => {
+  it("does NOT flag a scalar UInt64 PARAMETER or LOCAL (#52 unlock)", () => {
     const diags = numericDiags(`pure flow handle(n: UInt64) -> Int {\n  let big: UInt64 = 1\n  return 0\n}\n`);
-    assert.equal(diags.length, 2, "expected one for the UInt64 param and one for the UInt64 local");
-    assert.ok(diags.every((d) => d.severity === "error"));
+    assert.equal(diags.length, 0, `UInt64 param + local are admitted, got ${diags.length}`);
   });
 });
 
