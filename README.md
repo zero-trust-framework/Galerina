@@ -89,6 +89,63 @@ Galerina can **govern a tolerant numeric sub-kernel** as a deny-by-default, untr
 | **Government / defence** | Designed for air-gapped deployment, no cloud dependency. Governed BitNet CPU inference is in early integration (Inference Tower ~12%). |
 | **Enterprise regulated** | OWASP attack vectors blocked at the compiler. Supply-chain provenance via signed manifests (Ed25519 default; opt-in hybrid Ed25519+ML-DSA-65 via `GALERINA_MANIFEST_PROFILE=certified`, plus hybrid on the attestation/bridge surfaces). |
 
+### Capability radars
+
+A nine-axis self-assessment across the surfaces Galerina governs. Click any chart to open the full SVG.
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-1-security-governance.svg"><img src="docs/diagrams/radar-1-security-governance.svg" alt="Security & Governance" width="100%"></a>
+      <br><sub><b>1 · Security &amp; Governance</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-2-performance-systems.svg"><img src="docs/diagrams/radar-2-performance-systems.svg" alt="Performance & Systems" width="100%"></a>
+      <br><sub><b>2 · Performance &amp; Systems</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-3-devx-ecosystem.svg"><img src="docs/diagrams/radar-3-devx-ecosystem.svg" alt="DevX & Ecosystem" width="100%"></a>
+      <br><sub><b>3 · DevX &amp; Ecosystem</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-4-governed-chaos.svg"><img src="docs/diagrams/radar-4-governed-chaos.svg" alt="Governed Chaos" width="100%"></a>
+      <br><sub><b>4 · Governed Chaos</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-5-cicd-devsupport.svg"><img src="docs/diagrams/radar-5-cicd-devsupport.svg" alt="CI/CD & Dev Support" width="100%"></a>
+      <br><sub><b>5 · CI/CD &amp; Dev Support</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-6-tri-ternary.svg"><img src="docs/diagrams/radar-6-tri-ternary.svg" alt="Tri / Ternary" width="100%"></a>
+      <br><sub><b>6 · Tri / Ternary</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-7-web-api-secure.svg"><img src="docs/diagrams/radar-7-web-api-secure.svg" alt="Web & API Secure" width="100%"></a>
+      <br><sub><b>7 · Web &amp; API Secure</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-8-databasing.svg"><img src="docs/diagrams/radar-8-databasing.svg" alt="Databasing" width="100%"></a>
+      <br><sub><b>8 · Databasing</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-9-data-science.svg"><img src="docs/diagrams/radar-9-data-science.svg" alt="Data Science" width="100%"></a>
+      <br><sub><b>9 · Data Science</b></sub>
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/diagrams/radar-10-AI-ML-NuroNet.svg"><img src="docs/diagrams/radar-10-AI-ML-NuroNet.svg" alt="Databasing" width="100%"></a>
+      <br><sub><b>10 · AI/ML/Nuro Nets</b></sub>
+    </td>
+  </tr>
+</table>
+
 > **New here?** → [**SETUP.md**](SETUP.md) — install · run your first benchmark · Hello World with full governance comments
 
 ---
