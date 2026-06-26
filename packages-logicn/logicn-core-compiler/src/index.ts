@@ -139,6 +139,11 @@ export {
   generateHybridGovernanceKeyPair,
   generateEpilogueReceipt,
   type GovernanceAlgorithm,
+} from "./proof-graph.js";
+// #49 production hybrid (Ed25519+ML-DSA-65) verifier for the fuse loader's injected hybridVerifier seam.
+export { makeLmanifestHybridVerifier } from "./lmanifest-hybrid-verifier.js";
+export type { LmanifestHybridVerdict, LmanifestHybridVerifierInput } from "./lmanifest-hybrid-verifier.js";
+export {
   LLN_HW_001,
   LLN_HW_002,
   LLN_HW_003,

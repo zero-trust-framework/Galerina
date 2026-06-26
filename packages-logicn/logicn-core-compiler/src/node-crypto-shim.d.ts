@@ -36,4 +36,12 @@ declare module "node:crypto" {
   ): boolean;
 
   export function timingSafeEqual(a: Buffer | Uint8Array, b: Buffer | Uint8Array): boolean;
+
+  interface PublicKeyObject {
+    export(options: { type: string; format: "der" }): Buffer;
+    export(options: { type: string; format: "pem" }): string;
+  }
+  export function createPublicKey(
+    key: string | Buffer | { key: Uint8Array | Buffer; format: string; type: string },
+  ): PublicKeyObject;
 }

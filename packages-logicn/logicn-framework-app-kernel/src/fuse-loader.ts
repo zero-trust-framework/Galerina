@@ -420,7 +420,9 @@ async function verifyManifestSignature(
         }
         // "unverifiable" → fall through to the warn + "unsigned" path below (no key / undecidable).
       }
-      warn(`LLN-FUSE-HYBRID-UNVERIFIED: manifest carries a HYBRID PQ signature (algorithm '${String(algorithm)}') that this loader cannot verify without an injected hybrid verifier — treating as UNVERIFIED (REFUSED under requireSignature; admitted only where unsigned packages are already permitted). Inject FusePackageOptions.hybridVerifier to verify it at load (#49).`);
+      warn(hybridVerifier !== undefined
+        ? `LLN-FUSE-HYBRID-UNVERIFIED: the injected verifier could not decide the HYBRID PQ signature (algorithm '${String(algorithm)}', keyId '${String(keyId)}') — e.g. no resolvable public key — treating as UNVERIFIED (REFUSED under requireSignature; admitted only where unsigned packages are already permitted).`
+        : `LLN-FUSE-HYBRID-UNVERIFIED: manifest carries a HYBRID PQ signature (algorithm '${String(algorithm)}') that this loader cannot verify without an injected hybrid verifier — treating as UNVERIFIED (REFUSED under requireSignature; admitted only where unsigned packages are already permitted). Inject FusePackageOptions.hybridVerifier to verify it at load (#49).`);
     }
     return "unsigned";
   }

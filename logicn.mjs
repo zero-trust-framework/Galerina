@@ -938,6 +938,17 @@ Baseline comparison (governance-cost):
         console.error(`❌ LLN-FUSE-REVOCATION-UNTRUSTED: ${e.message} — refusing to fuse (fail-closed)`);
         process.exit(1);
       }
+      // #49 (H3/H4) — verify a HYBRID (Ed25519+ML-DSA-65) .lmanifest signature AT LOAD. The kernel stays
+      // PQ-crypto-free; inject the compiler's production verifier (reuses makeManifestEnvelope +
+      // verifyGovernanceSignatureHybrid, proofgraph context, base64url). Fail-closed / NO PQ downgrade —
+      // a missing/malformed ML-DSA key for a v2 manifest is a hard deny. Classical Ed25519 manifests unaffected.
+      try {
+        const cc = await import(new URL("packages-logicn/logicn-core-compiler/dist/index.js", import.meta.url).href);
+        opts.hybridVerifier = cc.makeLmanifestHybridVerifier();
+      } catch (e) {
+        console.error(`❌ LLN-FUSE-HYBRID-VERIFIER-UNAVAILABLE: ${e.message} — refusing to fuse (fail-closed)`);
+        process.exit(1);
+      }
       const components = await ak.fusePackages(dirs, opts);
       console.log(`✅ Fused ${components.size} package(s) (host-linked, first-party):`);
       for (const [name, c] of components) {
