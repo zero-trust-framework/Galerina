@@ -13,15 +13,15 @@ test("renders the governance-native metrics with HELP/TYPE and the dropped-serie
     executionTiers: { cache: 5, tree: 2 },
     declared: { memoryLimitBytes: 33554432, maxConcurrent: 10 },
   });
-  assert.match(out, /# TYPE galerin_governance_flag gauge/);
-  assert.match(out, /galerin_governance_flag\{flag="RequiresAudit"\} 1/);
-  assert.match(out, /galerin_governance_flag\{flag="DenyRemote"\} 0/);
-  assert.match(out, /galerin_audit_events_total\{status="Denied"\} 1/);
-  assert.match(out, /galerin_flow_execution_tier_total\{tier="cache"\} 5/);
-  assert.match(out, /galerin_governance_indeterminate_total 2/);
-  assert.match(out, /galerin_declared_memory_limit_bytes 33554432/);
+  assert.match(out, /# TYPE galerina_governance_flag gauge/);
+  assert.match(out, /galerina_governance_flag\{flag="RequiresAudit"\} 1/);
+  assert.match(out, /galerina_governance_flag\{flag="DenyRemote"\} 0/);
+  assert.match(out, /galerina_audit_events_total\{status="Denied"\} 1/);
+  assert.match(out, /galerina_flow_execution_tier_total\{tier="cache"\} 5/);
+  assert.match(out, /galerina_governance_indeterminate_total 2/);
+  assert.match(out, /galerina_declared_memory_limit_bytes 33554432/);
   // The fence's own counter is ALWAYS present (proves the fence ran).
-  assert.match(out, /galerin_telemetry_dropped_series_total 0/);
+  assert.match(out, /galerina_telemetry_dropped_series_total 0/);
 });
 
 test("effect labels are reduced to their FAMILY — never the arguments", () => {
@@ -29,8 +29,8 @@ test("effect labels are reduced to their FAMILY — never the arguments", () => 
     effectsObserved: { "network.outbound('https://customer-x/secret?token=abc')": 4, "network.inbound": 2, "database.query": 1 },
   });
   // network.* collapses to one family series with the summed count; the URL never appears.
-  assert.match(out, /galerin_effects_observed_total\{effect_family="network"\} 6/);
-  assert.match(out, /galerin_effects_observed_total\{effect_family="database"\} 1/);
+  assert.match(out, /galerina_effects_observed_total\{effect_family="network"\} 6/);
+  assert.match(out, /galerina_effects_observed_total\{effect_family="database"\} 1/);
   assert.ok(!out.includes("customer-x"), "the effect ARGUMENT must never egress");
   assert.ok(!out.includes("token"), "no query string leaks");
 });
@@ -39,18 +39,18 @@ test("EGRESS FENCE: a payload-shaped label value is DROPPED and counted, not emi
   // An effect with no family separator that looks like a path → unsafe label → dropped.
   const out = renderPrometheus({ effectsObserved: { "/var/secrets/key.pem": 1, "clock": 3 } });
   assert.ok(!out.includes("/var/secrets"), "a path-shaped label must not egress");
-  assert.match(out, /galerin_effects_observed_total\{effect_family="clock"\} 3/, "the safe family still emits");
-  assert.match(out, /galerin_telemetry_dropped_series_total 1/, "the dropped series is counted");
+  assert.match(out, /galerina_effects_observed_total\{effect_family="clock"\} 3/, "the safe family still emits");
+  assert.match(out, /galerina_telemetry_dropped_series_total 1/, "the dropped series is counted");
 });
 
 test("EGRESS FENCE: an unsafe behavioral fingerprint is dropped; a clean hash is emitted", () => {
   const dirty = renderPrometheus({ behavioralFingerprint: "user=alice@example.com /admin" });
   assert.ok(!dirty.includes("alice@example.com"), "PII-shaped fingerprint must not egress");
-  assert.match(dirty, /galerin_telemetry_dropped_series_total 1/);
+  assert.match(dirty, /galerina_telemetry_dropped_series_total 1/);
 
   const clean = renderPrometheus({ behavioralFingerprint: "sha256:abc123def456", build: "1.2.3" });
-  assert.match(clean, /galerin_behavioral_fingerprint_info\{fingerprint="sha256:abc123def456",build="1.2.3"\} 1/);
-  assert.match(clean, /galerin_telemetry_dropped_series_total 0/);
+  assert.match(clean, /galerina_behavioral_fingerprint_info\{fingerprint="sha256:abc123def456",build="1.2.3"\} 1/);
+  assert.match(clean, /galerina_telemetry_dropped_series_total 0/);
 });
 
 test("unknown governance flags / statuses / tiers (outside the closed vocab) are not emitted", () => {
@@ -62,21 +62,21 @@ test("unknown governance flags / statuses / tiers (outside the closed vocab) are
   assert.ok(!out.includes("NotARealFlag"), "unknown flag dropped");
   assert.ok(!out.includes("Bogus"), "unknown status dropped");
   assert.ok(!out.includes("quantum"), "unknown tier dropped");
-  assert.match(out, /galerin_governance_flag\{flag="RequiresAudit"\} 1/);
-  assert.match(out, /galerin_audit_events_total\{status="Success"\} 1/);
-  assert.match(out, /galerin_flow_execution_tier_total\{tier="sync"\} 2/);
+  assert.match(out, /galerina_governance_flag\{flag="RequiresAudit"\} 1/);
+  assert.match(out, /galerina_audit_events_total\{status="Success"\} 1/);
+  assert.match(out, /galerina_flow_execution_tier_total\{tier="sync"\} 2/);
 });
 
 test("non-finite numbers are dropped (NaN / Infinity never egress)", () => {
   const out = renderPrometheus({ allowedEffectsCount: NaN, proofObligationsCount: Infinity, queueDepth: 4 });
-  assert.ok(!out.includes("galerin_allowed_effects"), "NaN gauge omitted");
-  assert.ok(!out.includes("galerin_proof_obligations"), "Infinity gauge omitted");
-  assert.match(out, /galerin_queue_depth 4/);
+  assert.ok(!out.includes("galerina_allowed_effects"), "NaN gauge omitted");
+  assert.ok(!out.includes("galerina_proof_obligations"), "Infinity gauge omitted");
+  assert.match(out, /galerina_queue_depth 4/);
 });
 
 test("an empty snapshot still emits the fence counter (always-on)", () => {
   const out = renderPrometheus({});
-  assert.match(out, /galerin_telemetry_dropped_series_total 0/);
+  assert.match(out, /galerina_telemetry_dropped_series_total 0/);
 });
 
 test("helper: effectFamily reduces to the namespace before '.' or '('", () => {

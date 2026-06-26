@@ -121,7 +121,7 @@ async function main() {
     // Same-language architecture breakdown (sync): shows the "remove middleware" effect
     // without the kernel's async cost. Not separate runtime columns — informational.
     architecture: {
-      galerinAppKernel_async_opsPerSec: Number(kern.ops.toFixed(0)),
+      galerinaAppKernel_async_opsPerSec: Number(kern.ops.toFixed(0)),
       handRolledMiddlewareChain_sync_opsPerSec: Number(mw.ops.toFixed(0)),
       rawNoGovernance_sync_opsPerSec: Number(raw.ops.toFixed(0)),
       auditEventsEmitted: auditCount,

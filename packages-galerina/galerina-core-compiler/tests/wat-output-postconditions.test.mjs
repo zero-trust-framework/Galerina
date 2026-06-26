@@ -2,7 +2,7 @@
  * 0040 / #70 — WASM single-exit OUTPUT post-conditions (R&D 0040 follow-up, 2026-06-19).
  *
  * For a STRAIGHT-LINE flow (no nested/early returns) the WAT emitter now captures the tail value into
- * $galerin_result, gates each result-referencing `ensure` against it (fail-closed: a violation traps via
+ * $galerina_result, gates each result-referencing `ensure` against it (fail-closed: a violation traps via
  * `unreachable`), then returns it — so output post-conditions are enforced on the WASM tier too, not just
  * the interpreter. A flow with a nested/early return still DECLINES to the governed interpreter.
  */
@@ -35,10 +35,10 @@ contract { effects {} invariant { ensure result <= 100; } }
 { return a }`;
 
 describe("0040 WASM single-exit output post-conditions", () => {
-  it("emits the single-exit $galerin_result capture + output post-gate", () => {
+  it("emits the single-exit $galerina_result capture + output post-gate", () => {
     const { wat } = compileWAT(CLAMP);
-    assert.ok(wat.includes("$galerin_result"), `single-exit result local present:\n${wat}`);
-    assert.ok(wat.includes("local.set $galerin_result"), "captures the tail value into $galerin_result");
+    assert.ok(wat.includes("$galerina_result"), `single-exit result local present:\n${wat}`);
+    assert.ok(wat.includes("local.set $galerina_result"), "captures the tail value into $galerina_result");
     assert.ok(/post: ensure.*output/.test(wat), "emits the output post-condition gate");
   });
 
@@ -72,6 +72,6 @@ contract { effects {} invariant { ensure result <= 100; } }
     const { wat } = compileWAT(guard);
     // emitWATFromFlowAST returns null for a nested-return post-condition flow → the function body is the
     // fail-closed "cannot lower → falls back to walker" stub, NOT a single-exit capture.
-    assert.ok(!wat.includes("local.set $galerin_result"), `early-return flow must decline, not emit single-exit:\n${wat}`);
+    assert.ok(!wat.includes("local.set $galerina_result"), `early-return flow must decline, not emit single-exit:\n${wat}`);
   });
 });

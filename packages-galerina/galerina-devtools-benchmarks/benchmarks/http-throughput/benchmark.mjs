@@ -148,12 +148,12 @@ const requests = parseInt(args.find(a => a.startsWith("--requests="))?.split("="
 const skipGalerina = args.includes("--skip-galerina");
 
 const nodeResult = await benchmarkNodeRaw(requests);
-const galerinResult = skipGalerina ? { runtime: "galerina-governed", skipped: true }
+const galerinaResult = skipGalerina ? { runtime: "galerina-governed", skipped: true }
                                 : await benchmarkGalerinaGoverned(Math.min(requests, 200));
 
 console.log(JSON.stringify({
   benchmark: "http-throughput-v1",
   date: new Date().toISOString(),
   note: "Sequential requests (no concurrency). Measures server-side throughput, not client parallelism.",
-  results: { nodeRaw: nodeResult, galerinGoverned: galerinResult },
+  results: { nodeRaw: nodeResult, galerinaGoverned: galerinaResult },
 }, null, 2));

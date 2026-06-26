@@ -15,7 +15,7 @@ import { isComparable as specComparable, benchmarkSpec } from "./throughput-unit
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const dataPath  = join(__dirname, "..", "results", "latest.json");
 
-const ORDER = ["rustAvx512","rustAvx2","rust","cpp","nodejs","python","galerinPassive","galerinManifest","galerinGoverned","wasm","denoWebGpu"];
+const ORDER = ["rustAvx512","rustAvx2","rust","cpp","nodejs","python","galerinaPassive","galerinaManifest","galerinaGoverned","wasm","denoWebGpu"];
 const LABEL = {
   rustAvx512:     "Rust AVX-512",
   rustAvx2:       "Rust AVX2",
@@ -28,9 +28,9 @@ const LABEL = {
   // to MEASURE the cost of pre-planning vs not, and to verify the WASM compiler
   // against the reference interpreter). They are NOT the production path. The
   // production governed runtime is `galerina run` → WAT → WASM (the WASM row).
-  galerinPassive:  "Galerina passive ⟨interp⟩",
-  galerinManifest: "Galerina manifest ⟨interp⟩",
-  galerinGoverned: "Galerina governed ⟨interp⟩",
+  galerinaPassive:  "Galerina passive ⟨interp⟩",
+  galerinaManifest: "Galerina manifest ⟨interp⟩",
+  galerinaGoverned: "Galerina governed ⟨interp⟩",
   wasm:           "WASM ▶ production",
   denoWebGpu:     "Deno WebGPU (GPU)", // real GPU name filled at runtime from results (see GPU_NAME)
 };
@@ -43,8 +43,8 @@ function throughput(r) {
   // `null` here means "excluded" (non-comparable benchmark) or "no data" — both
   // correctly drop the runtime from comparison.
   if (r.normThroughput !== undefined) return r.normThroughput;
-  // ── Legacy path (out-of-scope benchmarks: galerinOpsPerRun null/1) ──
-  if (r.galerinOpsPerSecond) return r.galerinOpsPerSecond;
+  // ── Legacy path (out-of-scope benchmarks: galerinaOpsPerRun null/1) ──
+  if (r.galerinaOpsPerSecond) return r.galerinaOpsPerSecond;
   if (r.warmCallsPerSecond) return r.warmCallsPerSecond;
   return r.operationsPerSecond ?? r.additionsPerSecond ?? r.attemptsPerSecond
       ?? r.iterationsPerSecond ?? r.callsPerSecond ?? r.runsPerSecond ?? null;
@@ -294,14 +294,14 @@ for (const bench of data) {
   const speedStr = fmtT(winnerSpeed);
 
   // ── Galerina governed tier vs winner + vs Python floor ──
-  const gov = m.galerinGoverned ?? 0;
+  const gov = m.galerinaGoverned ?? 0;
   const py  = m.python ?? 0;
   // governed ⟨interp⟩ didn't run for this benchmark → say why, never a bare dash.
-  const govStr = gov ? fmtT(gov) : cellReason(bench, "galerinGoverned");
+  const govStr = gov ? fmtT(gov) : cellReason(bench, "galerinaGoverned");
 
   let govVsWinner = gov ? "—" : "N/A — governed ⟨interp⟩ not run";
   if (gov && winnerSpeed) {
-    if (winnerRt === "galerinGoverned") {
+    if (winnerRt === "galerinaGoverned") {
       govVsWinner = "🏆 1.00× (is winner)";
     } else {
       const r = gov / winnerSpeed;          // always ≤ 1 unless governed is winner
@@ -328,11 +328,11 @@ for (const bench of data) {
     note = "Native compiled — LLVM optimised, may auto-vectorise";
   } else if (winnerRt === "nodejs") {
     note = "V8 JIT — wins when WASM N/A or string/async workload";
-  } else if (winnerRt === "galerinPassive") {
-    const nextBest = ORDER.filter(r => r !== "galerinPassive" && m[r]).sort((a,b) => (m[b]??0)-(m[a]??0))[0];
+  } else if (winnerRt === "galerinaPassive") {
+    const nextBest = ORDER.filter(r => r !== "galerinaPassive" && m[r]).sort((a,b) => (m[b]??0)-(m[a]??0))[0];
     const nb = nextBest ? ` (first-call winner: ${LABEL[nextBest]} at ${fmtT(m[nextBest])})` : "";
     note = `LRU cache warm path${nb}`;
-  } else if (winnerRt === "galerinGoverned" || winnerRt === "galerinManifest") {
+  } else if (winnerRt === "galerinaGoverned" || winnerRt === "galerinaManifest") {
     note = "Galerina governed path wins this workload";
   } else if (winnerRt === "denoWebGpu") {
     note = `🎮 Real GPU dispatch (${GPU_NAME} via WebGPU)`;
@@ -348,7 +348,7 @@ for (const bench of data) {
   let beatsPython = 0, comparedToPython = 0, excluded = 0;
   for (const bench of data) {
     if (!comparable(bench)) { excluded++; continue; }
-    const gov = throughput(bench.results?.galerinGoverned);
+    const gov = throughput(bench.results?.galerinaGoverned);
     const py  = throughput(bench.results?.python);
     if (gov && py) { comparedToPython++; if (gov >= py) beatsPython++; }
   }
@@ -373,7 +373,7 @@ console.log("> **The standard view.** Winner = fastest PRODUCTION runtime (the 3
 console.log("| Benchmark | 🏆 Winner (ceiling) | Speed | WASM▶prod: rank · ×slower | gov⟨interp⟩: ×slower |");
 console.log("|---|---|---|---|---|");
 
-const PROD_POOL = ORDER.filter((rt) => !["galerinPassive", "galerinManifest", "galerinGoverned"].includes(rt));
+const PROD_POOL = ORDER.filter((rt) => !["galerinaPassive", "galerinaManifest", "galerinaGoverned"].includes(rt));
 const ordinal = (k) => k + (k % 10 === 1 && k % 100 !== 11 ? "st" : k % 10 === 2 && k % 100 !== 12 ? "nd" : k % 10 === 3 && k % 100 !== 13 ? "rd" : "th");
 const xSlower = (slow, win) => {
   if (!slow || !win) return "—";
@@ -393,10 +393,10 @@ for (const bench of data) {
   const winnerRt = ranked[0], winSpeed = m[winnerRt], M = ranked.length;
   const wasmRank = ranked.indexOf("wasm");
   const wasm = throughput(bench.results?.wasm) ?? 0;
-  const gov = throughput(bench.results?.galerinGoverned) ?? 0;
+  const gov = throughput(bench.results?.galerinaGoverned) ?? 0;
   const wasmCell = wasm > 0 && wasmRank >= 0 ? `${ordinal(wasmRank + 1)}/${M} · ${xSlower(wasm, winSpeed)}` : cellReason(bench, "wasm");
   winTally[LABEL[winnerRt]] = (winTally[LABEL[winnerRt]] ?? 0) + 1;
-  canonRows.push({ bench: bench.benchmark, winnerLabel: LABEL[winnerRt], winSpeed, wasmCell, govCell: gov > 0 ? xSlower(gov, winSpeed) : cellReason(bench, "galerinGoverned") });
+  canonRows.push({ bench: bench.benchmark, winnerLabel: LABEL[winnerRt], winSpeed, wasmCell, govCell: gov > 0 ? xSlower(gov, winSpeed) : cellReason(bench, "galerinaGoverned") });
 }
 canonRows.sort((a, b) => a.winnerLabel.localeCompare(b.winnerLabel) || b.winSpeed - a.winSpeed);
 for (const r of canonRows) console.log(`| ${r.bench} | **${r.winnerLabel}** | ${fmtT(r.winSpeed)} | ${r.wasmCell} | ${r.govCell} |`);
@@ -434,15 +434,15 @@ for (const bench of data) {
   })];
 
   if (GOV_COST_ONLY.has(bench.benchmark)) {
-    const govOverhead = m.galerinManifest && m.galerinGoverned
-      ? ((1 - m.galerinGoverned / m.galerinManifest) * 100).toFixed(1) + "% gov overhead"
+    const govOverhead = m.galerinaManifest && m.galerinaGoverned
+      ? ((1 - m.galerinaGoverned / m.galerinaManifest) * 100).toFixed(1) + "% gov overhead"
       : "N/A — only Galerina tiers ran";
     row.push(govOverhead);
   } else {
-    row.push((m.nodejs && m.galerinGoverned)
-      ? ratio(m.nodejs, m.galerinGoverned)
-      : (!m.nodejs && !m.galerinGoverned) ? "N/A — neither ran"
-      : !m.galerinGoverned ? "N/A — no governed ⟨interp⟩"
+    row.push((m.nodejs && m.galerinaGoverned)
+      ? ratio(m.nodejs, m.galerinaGoverned)
+      : (!m.nodejs && !m.galerinaGoverned) ? "N/A — neither ran"
+      : !m.galerinaGoverned ? "N/A — no governed ⟨interp⟩"
       : "N/A — no Node.js");
   }
   console.log("| "+row.join(" | ")+" |");
@@ -493,7 +493,7 @@ for (const bench of data) {
   const bestRust = Math.max(mt.rustAvx512 ?? 0, mt.rustAvx2 ?? 0, mt.rust ?? 0) || null;
   const node     = mt.nodejs;
   const wasm     = mt.wasm;
-  const governed = mt.galerinGoverned;
+  const governed = mt.galerinaGoverned;
 
   if (!wasm && !governed) continue;
 
@@ -696,7 +696,7 @@ if (gpuBench) {
     console.log(`**GPU detected:** ${gpu.device.present ? `${gpu.device.name} (driver ${gpu.device.driver}, ${gpu.device.memory})` : "none"}`);
     console.log(`**Compute toolchain:** ${gpu.summary}`);
     console.log(`**Deno WebGPU:** ${denoGpuAvail ? `✅ available — real GPU dispatch enabled (${GPU_NAME})` : "⏳ not installed"}`);
-    console.log(`**Galerina GPU backend:** \`${gpu.galerinGpuStatus}\` — gpu-plan.ts emits a WGSL skeleton only; no dispatch path (pending Phase 38).\n`);
+    console.log(`**Galerina GPU backend:** \`${gpu.galerinaGpuStatus}\` — gpu-plan.ts emits a WGSL skeleton only; no dispatch path (pending Phase 38).\n`);
   }
 
   console.log("| # | 🚦 | Runtime | Device (🖥️ CPU / 🎮 GPU) | Throughput (kernel ops/s) | Wall | vs Node |");
@@ -770,7 +770,7 @@ console.log("- Real AVX2 advantage appears on large tensors (L2/L3 cache boundar
 console.log("- WASM Phase 27: once WebAssembly.instantiate is wired, WASM SIMD 128 will show 10-100× over tree-walker.\n");
 console.log("**governance-cost: measuring the governance tax:**");
 console.log("- This benchmark isolates the overhead of the governance layer (ProofGraph + capability checking + audit).");
-console.log("- Key metric: galerinGoverned/galerinManifest ratio. Current baseline: ~2-3× slower (37% of manifest speed).");
+console.log("- Key metric: galerinaGoverned/galerinaManifest ratio. Current baseline: ~2-3× slower (37% of manifest speed).");
 console.log("- Governance overhead sources: ProofGraph construction, GovernanceFlags bitmask, capability lookup, audit event.");
 console.log("- Target (Phase 30): <1.2× overhead via compile-time governance caching and proof reuse.\n");
 console.log("**Phase 25 projection (WASM):**");
@@ -844,9 +844,9 @@ for (const bench of data) {
     .sort((a, b) => b.t - a.t);
   if (rows.length === 0) continue;
   const winner = rows[0].t, slowest = rows[rows.length - 1].t;
-  const realWinner = rows.find((x) => x.rt !== "galerinPassive");
+  const realWinner = rows.find((x) => x.rt !== "galerinaPassive");
   console.log(`### ${bench.benchmark}`);
-  if (rows[0].rt === "galerinPassive" && realWinner) {
+  if (rows[0].rt === "galerinaPassive" && realWinner) {
     console.log(`> 🏆 cache-hit "winner" is Galerina passive (memoised); **real compute winner: ${LABEL[realWinner.rt]} at ${fmtT(realWinner.t)}**.`);
   }
   console.log("| # | Runtime | Throughput | ×vs winner | ×vs slowest |");
@@ -855,7 +855,7 @@ for (const bench of data) {
     const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
     const vsW = i === 0 ? "🏆 winner" : fmtX(winner / x.t) + " slower";
     const vsS = i === rows.length - 1 ? "— (slowest)" : fmtX(x.t / slowest) + " faster";
-    const flag = x.rt === "galerinPassive" ? " ⚠️cache" : "";
+    const flag = x.rt === "galerinaPassive" ? " ⚠️cache" : "";
     console.log(`| ${medal} | ${LABEL[x.rt]}${flag} | ${fmtT(x.t)} | ${vsW} | ${vsS} |`);
   });
   console.log("");

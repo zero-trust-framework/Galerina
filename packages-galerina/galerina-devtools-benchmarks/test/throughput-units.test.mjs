@@ -14,19 +14,19 @@ const approx = (a, b, tol = 0.01) => Math.abs(a - b) / b <= tol;
 // ── nbody: the headline inflation case (was 32768×) ─────────────────────────
 const nbody = {
   nodejs:         { iterationsPerSecond: 3700, forceEvalsPerSecond: 3700 * 32768 },
-  galerinManifest: { execMs: 522.6 },
+  galerinaManifest: { execMs: 522.6 },
 };
 const nNode = normalizeThroughput("nodejs", nbody.nodejs, "nbody").ops;
-const nMan  = normalizeThroughput("galerinManifest", nbody.galerinManifest, "nbody").ops;
+const nMan  = normalizeThroughput("galerinaManifest", nbody.galerinaManifest, "nbody").ops;
 ok(nNode === 3700 * 32768, `nbody node → force-evals/s (${nNode})`);
 ok(approx(nMan, 62700, 0.02), `nbody galerina-manifest → force-evals/s (${nMan})`);
 ok(nNode > nMan * 1000, "nbody: Node is >1000× the tree-walker — no false win");
 ok(assertBenchmarkUnits("nbody", nbody).status === "PASS", "nbody unit assertion PASS");
 
 // ── collection-pipeline: whole-pass/sec must be scaled by size (was 10000×) ──
-const cp = { nodejs: { iterationsPerSecond: 1000, size: 10000 }, galerinManifest: { execMs: 50 } };
+const cp = { nodejs: { iterationsPerSecond: 1000, size: 10000 }, galerinaManifest: { execMs: 50 } };
 ok(normalizeThroughput("nodejs", cp.nodejs, "collection-pipeline").ops === 10_000_000, "collection-pipeline node → elements/s (×size)");
-ok(normalizeThroughput("galerinManifest", cp.galerinManifest, "collection-pipeline").ops === 200_000, "collection-pipeline galerina → elements/s");
+ok(normalizeThroughput("galerinaManifest", cp.galerinaManifest, "collection-pipeline").ops === 200_000, "collection-pipeline galerina → elements/s");
 
 // ── json-parse: nested rate must be de-nested (was a silent dropout) ─────────
 const jp = { nodejs: { records: 500, results: { splitScan: { operationsPerSecond: 800 } } } };

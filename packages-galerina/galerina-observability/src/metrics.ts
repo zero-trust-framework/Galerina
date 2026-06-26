@@ -343,7 +343,7 @@ function promLabel(value: string): string {
 
 /**
  * Render a MetricsSnapshot as Prometheus/OpenMetrics text using the app-ops `app_*`
- * namespace (deliberately distinct from governance-telemetry's `galerin_*`). Pure.
+ * namespace (deliberately distinct from governance-telemetry's `galerina_*`). Pure.
  * A route label that is not a safe token is dropped from its series (defence in depth).
  */
 export function renderMetricsPrometheus(snapshot: MetricsSnapshot): string {

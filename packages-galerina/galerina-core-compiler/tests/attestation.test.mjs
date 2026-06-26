@@ -13,7 +13,7 @@ import { parseProgram } from "../dist/index.js";
 describe("Attestation — buildAttestation", () => {
   it("produces correct artifact and schemaVersion fields", async () => {
     const att = await buildAttestation({ flowName: "testFlow" });
-    assert.equal(att.artifact, "galerin.audit.attestation");
+    assert.equal(att.artifact, "galerina.audit.attestation");
     assert.equal(att.schemaVersion, "1.0");
   });
 
@@ -76,7 +76,7 @@ describe("Attestation — attestationToYaml", () => {
   it("contains artifact field", async () => {
     const att = await buildAttestation({ flowName: "f" });
     const yaml = attestationToYaml(att);
-    assert.ok(yaml.includes("galerin.audit.attestation"));
+    assert.ok(yaml.includes("galerina.audit.attestation"));
   });
 
   it("contains schemaVersion field", async () => {
@@ -146,7 +146,7 @@ describe("Attestation — attestationFromJson", () => {
     const att = await buildAttestation({ flowName: "jsonFlow", sourceText: "x" });
     const json = JSON.stringify(att);
     const parsed = attestationFromJson(json);
-    assert.equal(parsed.artifact, "galerin.audit.attestation");
+    assert.equal(parsed.artifact, "galerina.audit.attestation");
     assert.equal(parsed.schemaVersion, "1.0");
     assert.equal(parsed.flow, "jsonFlow");
   });
@@ -160,7 +160,7 @@ describe("Attestation — attestationFromJson", () => {
 
   it("throws on invalid schemaVersion", () => {
     assert.throws(
-      () => attestationFromJson(JSON.stringify({ artifact: "galerin.audit.attestation", schemaVersion: "2.0" })),
+      () => attestationFromJson(JSON.stringify({ artifact: "galerina.audit.attestation", schemaVersion: "2.0" })),
       /unsupported schemaVersion/,
     );
   });

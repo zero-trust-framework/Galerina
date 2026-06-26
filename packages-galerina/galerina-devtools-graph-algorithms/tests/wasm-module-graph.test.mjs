@@ -57,7 +57,7 @@ const entryPoints = ["handleRequest"];
 // ─── Test 1: getExports returns correct flow names ───────────────────────────
 
 describe("getExports", () => {
-  it("returns galerinName of all export nodes", () => {
+  it("returns galerinaName of all export nodes", () => {
     const graph = buildWASMModuleGraph(girFlows, entryPoints, capabilityEntries);
     const exports = getExports(graph);
     assert.deepEqual(exports, ["handleRequest"]);
@@ -115,7 +115,7 @@ describe("getImports", () => {
     const netImport = getImports(graph).find((i) => i.effect === "network.outbound");
     assert.ok(netImport !== undefined);
     assert.equal(netImport.wasmName, "host:net.fetch");
-    assert.equal(netImport.galerinName, "Http.fetch");
+    assert.equal(netImport.galerinaName, "Http.fetch");
   });
 
   it("returns empty array when no flows have declared effects", () => {

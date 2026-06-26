@@ -78,10 +78,10 @@ export interface CheckConfig {
 function loadCheckConfig(startDir: string): CheckConfig {
   const candidates = [
     join(startDir, "galerina.check.json"),
-    join(startDir, ".galerinrc.json"),
+    join(startDir, ".galerinarc.json"),
     join(startDir, "galerina.config.json"),
     join(process.cwd(), "galerina.check.json"),
-    join(process.cwd(), ".galerinrc.json"),
+    join(process.cwd(), ".galerinarc.json"),
   ];
   for (const path of candidates) {
     if (existsSync(path)) {
@@ -1126,7 +1126,7 @@ function runCostAnalysis(targetDir: string): void {
 
 function main(): void {
   const { mode, targetDir } = parseArgs();
-  // Load galerina.check.json / .galerinrc.json if present
+  // Load galerina.check.json / .galerinarc.json if present
   const checkConfig: CheckConfig = (mode === "check" || mode === "check-strict")
     ? loadCheckConfig(targetDir)
     : {};

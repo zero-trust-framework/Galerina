@@ -18,72 +18,72 @@ const resultsDir  = join(__dirname, "..", "results");
 //
 // Rule of thumb: passiveCallCount × execMs < 1000ms (keep passive < 1s total)
 const BENCHMARKS = [
-  { id: "compute-mix",          dir: "compute-mix",          galerinOpsPerRun: 50000, timeBased: true, passiveCallCount: 3  },
-  { id: "arithmetic-threshold", dir: "arithmetic-threshold", galerinOpsPerRun: null,                   passiveCallCount: 3  },
-  { id: "six-digit-guess",      dir: "six-digit-guess",      galerinOpsPerRun: null,                   passiveCallCount: 3  },
-  { id: "record-allocation",    dir: "record-allocation",    galerinOpsPerRun: 10000,                  passiveCallCount: 20 },
-  { id: "fibonacci-recursive",  dir: "fibonacci-recursive",  galerinOpsPerRun: 1,                      passiveCallCount: 5  },
+  { id: "compute-mix",          dir: "compute-mix",          galerinaOpsPerRun: 50000, timeBased: true, passiveCallCount: 3  },
+  { id: "arithmetic-threshold", dir: "arithmetic-threshold", galerinaOpsPerRun: null,                   passiveCallCount: 3  },
+  { id: "six-digit-guess",      dir: "six-digit-guess",      galerinaOpsPerRun: null,                   passiveCallCount: 3  },
+  { id: "record-allocation",    dir: "record-allocation",    galerinaOpsPerRun: 10000,                  passiveCallCount: 20 },
+  { id: "fibonacci-recursive",  dir: "fibonacci-recursive",  galerinaOpsPerRun: 1,                      passiveCallCount: 5  },
   // Tower of Hanoi (n=16) with a threaded move-checksum — 65,535 moves/call, deep recursion + per-move
-  // governed arithmetic. galerinOpsPerRun = moves/call so the Galerina column reports moves/sec like the others;
+  // governed arithmetic. galerinaOpsPerRun = moves/call so the Galerina column reports moves/sec like the others;
   // `result` (=42452 at n=16) is the cross-language checksum oracle (all runtimes must agree).
-  { id: "tower-of-hanoi",       dir: "tower-of-hanoi",       galerinOpsPerRun: 65535,                  passiveCallCount: 2  },
-  { id: "collection-pipeline",  dir: "collection-pipeline",  galerinOpsPerRun: 10000,                  passiveCallCount: 30 },
-  { id: "governance-cost",      dir: "governance-cost",      galerinOpsPerRun: 1,                      passiveCallCount: 100 },
-  { id: "hardware-targets",     dir: "hardware-targets",     galerinOpsPerRun: 1,                      passiveCallCount: 1000 },
+  { id: "tower-of-hanoi",       dir: "tower-of-hanoi",       galerinaOpsPerRun: 65535,                  passiveCallCount: 2  },
+  { id: "collection-pipeline",  dir: "collection-pipeline",  galerinaOpsPerRun: 10000,                  passiveCallCount: 30 },
+  { id: "governance-cost",      dir: "governance-cost",      galerinaOpsPerRun: 1,                      passiveCallCount: 100 },
+  { id: "hardware-targets",     dir: "hardware-targets",     galerinaOpsPerRun: 1,                      passiveCallCount: 1000 },
   // Low-memory: measures heap bytes allocated per operation.
   // KEY METRIC: bytesPerOperation — WASM/Rust/Node ~0, tree-walker ~200-400 bytes/op.
   // processStream(10000) does 10000 inner iterations (validate + classify per item).
-  { id: "low-memory",          dir: "low-memory",           galerinOpsPerRun: 10000,                  passiveCallCount: 20   },
+  { id: "low-memory",          dir: "low-memory",           galerinaOpsPerRun: 10000,                  passiveCallCount: 20   },
   // GPU-compute: parallel map-reduce kernel — a GPU-SHAPED workload run on CPU.
   // mapReduce(100000) does 100000 per-element kernel evaluations.
   // GPU columns are filled by gpu-detect (toolchain-gated); Galerina GPU = pending Phase 38.
-  { id: "gpu-compute",         dir: "gpu-compute",          galerinOpsPerRun: 100000,                 passiveCallCount: 10   },
+  { id: "gpu-compute",         dir: "gpu-compute",          galerinaOpsPerRun: 100000,                 passiveCallCount: 10   },
   // Matrix multiply: canonical float32 GEMM at two scales (32×32 and 64×64).
   // Galerina uses scaled integer arithmetic (×1000) for the WASM path.
   // Key question: does WASM SIMD beat CPU, and at what scale does WebGPU win?
-  { id: "matrix-multiply", dir: "matrix-multiply", galerinOpsPerRun: 32 * 32, passiveCallCount: 5 },
+  { id: "matrix-multiply", dir: "matrix-multiply", galerinaOpsPerRun: 32 * 32, passiveCallCount: 5 },
   // Crypto-ops: SHA-256 bulk hashing, HMAC-SHA256, Ed25519 sign+verify.
   // WASM column is N/A — crypto delegates to the host capability.
   // Galerina stub documents the governance model (crypto.verify effect required).
-  { id: "crypto-ops", dir: "crypto-ops", galerinOpsPerRun: 1, passiveCallCount: 100 },
+  { id: "crypto-ops", dir: "crypto-ops", galerinaOpsPerRun: 1, passiveCallCount: 100 },
   // Text/HTML: string processing workload for web services.
   // Galerina string flows go through the sync tree-walker (not the integer bytecode VM).
   // Key question: how fast is WASM for string ops, and is the governed path viable for text work?
-  { id: "text-html", dir: "text-html", galerinOpsPerRun: 1, passiveCallCount: 100 },
+  { id: "text-html", dir: "text-html", galerinaOpsPerRun: 1, passiveCallCount: 100 },
   // HTTP-throughput: localhost req/s — Node.js raw vs Galerina governed endpoint.
   // Uses a server-lifecycle harness (benchmark.mjs), not the standard file pattern,
   // so it is intentionally NOT in this array. Run it standalone: `npm run run:http`.
   // Tri-logic: 3-valued ternary logic (True=1, False=-1, Unknown=0) — all 27 truth table combinations.
   // Relevant for future photonic compute substrates; validates correctness and shows CPU overhead today.
-  { id: "tri-logic", dir: "tri-logic", galerinOpsPerRun: 27000, passiveCallCount: 100 },
+  { id: "tri-logic", dir: "tri-logic", galerinaOpsPerRun: 27000, passiveCallCount: 100 },
   // Data-query: SQL-like data filtering on arrays of JSON records — a core web service workload.
   // Galerina governed path validates query inputs as Tainted<String> before execution.
-  { id: "data-query", dir: "data-query", galerinOpsPerRun: 1000, passiveCallCount: 50 },
+  { id: "data-query", dir: "data-query", galerinaOpsPerRun: 1000, passiveCallCount: 50 },
   // Call-chain: layered call-dispatch overhead — controller → service.method → util fn.
   // In Galerina: main → serviceLayer → domainLayer → leafCompute (7 flow calls per chain).
   // One op = one outer chain; 50,000 chains per run. Isolates flow-call cost (arg binding
   // + governed frame), salted by loop index so the pure-flow memo cache never short-circuits.
-  { id: "call-chain", dir: "call-chain", galerinOpsPerRun: 50000, passiveCallCount: 5 },
+  { id: "call-chain", dir: "call-chain", galerinaOpsPerRun: 50000, passiveCallCount: 5 },
   // N-body: pairwise gravitational force (scaled-integer, governed). One run =
   // simulate(64, 8) = steps×n×n = 32,768 softened inverse-distance force evals.
   // Array-free index-math kernel; checksum (536024) is identical across Node,
   // Python and the Galerina integer path. Physics-shaped compute throughput test.
-  { id: "nbody", dir: "nbody", galerinOpsPerRun: 32768, passiveCallCount: 5 },
+  { id: "nbody", dir: "nbody", galerinaOpsPerRun: 32768, passiveCallCount: 5 },
   // JSON-parse: key:value record scanning (the expensive part of real JSON workloads) —
   // split records on ',', split fields on ':', accumulate field counts + value lengths.
   // One run = scanRecords(500) = 500 records parsed. split/length match JS/Python exactly,
   // so the checksum (12500) is identical across Node, Python and the Galerina string path.
-  { id: "json-parse", dir: "json-parse", galerinOpsPerRun: 500, passiveCallCount: 20 },
+  { id: "json-parse", dir: "json-parse", galerinaOpsPerRun: 500, passiveCallCount: 20 },
   // ── Real-world cross-language benchmarks (Computer Language Benchmarks Game) ──
   // mandelbrot: scaled-int escape-time over a 128×128 grid (16384 px), max 100 iters.
   // One op = one pixel; checksum = Σ iteration counts (identical across runtimes).
-  { id: "mandelbrot", dir: "mandelbrot", galerinOpsPerRun: 16384, passiveCallCount: 5 },
+  { id: "mandelbrot", dir: "mandelbrot", galerinaOpsPerRun: 16384, passiveCallCount: 5 },
   // spectral-norm: scaled-int, index-math (no arrays). n=100, 10 power-iterations →
   // 10×2×n² = 200000 A(i,j) evaluations per run. One op = one A-eval.
-  { id: "spectral-norm", dir: "spectral-norm", galerinOpsPerRun: 200000, passiveCallCount: 5 },
+  { id: "spectral-norm", dir: "spectral-norm", galerinaOpsPerRun: 200000, passiveCallCount: 5 },
   // binary-trees: THE allocation/GC benchmark. minDepth 4, maxDepth 10 → 135854 nodes
   // allocated per run. One op = one node allocated. Read the bytes/op column here.
-  { id: "binary-trees", dir: "binary-trees", galerinOpsPerRun: 135854, passiveCallCount: 3 },
+  { id: "binary-trees", dir: "binary-trees", galerinaOpsPerRun: 135854, passiveCallCount: 3 },
   // ── .tmf trust-container CREATION — TMX-256 SHAKE Merkle + LE container packing ──
   // The Node.js column IS the shipped @galerina/ext-tmf engine (pure TS/Node — no .spore
   // path exists); python.py / bench.rs are byte-identical reference writers that assert
@@ -210,11 +210,11 @@ async function runBenchmark(bench) {
   const spore = join(dir, "benchmark.spore");
   if (existsSync(spore)) {
     console.log(`  galerina (governed)...`);
-    res.galerinGoverned = await runGalerina(spore, "governed", bench);
+    res.galerinaGoverned = await runGalerina(spore, "governed", bench);
     console.log(`  galerina (manifest)...`);
-    res.galerinManifest = await runGalerina(spore, "manifest", bench);
+    res.galerinaManifest = await runGalerina(spore, "manifest", bench);
     console.log(`  galerina (passive)...`);
-    res.galerinPassive = await runGalerina(spore, "passive", bench);
+    res.galerinaPassive = await runGalerina(spore, "passive", bench);
   }
 
   // ── Normalise throughput to a single canonical unit per benchmark ──────────
@@ -235,16 +235,16 @@ async function runBenchmark(bench) {
     }
     units = assertBenchmarkUnits(bench.id, res);
   } else {
-    // Out-of-scope benchmarks (galerinOpsPerRun null/1) keep the legacy Galerina
+    // Out-of-scope benchmarks (galerinaOpsPerRun null/1) keep the legacy Galerina
     // normalisation: ops/sec = opsPerRun × runsPerSec, or result.value as the op count.
-    for (const key of ["galerinGoverned", "galerinManifest"]) {
+    for (const key of ["galerinaGoverned", "galerinaManifest"]) {
       const r = res[key];
       if (!r || r.error) continue;
       const resultValue = r.result?.__tag === "int" ? r.result.value : null;
-      const opsPerRun   = bench.galerinOpsPerRun ?? resultValue ?? null;
+      const opsPerRun   = bench.galerinaOpsPerRun ?? resultValue ?? null;
       if (opsPerRun !== null && r.execMs > 0) {
-        r.galerinOpsPerSecond = Math.round((opsPerRun / r.execMs) * 1000);
-        r.galerinOpsPerRun    = opsPerRun;
+        r.galerinaOpsPerSecond = Math.round((opsPerRun / r.execMs) * 1000);
+        r.galerinaOpsPerRun    = opsPerRun;
       }
     }
   }

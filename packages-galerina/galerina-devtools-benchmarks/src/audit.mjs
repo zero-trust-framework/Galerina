@@ -89,7 +89,7 @@ console.log("\n4. Anti-inflation regression (Galerina governed must not beat Nod
 for (const id of ["nbody", "collection-pipeline", "low-memory", "compute-mix", "mandelbrot"]) {
   const bench = byId.get(id);
   if (!bench) continue;
-  const gov = tput(bench.results.galerinGoverned);
+  const gov = tput(bench.results.galerinaGoverned);
   const node = tput(bench.results.nodejs);
   if (gov == null || node == null) { console.log(`  – ${id}: missing gov/node throughput (skipped)`); continue; }
   if (gov < node) pass(`${id}: Node ${(node / gov).toFixed(0)}× the tree-walker (honest)`);

@@ -16,7 +16,7 @@ import { createHash, generateKeyPairSync, sign as cryptoSign, verify as cryptoVe
 // ---------------------------------------------------------------------------
 
 export interface GalerinaAttestation {
-  readonly artifact: "galerin.audit.attestation";
+  readonly artifact: "galerina.audit.attestation";
   readonly schemaVersion: "1.0";
   readonly flow: string;
   readonly timestamp: string;
@@ -122,7 +122,7 @@ export async function buildAttestation(
   }
 
   return {
-    artifact: "galerin.audit.attestation",
+    artifact: "galerina.audit.attestation",
     schemaVersion: "1.0",
     flow: inputs.flowName,
     timestamp: new Date().toISOString(),
@@ -380,9 +380,9 @@ export function attestationFromJson(json: string): GalerinaAttestation {
 
   const obj = parsed as Record<string, unknown>;
 
-  if (obj["artifact"] !== "galerin.audit.attestation") {
+  if (obj["artifact"] !== "galerina.audit.attestation") {
     throw new Error(
-      `attestationFromJson: invalid artifact field "${String(obj["artifact"])}", expected "galerin.audit.attestation"`,
+      `attestationFromJson: invalid artifact field "${String(obj["artifact"])}", expected "galerina.audit.attestation"`,
     );
   }
 

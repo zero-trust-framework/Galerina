@@ -58,7 +58,7 @@ export function gpuReport() {
     device,
     toolchains,
     // Galerina GPU backend is a known stub regardless of hardware
-    galerinGpuStatus: "not-implemented",     // gpu-plan.ts is a lowering plan only (Phase 38)
+    galerinaGpuStatus: "not-implemented",     // gpu-plan.ts is a lowering plan only (Phase 38)
     summary: !device.present
       ? "No GPU detected."
       : toolchains.anyRunnable

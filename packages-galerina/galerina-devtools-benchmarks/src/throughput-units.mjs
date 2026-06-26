@@ -4,7 +4,7 @@
  * the SAME unit.
  *
  * ── The bug this fixes ──────────────────────────────────────────────────────
- * compare.mjs historically read Galerina's `galerinOpsPerSecond` (INNER-ops/sec —
+ * compare.mjs historically read Galerina's `galerinaOpsPerSecond` (INNER-ops/sec —
  * e.g. nbody = 32768 force-evals per main() call) while reading the other
  * languages' `iterationsPerSecond` (WHOLE-CALL/sec — one simulate() call). It then
  * compared inner-ops/sec against whole-calls/sec, producing false "Galerina wins":
@@ -24,8 +24,8 @@
  * excluded from winner / Python-floor claims (see each spec's `reason`).
  *
  * NOTE: the canonical inner-ops-per-call (`N`) values here mirror
- * `BENCHMARKS[].galerinOpsPerRun` in runner.mjs; THIS file is authoritative for
- * throughput. Out-of-scope benchmarks (galerinOpsPerRun null/1 — arithmetic-threshold,
+ * `BENCHMARKS[].galerinaOpsPerRun` in runner.mjs; THIS file is authoritative for
+ * throughput. Out-of-scope benchmarks (galerinaOpsPerRun null/1 — arithmetic-threshold,
  * six-digit-guess, fibonacci-recursive, hardware-targets, governance-cost,
  * crypto-ops, text-html) are intentionally absent here and keep their legacy path.
  */
@@ -38,7 +38,7 @@ const scale = (rate, factor) => {
 };
 
 // Native (non-Galerina, non-WASM) runtime keys handled by each spec's `native()`.
-const GALERINA_INTERP = new Set(["galerinGoverned", "galerinManifest"]);
+const GALERINA_INTERP = new Set(["galerinaGoverned", "galerinaManifest"]);
 
 // The flat per-second rate fields a runner might report at the TOP level.
 // Used only for (a) display of non-comparable rows and (b) dropout detection.
@@ -164,14 +164,14 @@ const SPECS = {
     N: 27000, unit: "trit-ops/s", comparable: false,
     reason: "incomparable workloads — Galerina main()=runBulkTri(100000) (100k triples / 300k trit-ops); " +
             "node/python/rust run nested 9-element truth-table micro-benches plus a separate 10M bulk; " +
-            "galerinOpsPerRun=27000 (≈27 truth-table combos ×1000) corresponds to none of these. " +
+            "galerinaOpsPerRun=27000 (≈27 truth-table combos ×1000) corresponds to none of these. " +
             "Needs a common bulk-N trit-op path on every runtime.",
     native: () => null,
   },
   "data-query": {
     N: 1000, unit: "records/s", comparable: false,
     reason: "incomparable — Galerina main()=filterAndCount(1000)+groupByCategory(1000)=2000 record-scans " +
-            "(but galerinOpsPerRun=1000 undercounts); node/python run 7 separate query micro-benches " +
+            "(but galerinaOpsPerRun=1000 undercounts); node/python run 7 separate query micro-benches " +
             "nested under results.* with no single representative. Needs a main() recount + a chosen " +
             "representative query before the numbers compare.",
     native: () => null,
@@ -223,7 +223,7 @@ export function normalizeThroughput(rtKey, r, benchId) {
   let ops = null;
   if (GALERINA_INTERP.has(rtKey)) {
     ops = num(r.execMs) != null && r.execMs > 0 ? Math.round((spec.N / r.execMs) * 1000) : null;
-  } else if (rtKey === "galerinPassive") {
+  } else if (rtKey === "galerinaPassive") {
     ops = scale(r.warmCallsPerSecond, spec.N);               // warm = LRU-cache steady state
   } else if (rtKey === "wasm") {
     ops = scale(r.callsPerSecond, spec.N);                   // one WASM call = one main() = N inner ops
@@ -236,7 +236,7 @@ export function normalizeThroughput(rtKey, r, benchId) {
 /**
  * Assert that every runtime in a benchmark reports the SAME unit (and that none
  * with real data silently fail to normalize). `resultsByRt` is the `results`
- * object ({ nodejs, python, wasm, galerinGoverned, ... }).
+ * object ({ nodejs, python, wasm, galerinaGoverned, ... }).
  *
  * Returns { benchId, skipped?, comparable, unit, status, reason?, problems[] }.
  *   status: "PASS" | "FAIL" (comparable) or "FLAGGED" (non-comparable, expected).

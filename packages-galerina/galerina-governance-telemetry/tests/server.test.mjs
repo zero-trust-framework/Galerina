@@ -25,9 +25,9 @@ test("GET /metrics → 200 fenced Prometheus text", async () => {
   assert.equal(res.status, 200);
   assert.match(res.headers.get("content-type") ?? "", /text\/plain/);
   const body = await res.text();
-  assert.match(body, /galerin_governance_flag\{flag="RequiresAudit"\} 1/);
-  assert.match(body, /galerin_audit_events_total\{status="Success"\} 7/);
-  assert.match(body, /galerin_telemetry_dropped_series_total 0/);
+  assert.match(body, /galerina_governance_flag\{flag="RequiresAudit"\} 1/);
+  assert.match(body, /galerina_audit_events_total\{status="Success"\} 7/);
+  assert.match(body, /galerina_telemetry_dropped_series_total 0/);
 });
 
 test("GET /healthz → 200", async () => {

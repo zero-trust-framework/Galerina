@@ -6,7 +6,7 @@ import type { Graph } from "../core/types.js";
 export interface WASMNodeData {
   readonly kind: "export" | "import" | "internal";
   readonly wasmName: string;
-  readonly galerinName: string;
+  readonly galerinaName: string;
   readonly paramTypes: readonly string[];
   readonly resultTypes: readonly string[];
   readonly effect?: string;
@@ -86,7 +86,7 @@ export function buildWASMModuleGraph(
       builder.addNode(nodeId, {
         kind: "export",
         wasmName: `$${flow.qualifier}_${flow.name}`,
-        galerinName: flow.name,
+        galerinaName: flow.name,
         paramTypes: [],
         resultTypes: [],
       });
@@ -100,7 +100,7 @@ export function buildWASMModuleGraph(
       builder.addNode(nodeId, {
         kind: "internal",
         wasmName: `$${flow.qualifier}_${flow.name}`,
-        galerinName: flow.name,
+        galerinaName: flow.name,
         paramTypes: [],
         resultTypes: [],
       });
@@ -122,7 +122,7 @@ export function buildWASMModuleGraph(
       builder.addNode(nodeId, {
         kind: "import",
         wasmName: cap?.wasmImport ?? nodeId,
-        galerinName: cap?.functionName ?? effect,
+        galerinaName: cap?.functionName ?? effect,
         paramTypes: [],
         resultTypes: [],
         effect,
@@ -170,13 +170,13 @@ export function buildWASMModuleGraph(
 // ─── Query Functions ─────────────────────────────────────────────────────────
 
 /**
- * Returns the galerinName of all export nodes in the graph.
+ * Returns the galerinaName of all export nodes in the graph.
  */
 export function getExports(graph: WASMModuleGraph): string[] {
   return graph
     .nodes()
     .filter((n) => n.data.kind === "export")
-    .map((n) => n.data.galerinName);
+    .map((n) => n.data.galerinaName);
 }
 
 /**

@@ -30,11 +30,11 @@ const isWin = process.platform === "win32";
 
 /** Run `node galerina.mjs <args>` and return stdout/stderr/code */
 function galerina(...args) {
-  return galerinEnv({}, ...args);
+  return galerinaEnv({}, ...args);
 }
 
 /** Like galerina(), but merges extra environment variables (e.g. GALERINA_PROFILE). */
-function galerinEnv(extraEnv, ...args) {
+function galerinaEnv(extraEnv, ...args) {
   const r = spawnSync(process.execPath, [GALERINA, ...args], {
     cwd: ROOT, encoding: "utf8", timeout: 30000, env: { ...process.env, ...extraEnv },
   });
@@ -122,7 +122,7 @@ describe("CLI compatibility — galerina run", () => {
     assert.equal(dev.stdout.trim(), "5050");
 
     // PRODUCTION: the present manifest is unsigned (placeholder) → fail-closed before executing.
-    const prod = galerinEnv({ GALERINA_PROFILE: "production" }, "run", BENCH, "--invoke", "main");
+    const prod = galerinaEnv({ GALERINA_PROFILE: "production" }, "run", BENCH, "--invoke", "main");
     assert.notEqual(prod.code, 0, "production run must reject an unsigned (placeholder) manifest");
     assert.ok(prod.stderr.includes("SPORE-MANIFEST-UNSIGNED"), `expected SPORE-MANIFEST-UNSIGNED, got: ${prod.stderr}`);
   });
@@ -139,7 +139,7 @@ describe("CLI compatibility — galerina run", () => {
     const reallySigned = sig.algorithm === "Ed25519" && typeof sig.signature === "string" && sig.signature.length > 0 && sig.canon === "jcs";
     if (!reallySigned) return; // no signing key provisioned here → the positive path isn't exercisable
 
-    const prod = galerinEnv({ GALERINA_PROFILE: "production" }, "run", BENCH, "--invoke", "main");
+    const prod = galerinaEnv({ GALERINA_PROFILE: "production" }, "run", BENCH, "--invoke", "main");
     assert.equal(prod.code, 0, `production run of a jcs-signed manifest should succeed: ${prod.stderr}`);
     assert.equal(prod.stdout.trim(), "5050");
   });
@@ -158,13 +158,13 @@ describe("CLI compatibility — galerina run", () => {
     writeFileSync(cborPath, Buffer.from(serializeManifestCBOR({ ...manifest, governanceSignature: "placeholder" })));
 
     // Typo'd profile → fail-secure to production → the unsigned CBOR is rejected (and a warning is printed).
-    const typo = galerinEnv({ GALERINA_PROFILE: "prod" }, "run", BENCH, "--invoke", "main");
+    const typo = galerinaEnv({ GALERINA_PROFILE: "prod" }, "run", BENCH, "--invoke", "main");
     assert.notEqual(typo.code, 0, "a typo'd profile must fail-secure to production (deny the unsigned run)");
     assert.ok(typo.stderr.includes("SPORE-MANIFEST-UNSIGNED"), `expected SPORE-MANIFEST-UNSIGNED, got: ${typo.stderr}`);
     assert.ok(typo.stderr.includes("SPORE-PROFILE-UNRECOGNIZED"), "the unrecognized profile must be surfaced, not silent");
 
     // Explicit recognized dev token → relaxed → the gate is sourceHash-only → run succeeds.
-    const dev = galerinEnv({ GALERINA_PROFILE: "dev" }, "run", BENCH, "--invoke", "main");
+    const dev = galerinaEnv({ GALERINA_PROFILE: "dev" }, "run", BENCH, "--invoke", "main");
     assert.equal(dev.code, 0, `explicit dev profile should relax the gate: ${dev.stderr}`);
     assert.equal(dev.stdout.trim(), "5050");
   });
@@ -287,7 +287,7 @@ describe("CLI compatibility — verify signature-required policy", () => {
     assert.equal(dev.code, 0, `dev verify of a placeholder manifest should pass: ${dev.stderr}`);
 
     // PRODUCTION: an unsigned/placeholder manifest must fail-closed.
-    const prod = galerinEnv({ GALERINA_PROFILE: "production" }, "verify", BENCH);
+    const prod = galerinaEnv({ GALERINA_PROFILE: "production" }, "verify", BENCH);
     assert.notEqual(prod.code, 0, "production verify must reject an unsigned (placeholder) manifest");
     assert.ok(prod.stderr.includes("SPORE-MANIFEST-UNSIGNED"), `expected SPORE-MANIFEST-UNSIGNED, got: ${prod.stderr}`);
   });

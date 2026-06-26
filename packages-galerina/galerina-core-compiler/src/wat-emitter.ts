@@ -2464,17 +2464,17 @@ export function emitWATFromFlowAST(
 
   // 0040/#70: output post-conditions (`invariant { ensure result … }`). For a STRAIGHT-LINE flow
   // (no nested/early returns) emit a WASM single-exit gate: capture the tail value into
-  // $galerin_result, check each result-referencing post-condition against it, then return it
+  // $galerina_result, check each result-referencing post-condition against it, then return it
   // (fail-closed — a violation traps via `unreachable`, the value never escapes). A flow with a
   // nested/early return DECLINES to the governed interpreter (which enforces it fail-closed); the
-  // early-return → `br $galerin_exit` rewrite is the further follow-up.
+  // early-return → `br $galerina_exit` rewrite is the further follow-up.
   const resultPosts = flowResultPostconditions(flowNode);
   const singleExit = resultPosts.length > 0;
   if (singleExit && bodyHasNestedReturn(blockNode)) {
     recordLayouts = prevLayouts; recordVarTypes = prevVarTypes; enumVariants = prevEnums; currentReturnBase = prevReturnBase; // restore
     return null; // cannot capture-the-tail past an early return → interpreter enforces it
   }
-  const RESULT_LOCAL = "$galerin_result";
+  const RESULT_LOCAL = "$galerina_result";
   if (singleExit) vars.set("result", RESULT_LOCAL);
 
   const localDecls: string[] = [];
@@ -2514,7 +2514,7 @@ export function emitWATFromFlowAST(
     postGates.push(gate.replace(";; ensure", ";; post: ensure"));
   }
 
-  // 0040/#70: precompute the OUTPUT post-condition gates (against $galerin_result) here, while the
+  // 0040/#70: precompute the OUTPUT post-condition gates (against $galerina_result) here, while the
   // record/var-type context is still active (the tail after the body emit makes no emitWATExpr calls).
   // Pushed after the single-exit capture below.
   const resultPostGates: string[] = [];
@@ -2553,7 +2553,7 @@ export function emitWATFromFlowAST(
   // (no nested returns — excluded above); capture it, gate each result post-condition against
   // it (fail-closed: a violation traps), then return it.
   if (singleExit) {
-    bodyLines.push(`  ;; --- output post-conditions (SPORE-INV-002, single-exit on $galerin_result) ---`);
+    bodyLines.push(`  ;; --- output post-conditions (SPORE-INV-002, single-exit on $galerina_result) ---`);
     bodyLines.push(`  (local.set ${RESULT_LOCAL})`);
     bodyLines.push(...resultPostGates);
     bodyLines.push(`  (local.get ${RESULT_LOCAL})`);
@@ -2661,7 +2661,7 @@ function flowHasResultPostcondition(flowNode: AstNode): boolean {
  * match arm) — an early return that the simple capture-the-tail single-exit cannot enforce a
  * post-condition over (it would `(return …)` past the gate). Such flows DECLINE to the governed
  * interpreter (fail-closed). A top-level tail return / value-producing tail is fine (returns nothing
- * nested → false). The early-return → `br $galerin_exit` rewrite is the further follow-up.
+ * nested → false). The early-return → `br $galerina_exit` rewrite is the further follow-up.
  */
 function bodyHasNestedReturn(blockNode: AstNode): boolean {
   let nested = false;
@@ -3306,7 +3306,7 @@ export function buildWATModule(
     // aren't emitted yet, so those return types also stay i32 (unchanged). The result valtype
     // here is provably == what the body leaves on the stack because both key off FLOAT_WAT_TYPES.
     // EDGE (walker-only, unchanged): a float flow that ALSO has an `invariant { ensure result … }`
-    // output post-condition stays on the walker — $galerin_result is declared i32 (§emitWATFromFlowAST),
+    // output post-condition stays on the walker — $galerina_result is declared i32 (§emitWATFromFlowAST),
     // so the single-exit module won't assemble; it was already walker-only before this fix (no regression).
     // Step 3e: derive the result valtype from the declared return type. Float→f64 (#165); now ALSO
     // Int64→i64, since the body's i64 routing (Step 4c) leaves an i64 on the stack for an Int64-returning
@@ -3459,18 +3459,18 @@ export function buildWATModuleFromGIR(
  * a single exit point, where post-condition invariant gates can fire.
  *
  * Pattern:
- *   (block $galerin_exit
- *     ... body with br $galerin_exit replacing return ...
+ *   (block $galerina_exit
+ *     ... body with br $galerina_exit replacing return ...
  *   )
  *   ;; post-condition gates fire here (after $exit)
- *   local.get $galerin_result
+ *   local.get $galerina_result
  *
  * Stage A (now): only emits the wrapper structure — no active post-conditions yet.
  *   The wrapper is a no-op transformation that preserves identical behavior.
  *   Post-condition gates will be injected here in Phase 4 when #70 is fully active.
  *
  * Stage B (Phase 4): `ensure returnValue > 0` expressions in invariant {} will
- *   generate post-condition gates that are injected after $galerin_exit.
+ *   generate post-condition gates that are injected after $galerina_exit.
  */
 export function wrapInSingleExit(
   bodyLines: string[],
@@ -3482,7 +3482,7 @@ export function wrapInSingleExit(
     return bodyLines;
   }
 
-  // Future: wrap body in (block $galerin_exit), inject post-condition gates after
+  // Future: wrap body in (block $galerina_exit), inject post-condition gates after
   // For now Stage A: no post-conditions, return unchanged
   return bodyLines;
 }

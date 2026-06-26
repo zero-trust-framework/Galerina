@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 const __dir = dirname(fileURLToPath(import.meta.url));
 // opsPerRun: auto-extract from result value (number of additions performed per call)
-// The result IS the additions count (same as galerinOpsPerRun: null in runner.mjs)
+// The result IS the additions count (same as galerinaOpsPerRun: null in runner.mjs)
 export async function runWasmBenchmark() {
   const r = await runWASMBenchmark(join(__dir, "benchmark.spore"), null);
   // Extract opsPerRun from result and recompute iterationsPerSecond
