@@ -2,11 +2,11 @@
 
 > **⚠️ SUPERSEDED in part (0034 verdict, 2026-06-18).** The "compiler-checked move/borrow rules" advanced
 > tier below is **design-only and not enforced** — the borrow checker was never built (`LLN-MEMORY-001..008`
-> are not emitted; `borrow`/`move` examples do not parse). LogicN's canonical memory-safety model is
+> are not emitted; `borrow`/`move` examples parse/compile clean but are unenforced — corrected #65). LogicN's canonical memory-safety model is
 > **"Governed Capability + Ternary-Tagged Memory"** (value-state/taint + effect/capability + runtime
 > generation-tag UAF guards) — see **`logicn-memory-safety-model.md`**. The *binding hierarchy*
 > (`let`/`mut`/`readonly`), bounds checks, and the `unsafe` boundary in this doc are real and shipped; the
-> borrow/move ownership tier is a **non-goal** except the `move` + `USE_AFTER_MOVE` sliver (owner-gated).
+> borrow/move ownership tier is a **non-goal**; `USE_AFTER_MOVE` (LLN-MEMORY-001) was honest-retired as RESERVED in #65 — consume-once already ships as `LLN-AFFINE-001`.
 
 **Status:** Canonical v1 decision (memory-safety stance superseded — see banner)  
 **Scope:** `@logicn/core`, `@logicn/core-compiler` — binding rules, ownership, borrows, bounds checks, unsafe boundary  

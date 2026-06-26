@@ -1,6 +1,6 @@
 {
   "generated": "kb-index",
-  "docCount": 596,
+  "docCount": 599,
   "docs": [
     {
       "rel": "docs/Knowledge-Bases/00-KB-INDEX.md",
@@ -10154,6 +10154,7 @@
       ],
       "codes": [
         "LLN-MEMORY-001",
+        "LLN-AFFINE-001",
         "LLN-SYNTAX-001",
         "LLN-SYNTAX-002",
         "LLN-MEMORY-003",
@@ -10165,7 +10166,9 @@
         "LLN-MEMORY-008",
         "LLN-BINDING-001"
       ],
-      "tasks": [],
+      "tasks": [
+        "#65"
+      ],
       "xrefs": [],
       "topTerms": [
         "borrow",
@@ -10184,12 +10187,12 @@
         "copy",
         "native",
         "post-v1",
+        "lln-memory-001",
         "binding",
         "text",
         "gpu",
         "allowed",
         "model",
-        "lln-memory-001",
         "ownership",
         "types",
         "runtime"
@@ -14710,6 +14713,7 @@
         "LLN-SECRET-001",
         "LLN-SECRET-002",
         "LLN-SECRET-003",
+        "LLN-SECRET-004",
         "LLN-VALUESTATE-004",
         "LLN-PRIVACY-002",
         "LLN-PRIVACY-001",
@@ -14794,9 +14798,9 @@
         "status",
         "contract",
         "drcm",
-        "phase",
         "flow",
         "enforced",
+        "phase",
         "diagnostic",
         "effects",
         "block",
@@ -17555,6 +17559,7 @@
       ],
       "codes": [
         "LLN-MEMORY-001",
+        "LLN-AFFINE-001",
         "LLN-OWN-001",
         "LLN-MEMORY-002",
         "LLN-OWN-002",
@@ -17569,7 +17574,9 @@
         "LLN-OWN-005",
         "LLN-OWN-006"
       ],
-      "tasks": [],
+      "tasks": [
+        "#65"
+      ],
       "xrefs": [],
       "topTerms": [
         "ownership",
@@ -17588,9 +17595,9 @@
         "value",
         "placement",
         "analysis",
+        "after",
         "access",
         "semantics",
-        "after",
         "text",
         "moved",
         "through",
@@ -17656,6 +17663,7 @@
       "rel": "docs/Knowledge-Bases/logicn-memory-safety-model.md",
       "title": "LogicN memory-safety model — the stance, the all-stances survey, the honest verdict (2026-06-18)",
       "headings": [
+        "0. \"As safe as Rust, safer on three axes\" (the positioning — added 2026-06-26, #65)",
         "1. The model (honest core)",
         "2. All-stances survey (every paradigm vs LogicN)",
         "3. The honest verdict — **amend-add-paradigm** (spine robust; one real add)",
@@ -17663,36 +17671,43 @@
         "See also"
       ],
       "codes": [
-        "LLN-MEMORY-001"
+        "LLN-MEMORY-008",
+        "LLN-RAWPTR-001",
+        "LLN-SECRET-001",
+        "LLN-PRIVACY-002",
+        "LLN-MEMORY-001",
+        "LLN-AFFINE-001"
       ],
-      "tasks": [],
+      "tasks": [
+        "#65"
+      ],
       "xrefs": [],
       "topTerms": [
         "logicn",
+        "rust",
         "honest",
         "model",
+        "borrow",
         "all-stances",
         "verdict",
+        "checker",
         "survey",
+        "safe",
+        "safer",
+        "free",
+        "memory",
+        "wasm",
+        "generation",
+        "see",
         "gen",
         "add",
         "stance",
         "paradigm",
-        "borrow",
-        "keep",
-        "see",
-        "every",
-        "rust",
-        "checker",
-        "free",
-        "spine",
-        "move",
-        "inapplicable",
-        "tags",
-        "real",
-        "memory-safety",
         "heap",
-        "core"
+        "linear",
+        "tags",
+        "handle",
+        "fail-closed"
       ]
     },
     {
@@ -22147,6 +22162,152 @@
         "lane",
         "substrate",
         "wasmsha256"
+      ]
+    },
+    {
+      "rel": "docs/Knowledge-Bases/logicn-rd-0130-frontier-domains-positioning-2026-06-26.md",
+      "title": "RD-0130 — Frontier-domains positioning sweep (notes/63-recap-1..8)",
+      "headings": [
+        "Zero-trust score rubric (0–10, same convention as RD-0127)",
+        "The table",
+        "Overclaim register (must stay OUT of docs/copy — extends the two standing REFUSALS)",
+        "Net-new buildable backlog (the real yield — ZT-sound, in-bounds)",
+        "% audit (updated; anchors on the 2026-06-24-v2 audit = ~84% shippable / ~63% full-vision)",
+        "Build-status of the 4 net-new items (as of 2026-06-26)",
+        "Compliance with standing rules"
+      ],
+      "codes": [
+        "LLN-SUBSTRATE-005",
+        "LLN-INV-001",
+        "LLN-AFFINE-001",
+        "LLN-MEMORY-001",
+        "LLN-SECRET-004"
+      ],
+      "tasks": [
+        "#29",
+        "#18",
+        "#13",
+        "#17",
+        "#19",
+        "#36"
+      ],
+      "xrefs": [],
+      "topTerms": [
+        "shipped",
+        "net-new",
+        "overclaim",
+        "buildable",
+        "notes",
+        "audit",
+        "standing",
+        "rd-0130",
+        "honest",
+        "positioning",
+        "hardware",
+        "real",
+        "runtime",
+        "move",
+        "borrow",
+        "gap",
+        "in-bounds",
+        "crypto",
+        "strip",
+        "build",
+        "cheri",
+        "backlog",
+        "shippable",
+        "items",
+        "recap-1"
+      ]
+    },
+    {
+      "rel": "docs/Knowledge-Bases/logicn-rd-0131-rebrand-galerina-spore-2026-06-26.md",
+      "title": "RD-0131 — Rebrand LogicN→Galerina, .lln→.spore (R&D ONLY — DO NOT EXECUTE)",
+      "headings": [
+        "Verdict in one line",
+        "ZT rubric (0–10): 7–10 safe/sound · 5–7 doable with care · 3–5 risky · 0–3 fail-open / breaks security artifacts — do NOT blind-do.",
+        "The table",
+        "Landmine register (must be EXCLUDED from any blanket replace)",
+        "Recommended sequence (when/if owner greenlights — staged, verify-after-each, fail-closed)",
+        "Compliance",
+        "Update 2026-06-26 (RD-0131b — crypto-landmine completion)"
+      ],
+      "codes": [
+        "LLN-GOV-019"
+      ],
+      "tasks": [],
+      "xrefs": [],
+      "topTerms": [
+        "lln",
+        "logicn",
+        "galerina",
+        "spore",
+        "owner",
+        "brand",
+        "rename",
+        "replace",
+        "every",
+        "security",
+        "crypto",
+        "audit",
+        "keep",
+        "lln-",
+        "staged",
+        "safe",
+        "artifacts",
+        "blanket",
+        "token",
+        "fail-closed",
+        "codes",
+        "update",
+        "landmine",
+        "rebrand",
+        "signature"
+      ]
+    },
+    {
+      "rel": "docs/Knowledge-Bases/logicn-rd-0132-branding-ecosystem-2026-06-26.md",
+      "title": "RD-0132 — Branding ecosystem follow-up (notes/68-branding-2, -3) — R&D ONLY, NO DEPLOY",
+      "headings": [
+        "One line",
+        "ZT/soundness rubric (0–10): 7–10 sound/authorized/coherent · 5–7 fine-but-needs-a-decision · 3–5 aspirational-position-only · 0–3 refused/overclaim/contradiction.",
+        "The table",
+        "Key findings (R&D)",
+        "Compliance"
+      ],
+      "codes": [],
+      "tasks": [
+        "#67"
+      ],
+      "xrefs": [
+        "logicn-rd-0131-rebrand-galerina"
+      ],
+      "topTerms": [
+        "spore",
+        "tmf",
+        "notes",
+        "brand",
+        "source",
+        "owner",
+        "authorized",
+        "tritmesh",
+        "overclaim",
+        "branding-2",
+        "deploy",
+        "coherent",
+        "product",
+        "refused",
+        "branding",
+        "galerina",
+        "passport",
+        "contradiction",
+        "rd-0132",
+        "ecosystem",
+        "follow-up",
+        "branding-3",
+        "line",
+        "collision",
+        "compiled"
       ]
     },
     {
@@ -29220,6 +29381,7 @@
       ],
       "codes": [
         "LLN-MEMORY-001",
+        "LLN-AFFINE-001",
         "LLN-BINDING-004",
         "LLN-MEMORY-005",
         "LLN-MEMORY-003",
@@ -29229,7 +29391,9 @@
         "LLN-BINDING-001",
         "LLN-BINDING-003"
       ],
-      "tasks": [],
+      "tasks": [
+        "#65"
+      ],
       "xrefs": [],
       "topTerms": [
         "phase",

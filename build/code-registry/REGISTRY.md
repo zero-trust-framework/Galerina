@@ -9,10 +9,10 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | status | count | meaning |
 |---|---|---|
 | live | 38 | emitted with an exported constant |
-| inline | 303 | emitted, NO exported constant (R4 — Stage F) |
+| inline | 304 | emitted, NO exported constant (R4 — Stage F) |
 | referenced | 16 | defined + used/tested, emit via a pattern the indexer can't see (NOT dead) |
 | dead | 0 | defined AND truly unreferenced — RESERVED (wire or retire, std #1) |
-| phantom | 498 | doc-only mention, not in source (drift — DOC-004) |
+| phantom | 497 | doc-only mention, not in source (drift — DOC-004) |
 | ref | 147 | referenced only (no def/emit) |
 
 ## RESERVED — defined but not emitted (std #1: tag wire-or-retire)
@@ -1522,7 +1522,7 @@ Universal-coverage anchor (#219 std 1): every code below is registered by constr
 | LLN-SECRET-001 | inline | SecretValueLogged | — |
 | LLN-SECRET-002 | inline | SecretCrossesFlowBoundary / SecretSentToNetwork / SecretComparisonDenied | — |
 | LLN-SECRET-003 | inline | SecretSerializationDenied | — |
-| LLN-SECRET-004 | phantom | — | — |
+| LLN-SECRET-004 | inline | SecretDependentBranch | warning |
 | LLN-SECRET-005 | phantom | — | — |
 | LLN-SECRET-DISK-00 | phantom | — | — |
 | LLN-SECRET-HARDCODED-001 | phantom | — | — |

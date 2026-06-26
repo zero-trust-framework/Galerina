@@ -1,4 +1,4 @@
-# LogicN KB index (596 docs)
+# LogicN KB index (599 docs)
 
 Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.mjs --code LLN-...`
 
@@ -777,7 +777,8 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 
 ## LogicN v1 Memory Model
 `docs/Knowledge-Bases/logicn-core-memory-model.md`
-- codes: LLN-MEMORY-001, LLN-SYNTAX-001, LLN-SYNTAX-002, LLN-MEMORY-003, LLN-MEMORY-002, LLN-MEMORY-004, LLN-MEMORY-005, LLN-MEMORY-006, LLN-MEMORY-007, LLN-MEMORY-008, LLN-BINDING-001
+- codes: LLN-MEMORY-001, LLN-AFFINE-001, LLN-SYNTAX-001, LLN-SYNTAX-002, LLN-MEMORY-003, LLN-MEMORY-002, LLN-MEMORY-004, LLN-MEMORY-005, LLN-MEMORY-006, LLN-MEMORY-007, LLN-MEMORY-008, LLN-BINDING-001
+- tasks: #65
 - terms: borrow, unsafe, move, block, memory, logicn, rules, readonly, required, mutable, bounds, decision, cannot, copy
 
 ## LogicN Core Network: Governance Model
@@ -1154,10 +1155,10 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 
 ## LogicN — Governance Rules Registry
 `docs/Knowledge-Bases/logicn-governance-rules.md`
-- codes: LLN-GOV-004, LLN-LIMIT-001, LLN-GOV-019, LLN-SYNTAX-LEGACY-003, LLN-MONO-001, LLN-GOV-001, LLN-GOV-005, LLN-GOV-010, LLN-EFFECT-001, LLN-GOV-020, LLN-INV-003, LLN-STEP-001, LLN-GOV-003, LLN-GOV-018, LLN-GOV-017, LLN-EFFECT-002, LLN-EFFECT-003, LLN-CAP-001, LLN-CAP-002, LLN-CAP-003, LLN-SECRET-001, LLN-SECRET-002, LLN-SECRET-003, LLN-VALUESTATE-004
+- codes: LLN-GOV-004, LLN-LIMIT-001, LLN-GOV-019, LLN-SYNTAX-LEGACY-003, LLN-MONO-001, LLN-GOV-001, LLN-GOV-005, LLN-GOV-010, LLN-EFFECT-001, LLN-GOV-020, LLN-INV-003, LLN-STEP-001, LLN-GOV-003, LLN-GOV-018, LLN-GOV-017, LLN-EFFECT-002, LLN-EFFECT-003, LLN-CAP-001, LLN-CAP-002, LLN-CAP-003, LLN-SECRET-001, LLN-SECRET-002, LLN-SECRET-003, LLN-SECRET-004
 - tasks: #61, #55, #30, #44, #46, #58, #76, #36, #73, #74, #102
 - links: [[logicn-privacy-embedding-egress]] [[logicn-tritmesh-feature-gap-analysis-2026-06-24]]
-- terms: must, rules, planned, status, contract, drcm, phase, flow, enforced, diagnostic, effects, block, gate, policy
+- terms: must, rules, planned, status, contract, drcm, flow, enforced, phase, diagnostic, effects, block, gate, policy
 
 ## LogicN — Governance Scope: High Consequence Systems
 `docs/Knowledge-Bases/logicn-governance-scope.md`
@@ -1398,7 +1399,8 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 
 ## LogicN — Borrow, Move and Pinned Memory Semantics
 `docs/Knowledge-Bases/logicn-memory-borrow-move-pinned.md`
-- codes: LLN-MEMORY-001, LLN-OWN-001, LLN-MEMORY-002, LLN-OWN-002, LLN-MEMORY-003, LLN-OWN-003, LLN-MEMORY-004, LLN-MEMORY-005, LLN-MEMORY-006, LLN-MEMORY-007, LLN-OWN-004, LLN-MEMORY-008, LLN-OWN-005, LLN-OWN-006
+- codes: LLN-MEMORY-001, LLN-AFFINE-001, LLN-OWN-001, LLN-MEMORY-002, LLN-OWN-002, LLN-MEMORY-003, LLN-OWN-003, LLN-MEMORY-004, LLN-MEMORY-005, LLN-MEMORY-006, LLN-MEMORY-007, LLN-OWN-004, LLN-MEMORY-008, LLN-OWN-005, LLN-OWN-006
+- tasks: #65
 - terms: ownership, borrow, memory, move, transfer, pinned, tensor, logicn, gpu, compiler, phase, shared, zero-copy, value
 
 ## LogicN Memory — Request-Scope Arenas
@@ -1408,8 +1410,9 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 
 ## LogicN memory-safety model — the stance, the all-stances survey, the honest verdict (2026-06-18)
 `docs/Knowledge-Bases/logicn-memory-safety-model.md`
-- codes: LLN-MEMORY-001
-- terms: logicn, honest, model, all-stances, verdict, survey, gen, add, stance, paradigm, borrow, keep, see, every
+- codes: LLN-MEMORY-008, LLN-RAWPTR-001, LLN-SECRET-001, LLN-PRIVACY-002, LLN-MEMORY-001, LLN-AFFINE-001
+- tasks: #65
+- terms: logicn, rust, honest, model, borrow, all-stances, verdict, checker, survey, safe, safer, free, memory, wasm
 
 ## LogicN — Metadata Erasure
 `docs/Knowledge-Bases/logicn-metadata-erasure.md`
@@ -1838,6 +1841,23 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 `docs/Knowledge-Bases/logicn-rd-0128-cicd-native-testgen.md`
 - tasks: #57
 - terms: shipped, verdict, signed, testwitness, table, logicn, note, test, honest, build, refused, owner, proof, first
+
+## RD-0130 — Frontier-domains positioning sweep (notes/63-recap-1..8)
+`docs/Knowledge-Bases/logicn-rd-0130-frontier-domains-positioning-2026-06-26.md`
+- codes: LLN-SUBSTRATE-005, LLN-INV-001, LLN-AFFINE-001, LLN-MEMORY-001, LLN-SECRET-004
+- tasks: #29, #18, #13, #17, #19, #36
+- terms: shipped, net-new, overclaim, buildable, notes, audit, standing, rd-0130, honest, positioning, hardware, real, runtime, move
+
+## RD-0131 — Rebrand LogicN→Galerina, .lln→.spore (R&D ONLY — DO NOT EXECUTE)
+`docs/Knowledge-Bases/logicn-rd-0131-rebrand-galerina-spore-2026-06-26.md`
+- codes: LLN-GOV-019
+- terms: lln, logicn, galerina, spore, owner, brand, rename, replace, every, security, crypto, audit, keep, lln-
+
+## RD-0132 — Branding ecosystem follow-up (notes/68-branding-2, -3) — R&D ONLY, NO DEPLOY
+`docs/Knowledge-Bases/logicn-rd-0132-branding-ecosystem-2026-06-26.md`
+- tasks: #67
+- links: [[logicn-rd-0131-rebrand-galerina]]
+- terms: spore, tmf, notes, brand, source, owner, authorized, tritmesh, overclaim, branding-2, deploy, coherent, product, refused
 
 ## R&D — Phase 34B boundary param auto-taint: verified state + build-ready spec
 `docs/Knowledge-Bases/logicn-rd-34b-paramtaint-buildspec-2026-06-24.md`
@@ -2486,7 +2506,8 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 
 ## LogicN — V1 Memory Model Specification
 `docs/Knowledge-Bases/logicn-v1-memory-model.md`
-- codes: LLN-MEMORY-001, LLN-BINDING-004, LLN-MEMORY-005, LLN-MEMORY-003, LLN-MEMORY-006, LLN-RAWPTR-001, LLN-MEMORY-008, LLN-BINDING-001, LLN-BINDING-003
+- codes: LLN-MEMORY-001, LLN-AFFINE-001, LLN-BINDING-004, LLN-MEMORY-005, LLN-MEMORY-003, LLN-MEMORY-006, LLN-RAWPTR-001, LLN-MEMORY-008, LLN-BINDING-001, LLN-BINDING-003
+- tasks: #65
 - terms: phase, rule, borrow, move, ownership, unsafe, logicn, mutable, model, memory, borrows, enforcement, let, lifetime
 
 ## LogicN — Value-State Checker Architecture

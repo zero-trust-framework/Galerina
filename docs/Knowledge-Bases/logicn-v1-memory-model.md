@@ -2,11 +2,10 @@
 
 > **⚠️ MEMORY-SAFETY STANCE SUPERSEDED (0034 verdict, 2026-06-18).** The "Phase 5 full lifetime and borrow
 > analysis" this doc commits to is a **non-goal** — it was never built and is not on the roadmap.
-> `LLN-MEMORY-001..008` are not emitted; `borrow`/`borrow mut`/`move`/`pinned` examples do not parse. The
+> `LLN-MEMORY-001..008` are not emitted; `borrow`/`borrow mut`/`move`/`pinned` examples parse/compile clean but are unenforced (corrected #65). The
 > canonical model is **"Governed Capability + Ternary-Tagged Memory"** (value-state/taint + effect/capability
 > + runtime generation-tag UAF guards, shipped `692e62d`) — see **`logicn-memory-safety-model.md`**. The
-> Phase-3 *scanner-level* enforcement described here is real; the borrow/lifetime tier is design-only, except
-> the `move` + `USE_AFTER_MOVE` linearity sliver (owner-gated).
+> Phase-3 *scanner-level* enforcement described here is real; the borrow/lifetime tier is design-only; `USE_AFTER_MOVE` (LLN-MEMORY-001) was honest-retired as RESERVED in #65 — consume-once already ships as `LLN-AFFINE-001`.
 
 ## Purpose
 

@@ -3,8 +3,8 @@
   "total": 1002,
   "counts": {
     "ref": 147,
-    "inline": 303,
-    "phantom": 498,
+    "inline": 304,
+    "phantom": 497,
     "live": 38,
     "referenced": 16
   },
@@ -1309,7 +1309,7 @@
       "defs": 0,
       "emits": 1,
       "tests": 3,
-      "docs": 2
+      "docs": 10
     },
     {
       "code": "LLN-AI-003",
@@ -5074,7 +5074,7 @@
       "defs": 0,
       "emits": 2,
       "tests": 11,
-      "docs": 5
+      "docs": 6
     },
     {
       "code": "LLN-GOV-020",
@@ -6064,7 +6064,7 @@
       "defs": 0,
       "emits": 2,
       "tests": 11,
-      "docs": 28
+      "docs": 29
     },
     {
       "code": "LLN-INV-002",
@@ -6645,8 +6645,8 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 1,
-      "docs": 42
+      "tests": 3,
+      "docs": 47
     },
     {
       "code": "LLN-MEMORY-002",
@@ -6661,7 +6661,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 0,
+      "tests": 1,
       "docs": 4
     },
     {
@@ -6677,7 +6677,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 1,
+      "tests": 2,
       "docs": 9
     },
     {
@@ -6693,7 +6693,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 0,
+      "tests": 1,
       "docs": 3
     },
     {
@@ -6709,7 +6709,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 1,
+      "tests": 2,
       "docs": 8
     },
     {
@@ -6725,7 +6725,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 1,
+      "tests": 2,
       "docs": 5
     },
     {
@@ -6741,7 +6741,7 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 0,
+      "tests": 1,
       "docs": 3
     },
     {
@@ -6757,8 +6757,8 @@
       ],
       "defs": 0,
       "emits": 1,
-      "tests": 8,
-      "docs": 10
+      "tests": 11,
+      "docs": 12
     },
     {
       "code": "LLN-MEMORY-SCOPE-001",
@@ -7702,7 +7702,7 @@
       "severities": [],
       "defs": 0,
       "emits": 0,
-      "tests": 9,
+      "tests": 13,
       "docs": 22
     },
     {
@@ -8876,7 +8876,7 @@
       "defs": 0,
       "emits": 3,
       "tests": 42,
-      "docs": 66
+      "docs": 67
     },
     {
       "code": "LLN-PRIVACY-003",
@@ -9392,7 +9392,7 @@
       "defs": 0,
       "emits": 1,
       "tests": 1,
-      "docs": 12
+      "docs": 13
     },
     {
       "code": "LLN-READABLE-001",
@@ -10221,8 +10221,8 @@
       "severities": [],
       "defs": 0,
       "emits": 1,
-      "tests": 43,
-      "docs": 79
+      "tests": 45,
+      "docs": 80
     },
     {
       "code": "LLN-SECRET-002",
@@ -10251,20 +10251,24 @@
       "severities": [],
       "defs": 0,
       "emits": 1,
-      "tests": 11,
+      "tests": 14,
       "docs": 28
     },
     {
       "code": "LLN-SECRET-004",
       "family": "SECRET",
       "namespace": "LLN",
-      "status": "phantom",
-      "names": [],
-      "severities": [],
+      "status": "inline",
+      "names": [
+        "SecretDependentBranch"
+      ],
+      "severities": [
+        "warning"
+      ],
       "defs": 0,
-      "emits": 0,
-      "tests": 0,
-      "docs": 3
+      "emits": 1,
+      "tests": 10,
+      "docs": 6
     },
     {
       "code": "LLN-SECRET-005",
@@ -10681,7 +10685,7 @@
       ],
       "defs": 0,
       "emits": 2,
-      "tests": 34,
+      "tests": 35,
       "docs": 11
     },
     {
@@ -10697,7 +10701,7 @@
       ],
       "defs": 0,
       "emits": 2,
-      "tests": 31,
+      "tests": 36,
       "docs": 4
     },
     {
@@ -10737,7 +10741,7 @@
       ],
       "defs": 0,
       "emits": 2,
-      "tests": 27,
+      "tests": 30,
       "docs": 5
     },
     {
@@ -10866,7 +10870,7 @@
       "defs": 0,
       "emits": 2,
       "tests": 10,
-      "docs": 4
+      "docs": 5
     },
     {
       "code": "LLN-SUPPLY-001",
@@ -12598,7 +12602,7 @@
       "severities": [],
       "defs": 0,
       "emits": 1,
-      "tests": 21,
+      "tests": 31,
       "docs": 17
     },
     {
