@@ -35,7 +35,7 @@ import {
   type PrecisionTechnique,
 } from "./precision-strategy.js";
 import { createStubRegistry } from "./bridge/stub-provider.js";
-import { assertDeterminism, type BridgeRegistry, type BridgeOp, type BridgeResult } from "./bridge/interface.js";
+import { assertDeterminism, type BridgeRegistry, type BridgeOp, type BridgeResult, type BridgeAttestation } from "./bridge/interface.js";
 import type { EgressSink } from "./audit-logger.js";
 import { verifyAttestation, verifyAttestationHybrid, type AttestationPolicy } from "./bridge-attestation.js";
 import { compilePolicy, POL_HAS_ALLOWLIST, POL_HAS_CALL_BUDGET, POL_HAS_TOKEN_BUDGET, POL_DENY_HOST_NATIVE, type CompiledPolicy } from "./compiled-policy.js";
@@ -228,22 +228,26 @@ export interface PhotonicOffloadPort {
 
 /**
  * Certified-mode admission for the photonic lane. In CERTIFIED mode the photonic offload is consulted ONLY
- * when this admission DECLARATION is present, all three fields hold, AND the engine has an attestationPolicy
- * (fail-closed):
- *   • attested: asserts a verified attestation of the backend artifact exists;
+ * when this admission record is present, the sync preconditions hold, the engine has an attestationPolicy,
+ * AND `signedManifest` cryptographically verifies (fail-closed):
+ *   • attested: asserts a verified attestation of the backend artifact exists (caller-declared intent);
  *   • certificationProfile === "certified" (the dev emulator declares "dev");
- *   • toleranceWitnessed: the declared band is bound to a measured-epsilon curve (the ToleranceWitness rail).
- * HONEST SCOPE (audit): these are CALLER-ASSERTED fields, not yet cryptographically verified here. The
- * deployment is responsible for setting them from a REAL attestation; the tracked follow-up binds them to a
- * signed photonic BridgeManifest verified via verifyAttestationHybrid (the same path registry bridges use),
- * landing with a real silicon certified backend. No production path enables certified photonic today, so the
- * gate is latent. Absent/false ⇒ photonic stays OFF in certified mode (the safe default). A deployment builds
- * this from an attested certified-profile backend (e.g. selected via the photonic-hardware switch).
+ *   • toleranceWitnessed: the declared band is bound to a measured-epsilon curve (the ToleranceWitness rail);
+ *   • signedManifest (H5 FIX): a SIGNED photonic BridgeManifest. The engine verifies it via the SAME path
+ *     registry bridges use (verifyAttestationHybrid when an ML-DSA key is configured, else verifyAttestation)
+ *     against the engine's attestationPolicy, and additionally requires manifest.certificationProfile ===
+ *     "certified". Without a verifying signed manifest, certified photonic stays OFF — the self-declared
+ *     booleans alone NEVER admit (closing the confused-deputy: a forged `{attested:true,…}` literal carries
+ *     no valid signature, so it is denied).
+ * Absent/unsigned/unverifiable ⇒ photonic stays OFF in certified mode (the safe default). A deployment builds
+ * `signedManifest` from a real attested certified-profile backend (selected via the photonic-hardware switch).
  */
 export interface PhotonicCertifiedAttestation {
   readonly attested: boolean;
   readonly certificationProfile: string;
   readonly toleranceWitnessed: boolean;
+  /** H5: a SIGNED photonic BridgeManifest, verified against the engine's attestationPolicy. Required to admit. */
+  readonly signedManifest?: BridgeAttestation;
 }
 
 export interface PhotonicConfig {
@@ -271,8 +275,12 @@ export class HybridInferenceEngine {
   private readonly grantedCapabilityMask: number;
   /** Optional photonic offload (opt-in; off by default; in certified mode only with a verified attestation). */
   private readonly photonic: PhotonicConfig | null;
-  /** True iff a VERIFIED certified attestation admits the photonic lane in certified mode (computed once). */
+  /** Sync NECESSARY preconditions for certified photonic (declared intent + attestation infra). Not sufficient. */
   private readonly photonicCertifiedAdmissible: boolean;
+  /** True iff the certified-photonic SIGNED manifest cryptographically verified (computed once, async, fail-closed). */
+  private photonicCertifiedVerified = false;
+  private photonicCertifiedChecked = false;
+  private photonicCertifiedDenial: string | null = null;
   private bridgeAttestationDenial: string | null = null; // cached: first offending bridge id, if any
   private bridgeAttestationChecked = false;
   private bridgesInitialized = false;
@@ -324,12 +332,11 @@ export class HybridInferenceEngine {
     this.attestationPolicy = attestationPolicy;
     this.grantedCapabilityMask = grantedCapabilityMask;
     this.photonic = photonic;
-    // Certified-mode photonic admission, computed ONCE, fail-closed: all three attestation facts must hold.
-    // AUDIT HARDENING: additionally require the engine's attestation INFRASTRUCTURE to be present
-    // (attestationPolicy !== null) — certified photonic must never run in an engine with no attestation path.
-    // NB the three fields are a deployment-supplied admission DECLARATION; binding them to a verified signed
-    // photonic manifest (verifyAttestationHybrid, as registry bridges are checked) is the tracked follow-up
-    // that lands with a real silicon certified backend (no production path enables certified photonic today).
+    // Certified-mode photonic admission — NECESSARY sync preconditions, computed once, fail-closed: the
+    // deployment must declare intent (all three fields) AND the engine must have an attestation path
+    // (attestationPolicy !== null). These are NOT sufficient: H5 requires `signedManifest` to additionally
+    // VERIFY cryptographically (verifyPhotonicCertifiedAdmission, async, during the governance gate) before
+    // the photonic lane is admitted in certified mode. The self-declared booleans alone never admit.
     const ca = photonic?.certifiedAttestation;
     this.photonicCertifiedAdmissible =
       ca !== undefined &&
@@ -370,6 +377,55 @@ export class HybridInferenceEngine {
     }
     this.bridgeAttestationDenial = null;
     return null;
+  }
+
+  /**
+   * H5 (threat-model, 2026-06-25): certified-mode photonic admission must be backed by a VERIFIED signed
+   * photonic BridgeManifest — NOT the caller's self-declared booleans (the confused-deputy). Verify the
+   * supplied `signedManifest` through the SAME attestation path registry bridges use (hybrid when an ML-DSA
+   * key is configured, else classical Ed25519), and ADDITIONALLY require manifest.certificationProfile ===
+   * "certified" regardless of the policy's requireCertifiedProfile flag (defense-in-depth). Runs once, caches.
+   * Fail-CLOSED at every step: no policy / no signed manifest / failed verification / non-certified profile /
+   * a throwing verifier ⇒ certified photonic stays OFF. Returns true iff cryptographically admissible.
+   */
+  private async verifyPhotonicCertifiedAdmission(): Promise<boolean> {
+    if (this.photonicCertifiedChecked) return this.photonicCertifiedVerified;
+    this.photonicCertifiedChecked = true;
+    // The NECESSARY sync preconditions (declared intent + attestation infra) must hold first.
+    if (!this.photonicCertifiedAdmissible) return false;
+    const policy = this.attestationPolicy;
+    if (policy === null) return false; // no attestation path ⇒ never admit (already implied, kept defensive)
+    const signed = this.photonic?.certifiedAttestation?.signedManifest;
+    if (!signed) {
+      // CONFUSED-DEPUTY FIX: a self-declared attestation with no signed manifest is NOT trusted.
+      this.photonicCertifiedDenial = "certified photonic requires a signed BridgeManifest (self-declared attestation is not trusted)";
+      return false;
+    }
+    const mlDsaPublicKey = policy.mlDsaPublicKey;
+    // Mirror checkBridgeAttestation: a policy that mandates hybrid but provisions no ML-DSA key fails closed.
+    if (policy.requireHybrid === true && mlDsaPublicKey === undefined) {
+      this.photonicCertifiedDenial = "requireHybrid set but no mlDsaPublicKey provisioned (no PQ downgrade)";
+      return false;
+    }
+    let result;
+    try {
+      result = mlDsaPublicKey !== undefined
+        ? await verifyAttestationHybrid(signed, policy, mlDsaPublicKey)
+        : verifyAttestation(signed, policy);
+    } catch (e) {
+      this.photonicCertifiedDenial = `photonic attestation verify error: ${(e as Error).message}`;
+      return false; // a throwing verifier is itself a denial
+    }
+    if (!result.ok) {
+      this.photonicCertifiedDenial = `photonic attestation rejected: ${result.reason ?? "unverified"}`;
+      return false;
+    }
+    if (signed.manifest.certificationProfile !== "certified") {
+      this.photonicCertifiedDenial = `photonic manifest profile is "${signed.manifest.certificationProfile}", not "certified"`;
+      return false;
+    }
+    this.photonicCertifiedVerified = true;
+    return true;
   }
 
   initialize(): { plan: HybridPlan } {
@@ -438,6 +494,9 @@ export class HybridInferenceEngine {
       // does this engine even hold the ai.inference V_DPM bit? — so it runs first.
       const capabilityHeld = (AI_INFERENCE_CAP & this.grantedCapabilityMask) === AI_INFERENCE_CAP;
       const bridgeDenial = await this.checkBridgeAttestation();
+      // H5: verify the certified-photonic SIGNED manifest once (fail-closed; sets photonicCertifiedVerified).
+      // Cheap + cached; in non-certified mode the read site uses `!this.certified` so this is a no-op gate.
+      if (this.photonic && this.certified) await this.verifyPhotonicCertifiedAdmission();
       const govTrap = !capabilityHeld
         ? { code: "ERR_CAPABILITY_DENIED", details: { required: AI_INFERENCE_CAP, granted: this.grantedCapabilityMask } }
         : bridgeDenial !== null
@@ -600,8 +659,9 @@ export class HybridInferenceEngine {
       // uncertainty) → fall through to the UNCHANGED digital dispatch. Default off (this.photonic
       // === null) ⇒ this whole block is skipped and the path below is byte-identical to before.
       // Certified mode normally bars the photonic lane (the dev emulator is unattested). It is admitted in
-      // certified mode ONLY when a verified certified attestation was supplied (photonicCertifiedAdmissible).
-      if (this.photonic && (!this.certified || this.photonicCertifiedAdmissible) && decision.precision === "ternary") {
+      // certified mode ONLY when a SIGNED certified attestation cryptographically verified (H5 fix:
+      // photonicCertifiedVerified, set by verifyPhotonicCertifiedAdmission — not the self-declared booleans).
+      if (this.photonic && (!this.certified || this.photonicCertifiedVerified) && decision.precision === "ternary") {
         // Fail-SAFE to Binary: the whole duck-typed photonic-port interaction (kernel
         // build + route) is guarded — a port that THROWS (corrupt trit / native-handle
         // fault) DECLINES to the digital floor below, never escaping as an ungoverned

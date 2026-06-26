@@ -1,10 +1,12 @@
 // Certified-mode PHOTONIC admission. Certified mode normally bars the photonic lane (the dev emulator is an
-// unattested tolerance backend). It is admitted in certified mode ONLY when a VERIFIED certified attestation
-// is supplied (attested ∧ certificationProfile="certified" ∧ toleranceWitnessed). Fail-closed otherwise.
+// unattested tolerance backend). H5 fix (threat-model 2026-06-25): it is admitted ONLY when a SIGNED certified
+// BridgeManifest cryptographically VERIFIES through the same hybrid path registry bridges use (Ed25519+ML-DSA)
+// AND the sync preconditions hold. The self-declared booleans alone NEVER admit (closes the confused-deputy).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   createHybridEngine, generateHybridAttestationKeypair, attestBridgeHybrid, StubTernaryBridge,
+  signManifestHybrid,
 } from "../dist/index.js";
 import { createPhotonicRouterPort } from "../../logicn-ext-photonic-emulator/dist/index.js";
 import { AuditEgress } from "../../logicn-core-sentinel-egress/dist/index.js";
@@ -21,7 +23,19 @@ async function signedTernaryRegistry() {
 }
 const bigKernel = () => ({ n: 1024, lane: "photonic", tolerance: 0.05 });
 const CALL = { prompt: "x", correlationId: "cp", model: "bitnet_b1_58_2b", maxNewTokens: 128, opClasses: ["embedding", "feedforward"] };
-const GOOD_ATTESTATION = { attested: true, certificationProfile: "certified", toleranceWitnessed: true };
+
+// H5 fix: certified photonic admission now requires a SIGNED certified BridgeManifest, verified through the
+// SAME hybrid path registry bridges use — the self-declared booleans alone no longer admit. Build a real
+// hybrid-signed certified manifest (same key as the bridge registry) for the happy-path test.
+const CERTIFIED_MANIFEST = {
+  bridgeId: "photonic-certified", packageName: "@logicn/tower-citizen", packageHash: "0".repeat(64),
+  sourceEngine: "microsoft/BitNet", precision: "ternary", layoutVersion: "i2s-v1",
+  hardwareIdentity: "photonic-certified-backend", determinismMode: "exact", certificationProfile: "certified",
+};
+const signedCertifiedManifest = await signManifestHybrid(CERTIFIED_MANIFEST, privateKeyPem, mlDsaPrivateKey);
+const GOOD_ATTESTATION = { attested: true, certificationProfile: "certified", toleranceWitnessed: true, signedManifest: signedCertifiedManifest };
+// The OLD fail-open shape: the three self-declared booleans with NO signed manifest. Must now be DENIED.
+const SELF_DECLARED_ONLY = { attested: true, certificationProfile: "certified", toleranceWitnessed: true };
 
 async function certifiedEngine(photonic) {
   return createHybridEngine({
@@ -57,6 +71,36 @@ test("certified + an INVALID attestation fails closed (each of: unattested / wro
     assert.ok(!r.bridgesUsed.some((b) => b.startsWith("photonic:")),
       `invalid attestation ${JSON.stringify(certifiedAttestation)} must keep photonic OFF; got ${JSON.stringify(r.bridgesUsed)}`);
   }
+});
+
+test("H5 FAIL-CLOSED: self-declared booleans with NO signed manifest are DENIED (the confused-deputy fix)", async () => {
+  // This is exactly the OLD fail-open: a caller asserts {attested,certified,witnessed} with no cryptographic
+  // backing. It must no longer admit the photonic lane.
+  const eng = await certifiedEngine({ router: createPhotonicRouterPort(), kernelFor: bigKernel, certifiedAttestation: SELF_DECLARED_ONLY });
+  const r = await eng.infer(CALL);
+  assert.ok(!r.bridgesUsed.some((b) => b.startsWith("photonic:")),
+    `self-declared (unsigned) attestation must keep photonic OFF; got ${JSON.stringify(r.bridgesUsed)}`);
+  assert.ok(r.bridgesUsed.includes("stub-ternary"));
+});
+
+test("H5 FAIL-CLOSED: a FORGED signature (wrong key) is DENIED", async () => {
+  const other = await generateHybridAttestationKeypair();
+  const forged = await signManifestHybrid(CERTIFIED_MANIFEST, other.privateKeyPem, other.mlDsaPrivateKey);
+  const certifiedAttestation = { attested: true, certificationProfile: "certified", toleranceWitnessed: true, signedManifest: forged };
+  const eng = await certifiedEngine({ router: createPhotonicRouterPort(), kernelFor: bigKernel, certifiedAttestation });
+  const r = await eng.infer(CALL);
+  assert.ok(!r.bridgesUsed.some((b) => b.startsWith("photonic:")),
+    `a manifest signed by the wrong key must keep photonic OFF; got ${JSON.stringify(r.bridgesUsed)}`);
+});
+
+test("H5 FAIL-CLOSED: a validly-signed but NON-certified (dev) manifest is DENIED", async () => {
+  const devManifest = { ...CERTIFIED_MANIFEST, certificationProfile: "dev" };
+  const signedDev = await signManifestHybrid(devManifest, privateKeyPem, mlDsaPrivateKey);
+  const certifiedAttestation = { attested: true, certificationProfile: "certified", toleranceWitnessed: true, signedManifest: signedDev };
+  const eng = await certifiedEngine({ router: createPhotonicRouterPort(), kernelFor: bigKernel, certifiedAttestation });
+  const r = await eng.infer(CALL);
+  assert.ok(!r.bridgesUsed.some((b) => b.startsWith("photonic:")),
+    `a signed-but-dev-profile manifest must keep photonic OFF; got ${JSON.stringify(r.bridgesUsed)}`);
 });
 
 test("control: NON-certified mode runs photonic without any attestation (existing behaviour unchanged)", async () => {
