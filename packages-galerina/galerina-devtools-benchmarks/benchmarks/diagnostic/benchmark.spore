@@ -67,7 +67,7 @@ contract {
 ;; ── Test 4: Logging Throughput (Audit Tax) ────────────────────────────────────
 ;; Measures: the overhead of governance machinery per call
 ;; Run with/without invariant blocks to measure the "audit tax"
-;; Galerina's goal: governance overhead should be < 10% of raw execution
+;; LogicN's goal: governance overhead should be < 10% of raw execution
 
 pure flow loggingThroughputTest(x: Int) -> Int
 contract {

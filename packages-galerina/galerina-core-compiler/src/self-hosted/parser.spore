@@ -1,11 +1,11 @@
 /// @file: parser.spore
-/// @purpose: Galerina parser â€” Milestone 2: flow declaration headers + body stmts
+/// @purpose: LogicN parser â€” Milestone 2: flow declaration headers + body stmts
 /// @status: Stage B milestone â€” parses pure/guarded/secure/flow declarations + body stmts
 /// @phase: 46
 /// test_status: milestone
 
 // ============================================================
-// Galerina Self-Hosted Parser â€” Milestone 1
+// LogicN Self-Hosted Parser â€” Milestone 1
 //
 // Parses flow declaration headers from a token stream produced
 // by lexer.spore. Emits FlowDecl records for each flow found.
@@ -1179,7 +1179,7 @@ contract { intent { "Parse one statement; dispatch on the leading token kind/val
       blk = parseBlock(tokens, p + 1)
     }
     // Optional `else { ... }` â€” skip newlines, then look for the `else` keyword
-    // followed by `{`. Galerina bans chained `else if`, so only `else { ... }` here.
+    // followed by `{`. LogicN bans chained `else if`, so only `else { ... }` here.
     mut elseStmts: Array<Stmt> = Array.empty()
     mut endPos: Int = blk.nextPos
     mut q: Int = blk.nextPos
@@ -1388,7 +1388,7 @@ contract {
 
 pure flow parseFlows(tokens: Array<Token>) -> ParseResult
 contract {
-  intent { "Parse Galerina flow declarations from a token stream. Milestone 1: flow headers only." }
+  intent { "Parse LogicN flow declarations from a token stream. Milestone 1: flow headers only." }
 }
 {
   mut flows: Array<FlowDecl> = Array.empty()
@@ -1603,7 +1603,7 @@ contract {
     mut qualifier: String = ""
     mut namePos: Int = 0
 
-    // Detect qualifier â€” no else-if; use sequential if blocks (Galerina: match on strings not yet supported for runtime values)
+    // Detect qualifier â€” no else-if; use sequential if blocks (LogicN: match on strings not yet supported for runtime values)
     if tv == "pure" or tv == "guarded" or tv == "secure" {
       if tokVal(tokens, pos + 1) == "flow" {
         qualifier = tv

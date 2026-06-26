@@ -1,10 +1,10 @@
-/// six-digit-guess benchmark — Galerina governed runtime
+/// six-digit-guess benchmark — LogicN governed runtime
 /// SAME algorithm as node.mjs and python.py v2:
 ///   sequential search for code 42069 with bulls+cows scoring per attempt.
 ///
-/// Galerina implements bulls+cows via integer arithmetic (no string ops).
+/// LogicN implements bulls+cows via integer arithmetic (no string ops).
 /// Digits extracted via modulo/division — avoids string stdlib limitations.
-/// Note: "target" is a reserved keyword in Galerina — renamed to "tgt".
+/// Note: "target" is a reserved keyword in LogicN — renamed to "tgt".
 
 pure flow bullsAndCows(candidate: Int, tgt: Int) -> Int
 contract { effects {} }

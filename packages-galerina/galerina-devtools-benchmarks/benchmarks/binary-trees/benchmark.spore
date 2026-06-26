@@ -1,9 +1,9 @@
-/// binary-trees benchmark — Galerina governed runtime (Computer Language Benchmarks Game).
+/// binary-trees benchmark — LogicN governed runtime (Computer Language Benchmarks Game).
 /// THE allocation/GC benchmark. minDepth=4, maxDepth=10 → 135854 nodes per run.
 ///
 /// COUNT-ONLY form. The reference implementations (node.mjs / python.py / bench.rs)
 /// allocate REAL heap node objects so the bytes/op column measures tree memory — that
-/// is the honest headline. Galerina today cannot express a recursive *record* tree: a
+/// is the honest headline. LogicN today cannot express a recursive *record* tree: a
 /// record field may self-reference (`left: TreeNode`), but there is no working leaf
 /// terminator — no `null`, no payload-carrying `enum` variant, and `Option<Record>`
 /// is not lowered. So the data shape is inexpressible.
@@ -15,7 +15,7 @@
 /// SHAPE is identical (treeNodes runs 135854 recursive flow calls per run, one per
 /// node the other runtimes allocate), and the integer checksum is bit-for-bit equal:
 /// 135854 — matching Node, Python and Rust. Only the heap object is elided; the
-/// tree-walker's per-call frame allocation is what the Galerina memory column reports.
+/// tree-walker's per-call frame allocation is what the LogicN memory column reports.
 
 pure flow treeNodes(depth: Int) -> Int
 contract { effects {} }

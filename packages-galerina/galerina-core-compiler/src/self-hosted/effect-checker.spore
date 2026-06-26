@@ -4,7 +4,7 @@
 /// @status: declared-vs-used effect reconciliation subset, executing tests
 
 // ============================================================
-// Galerina Self-Hosted Effect Checker — Phase 66 / Axis-B S2
+// LogicN Self-Hosted Effect Checker — Phase 66 / Axis-B S2
 //
 // Takes flow records from the Stage B parser and validates effect
 // declarations against the effects the body actually uses.
@@ -51,7 +51,7 @@ record EffectCheckResult {
 
 pure flow knownEffects() -> Array
 contract {
-  intent { "Return all valid Galerina declared effects." }
+  intent { "Return all valid LogicN declared effects." }
 }
 {
   return [
@@ -172,7 +172,7 @@ contract {
         // guard avoids emitting a duplicate SPORE-EFFECT-004 for a used+declared effect.
         if contains(known, ue) == false {
           if contains(declared, ue) == false {
-            let umsg: String = "Effect '" + ue + "' used by flow '" + flowName + "' is not a recognised Galerina effect name"
+            let umsg: String = "Effect '" + ue + "' used by flow '" + flowName + "' is not a recognised LogicN effect name"
             diags = diags.append({ code: "SPORE-EFFECT-004", message: umsg, flowName: flowName, severity: "error" })
           }
         }
@@ -190,7 +190,7 @@ contract {
     match deOpt {
       Some(de) => {
         if contains(known, de) == false {
-          let umsg2: String = "Effect '" + de + "' declared by flow '" + flowName + "' is not a recognised Galerina effect name"
+          let umsg2: String = "Effect '" + de + "' declared by flow '" + flowName + "' is not a recognised LogicN effect name"
           diags = diags.append({ code: "SPORE-EFFECT-004", message: umsg2, flowName: flowName, severity: "error" })
         }
       }

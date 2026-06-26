@@ -1,4 +1,4 @@
-;; Galerina — security::interim BoundaryProxy
+;; LogicN — security::interim BoundaryProxy
 ;;
 ;; PURPOSE:
 ;;   User-space validation proxy for cross-boundary calls.
@@ -18,8 +18,8 @@
 ;;       let result = external_api::call(payload)
 ;;       security::interim::post_flight_cleanup(token)
 ;;
-;; REFERENCE: galerina-governance-rules.md — FG-003 (drcm_core_v1 profile)
-;;            galerina-architecture-patterns.md — Pattern 4 interim
+;; REFERENCE: logicn-governance-rules.md — FG-003 (drcm_core_v1 profile)
+;;            logicn-architecture-patterns.md — Pattern 4 interim
 ;;            notes/19-DCRM-patten-4
 
 ;; ─── Types ───────────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ contract {
 }
 {
   ;; NOTE: This is a stub. The real (TypeScript) implementation is in
-  ;; packages-galerina/galerina-core-compiler/src/security-sink-monitor.ts
+  ;; packages-logicn/logicn-core-compiler/src/security-sink-monitor.ts
   ;; (the `activeSinkMonitor` wired into the interpreter's sink_monitor::scan).
   ;; Once Stage B is fully self-hosted and the DRCM Phase 1 prefix-token
   ;; scanner lands, this stub will call the pure .spore implementation.

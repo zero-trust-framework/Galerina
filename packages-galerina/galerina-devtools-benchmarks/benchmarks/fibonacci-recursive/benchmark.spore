@@ -1,4 +1,4 @@
-/// fibonacci-recursive benchmark — Galerina governed runtime
+/// fibonacci-recursive benchmark — LogicN governed runtime
 /// Naive recursive Fibonacci — no memoization.
 /// Tests recursive flow call overhead (each call allocates a stack frame + tagged values).
 /// Uses fib(20) to keep wall time reasonable; runner reports extrapolated throughput.

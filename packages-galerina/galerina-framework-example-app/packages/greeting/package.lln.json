@@ -1,0 +1,9 @@
+{
+  "name": "greeting",
+  "version": "0.1.0",
+  "kind": "pure-transform",
+  "provides": "greeting",
+  "entry": "src/index.spore",
+  "seam": "compute.pure",
+  "capabilities": []
+}

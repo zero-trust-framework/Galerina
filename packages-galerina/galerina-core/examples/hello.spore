@@ -2,6 +2,6 @@
 // AREA: basic
 // PURPOSE: simplest possible flow — print and return Ok
 secure flow main() -> Result<Void, Error> {
-  print("hello from Galerina")
+  print("hello from LogicN")
   return Ok()
 }

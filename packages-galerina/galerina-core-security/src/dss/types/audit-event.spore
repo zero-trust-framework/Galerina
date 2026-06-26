@@ -7,7 +7,7 @@
 ;;   No partial state mutation is possible — the Confused Deputy Problem is
 ;;   structurally eliminated, not defended against.
 ;;
-;; See: docs/Knowledge-Bases/galerina-governed-tower-specification.md §3E
+;; See: docs/Knowledge-Bases/logicn-governed-tower-specification.md §3E
 
 // AuditEvent — emitted by DSS.wasm trap handler on every SPORE-INV-000 signal
 type AuditEvent {

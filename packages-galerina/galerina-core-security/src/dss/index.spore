@@ -1,7 +1,7 @@
 // DSS — Deterministic Security Supervisor
 // DRCM Phase 5 Foundation Files
 //
-// Build order (spec: galerina-governed-tower-specification.md §5):
+// Build order (spec: logicn-governed-tower-specification.md §5):
 //   1. vdpm.spore            ← V_DPM bit layout + capability mapping + O(1) check  [THIS PHASE]
 //   2. capability-map.spore  ← SystemCapabilityType enum + string→bit converter     [#38]
 //   3. emergency-sm.spore    ← Emergency state machine transitions                  [#39]

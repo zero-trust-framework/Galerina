@@ -1,0 +1,9 @@
+{
+  "name": "logicn-ext-bridge-quantum",
+  "version": "0.1.0",
+  "kind": "ext-bridge",
+  "provides": "quantum",
+  "entry": "src/index.ts",
+  "seam": "bridge.compute.outbound",
+  "capabilities": ["quantum.simulate", "quantum.observe", "quantum.sample", "audit.write"]
+}

@@ -1,6 +1,6 @@
-/// call-chain benchmark — Galerina governed runtime
+/// call-chain benchmark — LogicN governed runtime
 /// Imitates an OOP call stack: controller → service.method() → util function.
-/// In Galerina every layer is a flow, so this measures flow-call DISPATCH overhead
+/// In LogicN every layer is a flow, so this measures flow-call DISPATCH overhead
 /// (arg binding into tagged values + a governed frame) through a 3-deep chain:
 ///   main → serviceLayer → domainLayer → leafCompute
 /// Per outer iteration the chain fans out to 7 flow calls

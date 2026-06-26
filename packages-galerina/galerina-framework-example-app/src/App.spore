@@ -1,7 +1,7 @@
-// App.spore — composition root for galerina-framework-example-app.
+// App.spore — composition root for logicn-framework-example-app.
 //
 // flow main() is the entry the host App Kernel invokes AFTER admission (the Kernel
-// IS the boot; there is no separate boot file). `galerina build src/App.spore` fuses the
+// IS the boot; there is no separate boot file). `logicn build src/App.spore` fuses the
 // app into ONE signed build/App.wasm plus a signed build/App.lmanifest — the
 // admission artifact the Kernel verifies first (signature -> capability bounds ->
 // revocation), before governance is part of execution rather than a layer around it.
@@ -18,7 +18,7 @@
 //     unrecognised state exits non-zero, never falls through.
 pure flow main() -> Int
 contract {
-  intent { "Compose galerina-framework-example-app: serve the greeting flow at GET /hello via the App Kernel." }
+  intent { "Compose logicn-framework-example-app: serve the greeting flow at GET /hello via the App Kernel." }
 }
 {
   let status: Int = 0

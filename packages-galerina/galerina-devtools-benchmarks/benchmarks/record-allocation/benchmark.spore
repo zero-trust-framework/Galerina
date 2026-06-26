@@ -1,4 +1,4 @@
-/// record-allocation benchmark — Galerina governed runtime
+/// record-allocation benchmark — LogicN governed runtime
 /// Creates N records with integer fields, sums two fields.
 /// Directly measures {__tag,value} object creation overhead.
 

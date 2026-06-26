@@ -16,7 +16,7 @@
 ;;
 ;; Build order position: 7 of 7 (final DSS file)
 ;;
-;; See: docs/Knowledge-Bases/galerina-governed-tower-specification.md §3D
+;; See: docs/Knowledge-Bases/logicn-governed-tower-specification.md §3D
 
 import "./types/audit-event.spore"
 import "./vdpm.spore"

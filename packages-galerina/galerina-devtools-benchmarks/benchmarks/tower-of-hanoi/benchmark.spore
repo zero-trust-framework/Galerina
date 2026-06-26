@@ -1,9 +1,9 @@
-/// tower-of-hanoi benchmark — Galerina governed runtime
+/// tower-of-hanoi benchmark — LogicN governed runtime
 /// 3-peg Tower of Hanoi with a THREADED move-checksum. Unlike the trivial 2^n-1 closed form, every one of
 /// the 2^n-1 moves is actually executed and folded into a rolling checksum:
 ///     acc = (acc * 31 + moveCode) % 65521
 /// The checksum is i32-OVERFLOW-SAFE by construction — acc < 65521, so acc*31 < 2,031,151 < 2^31, so no
-/// intermediate ever trips the Fork-A overflow trap (unlike a wrapping hash, which would TRAP in Galerina).
+/// intermediate ever trips the Fork-A overflow trap (unlike a wrapping hash, which would TRAP in LogicN).
 /// It is also cross-language-identical (every runtime computes the same value). This stresses deep recursion
 /// (2^n call frames) + per-call governed arithmetic — a genuinely harder benchmark than naive recursion.
 

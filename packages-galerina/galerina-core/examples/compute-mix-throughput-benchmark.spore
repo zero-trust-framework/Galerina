@@ -124,7 +124,7 @@ effects [runtime.clock, runtime.metrics] {
   let cpuTotalMs: Float = cpu.userMs + cpu.systemMs
 
   return Ok(ComputeMixBenchmarkReport {
-    runtime: "galerina-prototype"
+    runtime: "logicn-prototype"
     benchmark: "compute-mix-throughput-v2"
     executionMode: "nodejs-runner"
     comparisonType: "prototype-runner-overhead"

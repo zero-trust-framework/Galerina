@@ -7,7 +7,7 @@
  *   full     — every step produces a govComment annotation in the manifest
  *
  * The gap between them is the "Audit Tax" — how much governance observability costs.
- * Galerina's goal: make this gap as small as possible.
+ * LogicN's goal: make this gap as small as possible.
  */
 
 ;; Mode A: Minimal — just the computation, minimal audit surface

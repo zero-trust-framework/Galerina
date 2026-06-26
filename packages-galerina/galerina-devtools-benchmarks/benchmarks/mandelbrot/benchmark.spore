@@ -4,7 +4,7 @@
 /// z ← z² + c, capped at MAXITER=100. The checksum is the sum of iteration counts over all
 /// 16384 pixels. The complex squaring uses scaled-int arithmetic: zr² and zi² are computed
 /// as (z·z)/SCALE, and the cross term 2·zr·zi is split into sign + magnitude so EVERY
-/// integer division has a non-negative numerator — that makes Galerina `/` agree with Python
+/// integer division has a non-negative numerator — that makes LogicN `/` agree with Python
 /// `//`, JS `Math.trunc` and Rust `/` bit-for-bit. All intermediates stay < 2^31 (the
 /// integer path is 32-bit): zr,zi ≤ ~2·SCALE = 16384, products ≤ 268M, sums < 536M.
 

@@ -1,9 +1,9 @@
-/// hardware-targets — Float32 vector dot product in Galerina
+/// hardware-targets — Float32 vector dot product in LogicN
 ///
-/// Tests: Galerina tree-walker performance on a tight inner loop
+/// Tests: LogicN tree-walker performance on a tight inner loop
 /// that a WASM SIMD implementation (Phase 27+) would accelerate.
 ///
-/// The Galerina results here represent the BASELINE (tree-walker).
+/// The LogicN results here represent the BASELINE (tree-walker).
 /// Phase 27 WASM compilation of this flow should show 10-100× improvement.
 ///
 /// Compute: dot product of vectors a=[0.001, 0.002, ..., 0.008] × b=[0.008, 0.007, ..., 0.001]

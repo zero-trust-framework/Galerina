@@ -1,5 +1,5 @@
 /// @milestone: Stage-B-Root-Capability
-/// @description: The Galerina compiler declares its own capabilities in Galerina source.
+/// @description: The LogicN compiler declares its own capabilities in LogicN source.
 /// Phase 40: flows now have real executable bodies (not just stubs).
 /// This is the governance-first principle applied to the compiler itself.
 

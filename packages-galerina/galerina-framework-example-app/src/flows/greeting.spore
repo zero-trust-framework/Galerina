@@ -3,7 +3,7 @@
 // This is the human-authored source of the greeting. packages/greeting/ is its
 // compiled, signed, fusable form — what the App Kernel admits and invokes at
 // runtime. Keep the two in step: edit the logic here, then rebuild the package with
-// `galerina build --package packages/greeting`.
+// `logicn build --package packages/greeting`.
 //
 // Deny-by-default: this flow is `pure` and needs NO capabilities, so it cannot reach
 // the network, storage, secrets, the database, or inference. To grant a capability

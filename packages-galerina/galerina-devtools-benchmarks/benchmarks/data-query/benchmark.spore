@@ -1,5 +1,5 @@
-/// data-query benchmark — Galerina version of SQL-like data filtering.
-/// In Galerina, all query inputs are Tainted<String> until validated.
+/// data-query benchmark — LogicN version of SQL-like data filtering.
+/// In LogicN, all query inputs are Tainted<String> until validated.
 /// This stub shows how a governed query pipeline would be structured.
 /// Actual filtering runs through the governed path (not WASM-compiled).
 

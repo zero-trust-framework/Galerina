@@ -6,9 +6,9 @@
 ///
 /// The benchmark measures the SAME workload on every runtime:
 ///   - Rust / Node / Python:  serial CPU loop  (real, today)
-///   - Galerina WASM / bytecode: serial CPU loop  (real, today)
+///   - LogicN WASM / bytecode: serial CPU loop  (real, today)
 ///   - GPU (any runtime):      parallel kernel   (pending — see harness)
-///   - Galerina GPU:             NOT IMPLEMENTED — gpu-plan.ts is a lowering plan
+///   - LogicN GPU:             NOT IMPLEMENTED — gpu-plan.ts is a lowering plan
 ///                             stub only (Phase 38). No invented numbers.
 ///
 /// Kept integer + bounded (acc never exceeds 1e9 < Int32 max) so every runtime

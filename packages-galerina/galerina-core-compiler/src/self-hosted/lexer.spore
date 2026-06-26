@@ -1,11 +1,11 @@
 /// @file: lexer.spore
-/// @purpose: Galerina lexer written in Galerina â€” Phase 16 milestone
+/// @purpose: LogicN lexer written in LogicN â€” Phase 16 milestone
 /// @status: executable â€” Phase 12A loops active; Phase 16 adds endLine/endColumn, unicode escapes, depth limits
 
 // ============================================================
-// Galerina Self-Hosted Lexer
+// LogicN Self-Hosted Lexer
 //
-// Tokenises Galerina source text into a stream of Token values.
+// Tokenises LogicN source text into a stream of Token values.
 // This file is the first component of the self-hosted compiler.
 //
 // Capabilities used:
@@ -129,7 +129,7 @@ contract {
           }
           Some(cb) => {
             let two = single + cb.toString()
-            // Use a known-set check instead of else-if chains (Galerina: no else-if)
+            // Use a known-set check instead of else-if chains (LogicN: no else-if)
             let known: Array<String> = ["->", "=>", "==", "!=", "<=", ">=", "&&", "||", "..", "::", "//", "/*"]
             if known.contains(two) {
               return [two, (pos + 2).toString(), "true"]
@@ -189,7 +189,7 @@ contract {
 // UNQUOTED content and endPos is the index just past the closing '"'.
 // A backslash (codePoint 92) escapes the next char so an escaped quote does not
 // terminate the string. The backslash+escaped char are both kept in value
-// (Galerina string escapes are pass-through, so this mirrors the raw source text).
+// (LogicN string escapes are pass-through, so this mirrors the raw source text).
 pure flow scanString(source: String, startPos: Int, srcLen: Int) -> Array<String>
 contract {
   intent { "Scan a double-quoted string literal at startPos. Returns [unquotedValue, endPos] as strings." }
@@ -398,7 +398,7 @@ contract {
     type TokenizeResult = Result<Array<Token>, LexError>
   }
 
-  intent { "Tokenise Galerina source text into a stream of tokens. Single-pass, bounded by source length." }
+  intent { "Tokenise LogicN source text into a stream of tokens. Single-pass, bounded by source length." }
 }
 {
   let keywords = makeKeywordTable()
@@ -420,7 +420,7 @@ contract {
 
       Some(c) => {
         // Dispatch on character class.
-        // Galerina: no else-if. Whitespace chars are mutually exclusive so sequential
+        // LogicN: no else-if. Whitespace chars are mutually exclusive so sequential
         // if-without-else is correct â€” only one branch fires per character.
         mut handled: Bool = false
 

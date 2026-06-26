@@ -9,7 +9,7 @@
 ;;
 ;; Build order position: 6 of 7 (penultimate)
 ;;
-;; See: docs/Knowledge-Bases/galerina-topological-graph-engine.md
+;; See: docs/Knowledge-Bases/logicn-topological-graph-engine.md
 
 import "./vdpm.spore"
 import "./capability-map.spore"

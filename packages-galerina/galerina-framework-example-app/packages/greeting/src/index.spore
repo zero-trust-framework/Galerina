@@ -1,7 +1,7 @@
 // greeting — the governed compute the App Kernel fuses and invokes for GET /hello.
 //
 // This is the compiled, signed, fusable form of the app's greeting flow
-// (mirrors src/flows/greeting.spore). `galerina build --package` lowers it to a
+// (mirrors src/flows/greeting.spore). `logicn build --package` lowers it to a
 // governed dist/greeting.wasm plus a signed dist/greeting.lmanifest.json; the
 // host (host/server.ts) fuses that at the compute.pure seam and calls main(),
 // whose i32 result is the HTTP status the route returns.

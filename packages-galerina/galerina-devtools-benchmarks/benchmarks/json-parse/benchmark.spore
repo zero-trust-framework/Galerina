@@ -1,4 +1,4 @@
-/// json-parse benchmark — JSON-style string parsing in Galerina.
+/// json-parse benchmark — JSON-style string parsing in LogicN.
 /// Scans key:value records (the expensive part of real JSON workloads):
 /// splits records on ',' into fields, splits each field on ':' to reach the
 /// value, and accumulates field counts + value lengths over N records.

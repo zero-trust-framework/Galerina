@@ -1,0 +1,27 @@
+// EXPECT: REJECT
+// ERROR: SPORE-MEMORY-001
+// AREA: memory
+// PURPOSE: use after move is rejected — moved value cannot be accessed again
+
+type Payload {
+  data: String
+}
+
+/// Sends a payload by taking ownership of it.
+flow sendPayload(move p: Payload) -> Result<Void, String> {
+  effects [network.external]
+  return transmit(p.data)
+}
+
+/// INTENTIONAL ERROR: uses `payload` after it has been moved.
+/// The checker must emit SPORE-MEMORY-001 at the second use of `payload`.
+flow demonstrateUseAfterMove() -> Result<Void, String> {
+  let payload: Payload = Payload { data: "hello" }
+
+  // First use — ownership moves into sendPayload
+  sendPayload(move payload)
+
+  // INVALID: payload was moved; this access must be rejected
+  // Expected diagnostic: SPORE-MEMORY-001 USE_AFTER_MOVE
+  return transmit(payload.data)
+}

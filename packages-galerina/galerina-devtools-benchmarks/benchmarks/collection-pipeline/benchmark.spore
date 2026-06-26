@@ -1,4 +1,4 @@
-/// collection-pipeline benchmark — Galerina governed runtime
+/// collection-pipeline benchmark — LogicN governed runtime
 /// filter(isEven) -> map(*2) -> sum over integers 0..9999
 /// Implemented as a while loop because filter/map/reduce chaining
 /// requires stdlib verification not yet available in governed mode.

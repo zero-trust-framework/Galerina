@@ -1,8 +1,8 @@
-/// arithmetic-threshold benchmark — Galerina governed runtime
+/// arithmetic-threshold benchmark — LogicN governed runtime
 /// SAME algorithm as node.mjs and python.py v2:
 ///   double-add per cycle + modular-multiply + XOR checksum
 ///
-/// Uses a tree-walker-friendly threshold (5 billion) so Galerina finishes in <2s.
+/// Uses a tree-walker-friendly threshold (5 billion) so LogicN finishes in <2s.
 /// The runner normalises to additions/second for fair cross-runtime comparison.
 
 pure flow main() -> Int

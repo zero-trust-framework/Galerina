@@ -11,7 +11,7 @@
 ///   returnExpr.kind is one of "literal" | "param" | "arith" | "compare".
 
 // ============================================================
-// Galerina Self-Hosted GIR Emitter — Phase 68 / Axis-B S3
+// LogicN Self-Hosted GIR Emitter — Phase 68 / Axis-B S3
 //
 // Converts ParseResult (from Stage B parser) into simplified GIR nodes.
 // GIR = Governed Intermediate Representation — the canonical intermediate

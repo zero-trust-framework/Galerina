@@ -12,7 +12,7 @@
 ///   returnExpr.kind is one of "literal" | "param" | "arith" | "compare".
 
 // ============================================================
-// Galerina Self-Hosted Type Checker — Phase 47
+// LogicN Self-Hosted Type Checker — Phase 47
 //
 // Takes flow records from the Stage B ParseResult and performs real type
 // checks, emitting TypeDiagnostic records with codes that match the Stage A

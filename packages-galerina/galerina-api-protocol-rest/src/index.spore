@@ -1,6 +1,6 @@
-// galerina-api-protocol-rest — reference REST protocol adapter (Level-3 fusable package).
+// logicn-api-protocol-rest — reference REST protocol adapter (Level-3 fusable package).
 //
-// A developer authors this package; `galerina build --package <dir>` compiles its
+// A developer authors this package; `logicn build --package <dir>` compiles its
 // /src into a governed, signed .wasm + .lmanifest in dist/, plus a fusion
 // descriptor (.fuse.json) and an embedded, signed `fuse` block in the manifest.
 // It is then FUSED into a host App Kernel at the `protocol.inbound` seam —

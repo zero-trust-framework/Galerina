@@ -1,7 +1,7 @@
 project "OrderRiskDemo"
 
 language {
-  name "Galerina"
+  name "LogicN"
   version "0.1"
   compatibility "prototype"
 }
@@ -82,8 +82,8 @@ runtime {
 
   production {
     disabled_packages [
-    "packages-galerina/galerina-tools-benchmark",
-    "packages-galerina/galerina-devtools-*"
+    "packages-logicn/logicn-tools-benchmark",
+    "packages-logicn/logicn-devtools-*"
     ]
 
     package_overrides []
@@ -104,7 +104,7 @@ runtime {
 
     spill {
       enabled true
-      path "./storage/tmp/galerina-spill"
+      path "./storage/tmp/logicn-spill"
       max_disk 2gb
       ttl 1h
       encryption true

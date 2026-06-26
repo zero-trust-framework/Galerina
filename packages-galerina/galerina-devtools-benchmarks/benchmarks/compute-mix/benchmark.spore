@@ -1,10 +1,10 @@
-/// compute-mix benchmark — Galerina governed runtime
+/// compute-mix benchmark — LogicN governed runtime
 /// SAME algorithm as node.mjs and python.py v2:
-///   2x LCG + 2x xorshift mix + 4-way branch (no float sqrt — Galerina Math.sqrt pending)
+///   2x LCG + 2x xorshift mix + 4-way branch (no float sqrt — LogicN Math.sqrt pending)
 ///
-/// Uses 50,000 fixed iterations so Galerina completes in <1s.
+/// Uses 50,000 fixed iterations so LogicN completes in <1s.
 /// The runner normalises to ops/second for fair cross-runtime comparison.
-/// Note: omits float sqrt step because Galerina Math.sqrt is not yet in stdlib.
+/// Note: omits float sqrt step because LogicN Math.sqrt is not yet in stdlib.
 
 pure flow main() -> Int
 contract { effects {} }
@@ -17,7 +17,7 @@ contract { effects {} }
     /// Step 1: LCG advance
     seed = seed * 1664525 + 1013904223
 
-    /// Step 2: first xorshift mix (approximate — Galerina uses Int not UInt32)
+    /// Step 2: first xorshift mix (approximate — LogicN uses Int not UInt32)
     let mix1: Int = (seed + (seed / 8192)) * 2246822519
 
     /// Step 3: second xorshift mix

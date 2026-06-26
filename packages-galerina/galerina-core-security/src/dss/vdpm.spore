@@ -25,7 +25,7 @@
 //   result = Int.bitAnd(V_DPM, request_mask)
 //   if result == 0: fire unreachable trap -> SPORE-INV-000
 //
-// See: docs/Knowledge-Bases/galerina-governed-tower-specification.md §4
+// See: docs/Knowledge-Bases/logicn-governed-tower-specification.md §4
 // ═══════════════════════════════════════════════════════════════════════════════
 
 ;; V_DPM register — 32-bit Dynamic Posture Matrix

@@ -3,7 +3,7 @@
 //
 // Pure scalar-trit logic over balanced ternary {-1, 0, 1}, re-implementing the
 // numeric `Tri` operations from
-//   packages-galerina/galerina-core-logic/src/index.ts
+//   packages-logicn/logicn-core-logic/src/index.ts
 // (triNot / triAnd / triOr / triNor).
 //
 // Encoding (identical to the .ts numeric Tri type):
@@ -11,7 +11,7 @@
 //
 // DELIBERATE SIMPLIFICATION vs the v0.2 TriState in src/tri/tri-ops.ts:
 //   The v0.2 ops thread an UnknownReason[] chain through every "unknown"
-//   result (records-of-arrays). Galerina's Stage-A compiler has a known
+//   result (records-of-arrays). LogicN's Stage-A compiler has a known
 //   recursive-record gap, so this pilot drops the reason/record chain entirely
 //   and operates on the bare scalar trit (Int -1/0/1) — exactly the surface of
 //   the v0.1 numeric `Tri` ops, which carry no reasons. Semantics of the

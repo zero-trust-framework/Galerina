@@ -11,7 +11,7 @@
 ///   - deterministic is true when the flow requires deterministic_execution
 
 // ============================================================
-// Galerina Self-Hosted Governance Verifier — Phase 67
+// LogicN Self-Hosted Governance Verifier — Phase 67
 //
 // Validates governance invariants from ParseResult:
 //   1. safety_critical flows must declare audit.write       (SPORE-VAL-001)

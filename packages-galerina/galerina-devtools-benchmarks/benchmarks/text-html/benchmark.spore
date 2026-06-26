@@ -1,4 +1,4 @@
-/// text-html benchmark — string processing in Galerina
+/// text-html benchmark — string processing in LogicN
 /// These flows use the String stdlib which goes through the sync fast-path
 /// (not the integer bytecode VM). Shows the string execution tier.
 
