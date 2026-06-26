@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "appendOnly": true,
-  "note": "Enforced signing-key revocation registry (Gap B v0). A keyId listed here evaluates to Deny at verify/admission gates even with a cryptographically valid signature. Append-only — never remove an entry. Human-readable mirror: security/revocations/REV-*.md. HARDENING TODO: self-sign this registry (active key) + verify its signature before trusting it; wire the check into bridge-attestation + border-check (see docs/Knowledge-Bases/galerina-key-custody-and-rotation.md §3).",
+  "note": "Enforced signing-key revocation registry (Gap B v0). A keyId listed here evaluates to Deny at verify/admission gates even with a cryptographically valid signature. Append-only — never remove an entry. Human-readable mirror: security/revocations/REV-*.md. HARDENING TODO: self-sign this registry (active key) + verify its signature before trusting it; wire the check into bridge-attestation + border-check (see docs/Knowledge-Bases/logicn-key-custody-and-rotation.md §3).",
   "revoked": [
     {
       "keyId": "8eecf4187ebc9341",
       "algorithm": "ed25519",
       "revokedAt": "2026-06-17",
-      "reason": "Signing private key committed to git history at commit cb5036d (.env.galerina-signing).",
+      "reason": "Signing private key committed to git history at commit cb5036d (.env.logicn-signing).",
       "supersededBy": "ab46f4c7e2797b9b",
       "advisory": "security/revocations/REV-2026-06.md"
     }

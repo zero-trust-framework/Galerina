@@ -35,6 +35,7 @@ const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8",
 // Never read/edit/rename these (integrity, volatile, vendored, binary, self).
 const EXCLUDE = [
   /^build\//,                                              // generated catalogs/graph/coverage — REGENERATED after the rename (don't text-churn)
+  /(^|\/)governance\/revocations\.json$/,                  // ROOT-SIGNED registry — renaming its content breaks the offline trust-anchor signature (re-sign = key ceremony)
   /(^|\/)package-lock\.json$/,
   /\.lock$/,
   /(^|\/)scripts\/rebrand-galerina\.mjs$/,                 // self
