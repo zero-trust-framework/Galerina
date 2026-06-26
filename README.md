@@ -140,7 +140,7 @@ A nine-axis self-assessment across the surfaces Galerina governs. Click any char
       <br><sub><b>9 · Data Science</b></sub>
     </td>
     <td width="50%" align="center">
-      <a href="docs/diagrams/radar-10-AI-ML-NuroNet.svg"><img src="docs/diagrams/radar-10-AI-ML-NuroNet.svg" alt="Databasing" width="100%"></a>
+      <a href="docs/diagrams/radar-10-AI-ML-NuroNet.svg"><img src="docs/diagrams/radar-10-AI-ML-NuroNet.svg" alt="AI / ML / Neural Nets" width="100%"></a>
       <br><sub><b>10 · AI/ML/Nuro Nets</b></sub>
     </td>
   </tr>
