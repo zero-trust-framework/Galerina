@@ -1,0 +1,46 @@
+{
+  "name": "@galerina/devtools-project-graph",
+  "version": "1.0.0-beta.2",
+  "description": "Graph data structures, algorithms, and runtime reporting for the LogicN platform",
+  "license": "Apache-2.0",
+  "author": "LogicN Contributors",
+  "keywords": [
+    "logicn",
+    "graph",
+    "effect-graph",
+    "boundary-graph",
+    "audit",
+    "reporting"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test tests/core.test.mjs tests/algorithms.test.mjs tests/graphs.test.mjs tests/reporting.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/logicn/lln-graph.git"
+  }
+}

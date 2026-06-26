@@ -71,12 +71,8 @@ build/graph/*.dot
 **/.graph/package-graph.json
 
 # ── Nested-clone stopgap + sentinel scratch (RD-0124 hygiene; verified by adversarial audit ww6c274j4) ──
-# A stray nested git clone of the graph ENGINE lives here with its OWN .git/ and a PERSONAL remote.
-# `git add` on it would record a SUBMODULE GITLINK to a personal GitHub repo INSIDE the governed tree —
-# an uncontrolled supply-chain edge. Ignore it so that can never happen by accident. This is a STOPGAP:
-# the package is real and depended-upon (do NOT delete) — the fix is operator de-clone (remove the inner
-# .git/) then commit its source in-tree like its siblings.
-packages-galerina/galerina-devtools-project-graph/
+# galerina-devtools-project-graph is now committed IN-TREE like its siblings (the documented de-clone
+# fix applied 2026-06-26: removed its nested .git/ + personal remote; absorbed into this monorepo).
 # Sentinel-state test scratch: build/lss-test-<pid>-<n>/ from galerina-core-sentinel-state tests. The
 # build/*.snap rule only matches snaps DIRECTLY under build/, so these nested-subdir snaps leaked into
 # `git status`. Synthetic fixtures, no secrets.
