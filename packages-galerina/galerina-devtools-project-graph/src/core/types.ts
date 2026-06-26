@@ -74,12 +74,12 @@ export interface LlnDiagnostic {
 }
 
 // ---------------------------------------------------------------------------
-// LLN-PGRAPH diagnostic constants — project-graph-owned; distinct from flowgraph's LLN-GRAPH-*
+// SPORE-PGRAPH diagnostic constants — project-graph-owned; distinct from flowgraph's SPORE-GRAPH-*
 // ---------------------------------------------------------------------------
 
 /** A cycle was found in a graph that must be a DAG. */
 export const LLN_PGRAPH_001 = {
-  code: "LLN-PGRAPH-001",
+  code: "SPORE-PGRAPH-001",
   name: "CYCLE_DETECTED",
   severity: "error",
   message: "Graph contains a cycle where a directed acyclic graph is required.",
@@ -87,7 +87,7 @@ export const LLN_PGRAPH_001 = {
 
 /** A referenced node does not exist in the graph. */
 export const LLN_PGRAPH_002 = {
-  code: "LLN-PGRAPH-002",
+  code: "SPORE-PGRAPH-002",
   name: "NODE_NOT_FOUND",
   severity: "error",
   message: "Referenced node does not exist in the graph.",
@@ -95,7 +95,7 @@ export const LLN_PGRAPH_002 = {
 
 /** A declared dependency could not be resolved to an existing node. */
 export const LLN_PGRAPH_003 = {
-  code: "LLN-PGRAPH-003",
+  code: "SPORE-PGRAPH-003",
   name: "DEPENDENCY_MISSING",
   severity: "error",
   message: "A declared dependency was not found in the graph.",
@@ -103,7 +103,7 @@ export const LLN_PGRAPH_003 = {
 
 /** Iterative fixpoint propagation did not converge within the allowed iterations. */
 export const LLN_PGRAPH_004 = {
-  code: "LLN-PGRAPH-004",
+  code: "SPORE-PGRAPH-004",
   name: "FIXPOINT_TIMEOUT",
   severity: "error",
   message: "Iterative fixpoint propagation did not converge within the maximum allowed iterations.",
@@ -111,7 +111,7 @@ export const LLN_PGRAPH_004 = {
 
 /** A resource lifecycle state transition is not permitted by the state machine. */
 export const LLN_PGRAPH_005 = {
-  code: "LLN-PGRAPH-005",
+  code: "SPORE-PGRAPH-005",
   name: "INVALID_TRANSITION",
   severity: "error",
   message: "Resource lifecycle state transition is not permitted.",

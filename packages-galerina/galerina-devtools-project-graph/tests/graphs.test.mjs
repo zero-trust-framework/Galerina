@@ -66,20 +66,20 @@ describe("EffectGraph — validateEffects", () => {
     assert.deepEqual(validateEffects(g), []);
   });
 
-  it("emits LLN-PGRAPH-010 for undeclared inferred effect", () => {
+  it("emits SPORE-PGRAPH-010 for undeclared inferred effect", () => {
     const g = buildEffectGraph([
       { flowName: "bad", safetyLevel: "guarded", declaredEffects: [], inferredEffects: ["database.write"], calls: [] },
     ]);
     const diags = validateEffects(g);
-    assert.ok(diags.some((d) => d.code === "LLN-PGRAPH-010"));
+    assert.ok(diags.some((d) => d.code === "SPORE-PGRAPH-010"));
   });
 
-  it("emits LLN-PGRAPH-012 for safe flow with effects", () => {
+  it("emits SPORE-PGRAPH-012 for safe flow with effects", () => {
     const g = buildEffectGraph([
       { flowName: "oops", safetyLevel: "safe", declaredEffects: ["network.call"], inferredEffects: ["network.call"], calls: [] },
     ]);
     const diags = validateEffects(g);
-    assert.ok(diags.some((d) => d.code === "LLN-PGRAPH-012"));
+    assert.ok(diags.some((d) => d.code === "SPORE-PGRAPH-012"));
   });
 });
 
@@ -106,7 +106,7 @@ describe("BoundaryGraph — validateBoundaries", () => {
     assert.deepEqual(validateBoundaries(g), []);
   });
 
-  it("emits LLN-PGRAPH-020 when denied effect crosses boundary", () => {
+  it("emits SPORE-PGRAPH-020 when denied effect crosses boundary", () => {
     const g = buildBoundaryGraph(
       [
         { boundaryId: "src", boundaryType: "api", trustLevel: "validated", allowedEffects: [], deniedEffects: [] },
@@ -115,10 +115,10 @@ describe("BoundaryGraph — validateBoundaries", () => {
       [{ from: "src", to: "dst", transferredEffects: ["filesystem.write"], transferredSecrets: [], requiresValidation: true }],
     );
     const diags = validateBoundaries(g);
-    assert.ok(diags.some((d) => d.code === "LLN-PGRAPH-020"));
+    assert.ok(diags.some((d) => d.code === "SPORE-PGRAPH-020"));
   });
 
-  it("emits LLN-PGRAPH-021 when secret crosses non-secret boundary", () => {
+  it("emits SPORE-PGRAPH-021 when secret crosses non-secret boundary", () => {
     const g = buildBoundaryGraph(
       [
         { boundaryId: "src", boundaryType: "api", trustLevel: "validated", allowedEffects: [], deniedEffects: [] },
@@ -127,7 +127,7 @@ describe("BoundaryGraph — validateBoundaries", () => {
       [{ from: "src", to: "dst", transferredEffects: [], transferredSecrets: ["API_KEY"], requiresValidation: true }],
     );
     const diags = validateBoundaries(g);
-    assert.ok(diags.some((d) => d.code === "LLN-PGRAPH-021"));
+    assert.ok(diags.some((d) => d.code === "SPORE-PGRAPH-021"));
   });
 });
 
@@ -194,11 +194,11 @@ describe("ProjectGraph", () => {
 // ---------------------------------------------------------------------------
 
 describe("DependencyGraph — buildDependencyGraph", () => {
-  it("produces LLN-PGRAPH-003 for missing dependency", () => {
+  it("produces SPORE-PGRAPH-003 for missing dependency", () => {
     const { diagnostics } = buildDependencyGraph([
       { name: "task-a", depends: ["MISSING"] },
     ]);
-    assert.ok(diagnostics.some((d) => d.code === "LLN-PGRAPH-003"));
+    assert.ok(diagnostics.some((d) => d.code === "SPORE-PGRAPH-003"));
   });
 
   it("creates no diagnostics when all dependencies exist", () => {
@@ -222,7 +222,7 @@ describe("resolveDependencies", () => {
     assert.deepEqual(result.order, ["install", "build", "test"]);
   });
 
-  it("returns ok:false and LLN-PGRAPH-001 for circular dependency", () => {
+  it("returns ok:false and SPORE-PGRAPH-001 for circular dependency", () => {
     // Build the graph manually to create a cycle (buildDependencyGraph skips unknown deps
     // since it can't add edges for nodes that don't exist — we use GraphBuilder directly).
     // GraphBuilder is already imported at the top of this file.
@@ -234,7 +234,7 @@ describe("resolveDependencies", () => {
     const g = b.build();
     const result = resolveDependencies(g);
     assert.equal(result.ok, false);
-    assert.equal(result.diagnostic?.code, "LLN-PGRAPH-001");
+    assert.equal(result.diagnostic?.code, "SPORE-PGRAPH-001");
   });
 });
 
@@ -276,14 +276,14 @@ describe("ResourceLifecycleGraph", () => {
     ]);
     const result = advanceState(g, "Cache", "closed", { trigger: "skip" });
     assert.equal(result.ok, false);
-    assert.equal(result.diagnostic.code, "LLN-PGRAPH-005");
+    assert.equal(result.diagnostic.code, "SPORE-PGRAPH-005");
   });
 
   it("advanceState returns diagnostic for unknown resource", () => {
     const g = buildResourceLifecycleGraph([]);
     const result = advanceState(g, "MISSING", "ready", { trigger: "x" });
     assert.equal(result.ok, false);
-    assert.equal(result.diagnostic.code, "LLN-PGRAPH-002");
+    assert.equal(result.diagnostic.code, "SPORE-PGRAPH-002");
   });
 });
 
@@ -312,7 +312,7 @@ describe("CapabilityGraph", () => {
     assert.ok(granted.includes("DatabaseAccess"));
   });
 
-  it("validateCapabilities returns LLN-PGRAPH-030 for missing grant", () => {
+  it("validateCapabilities returns SPORE-PGRAPH-030 for missing grant", () => {
     const g = buildCapabilityGraph(
       [
         { name: "SecretAccess", kind: "capability" },
@@ -322,6 +322,6 @@ describe("CapabilityGraph", () => {
       // No "grants" edge — SecretAccess is required but not reachable via grants
     );
     const diags = validateCapabilities(g);
-    assert.ok(diags.some((d) => d.code === "LLN-PGRAPH-030"));
+    assert.ok(diags.some((d) => d.code === "SPORE-PGRAPH-030"));
   });
 });

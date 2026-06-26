@@ -9,7 +9,7 @@ import { GraphBuilder } from "../core/builder.js";
 import type { Graph, GraphNode, NodeId } from "../core/types.js";
 import { LLN_PGRAPH_004 } from "../core/types.js";
 
-/** Default maximum iterations before emitting LLN-PGRAPH-004. */
+/** Default maximum iterations before emitting SPORE-PGRAPH-004. */
 const DEFAULT_MAX_ITERATIONS = 1_000;
 
 export type FixpointResult<N, E> =

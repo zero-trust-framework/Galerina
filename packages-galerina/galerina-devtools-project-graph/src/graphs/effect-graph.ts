@@ -5,8 +5,8 @@
 // Effect propagation uses the fixpoint algorithm so transitive effects
 // (effects inherited from callees) are always computed correctly.
 //
-// Diagnostic codes: LLN-PGRAPH-010..013 — project-graph-owned, the effect-graph VIEW of
-// effect propagation; distinct from logicn-core-compiler's authoritative LLN-EFFECT-* codes.
+// Diagnostic codes: SPORE-PGRAPH-010..013 — project-graph-owned, the effect-graph VIEW of
+// effect propagation; distinct from logicn-core-compiler's authoritative SPORE-EFFECT-* codes.
 // =============================================================================
 
 import { GraphBuilder } from "../core/builder.js";
@@ -48,28 +48,28 @@ export type EffectGraph = Graph<EffectNodeData, EffectEdgeData>;
 // ---------------------------------------------------------------------------
 
 export const LLN_PGRAPH_010 = {
-  code: "LLN-PGRAPH-010",
+  code: "SPORE-PGRAPH-010",
   name: "UNDECLARED_EFFECT_IN_GRAPH",
   severity: "error",
   message: "Flow performs an effect that is not declared in its effects list.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_011 = {
-  code: "LLN-PGRAPH-011",
+  code: "SPORE-PGRAPH-011",
   name: "EFFECT_NOT_INFERRED",
   severity: "error",
   message: "Flow declares an effect that cannot be inferred from its body or callees.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_012 = {
-  code: "LLN-PGRAPH-012",
+  code: "SPORE-PGRAPH-012",
   name: "UNSAFE_EFFECT_IN_SAFE_FLOW",
   severity: "error",
   message: "Flow with safety level 'safe' performs a side-effectful operation.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_013 = {
-  code: "LLN-PGRAPH-013",
+  code: "SPORE-PGRAPH-013",
   name: "TRANSITIVE_EFFECT_UNDECLARED",
   severity: "error",
   message:
@@ -178,7 +178,7 @@ export function validateEffects(graph: EffectGraph): LlnDiagnostic[] {
     const { flowName, safetyLevel, declaredEffects, inferredEffects, transitiveEffects } =
       node.data;
 
-    // LLN-PGRAPH-010: inferred effect not declared.
+    // SPORE-PGRAPH-010: inferred effect not declared.
     for (const effect of inferredEffects) {
       if (!declaredEffects.includes(effect)) {
         diagnostics.push({
@@ -188,7 +188,7 @@ export function validateEffects(graph: EffectGraph): LlnDiagnostic[] {
       }
     }
 
-    // LLN-PGRAPH-011: declared effect not inferred (dead declaration).
+    // SPORE-PGRAPH-011: declared effect not inferred (dead declaration).
     for (const effect of declaredEffects) {
       if (!inferredEffects.includes(effect) && !transitiveEffects.includes(effect)) {
         diagnostics.push({
@@ -198,7 +198,7 @@ export function validateEffects(graph: EffectGraph): LlnDiagnostic[] {
       }
     }
 
-    // LLN-PGRAPH-012: safe flow has any effects.
+    // SPORE-PGRAPH-012: safe flow has any effects.
     if (safetyLevel === "safe" && inferredEffects.length > 0) {
       diagnostics.push({
         ...LLN_PGRAPH_012,
@@ -206,7 +206,7 @@ export function validateEffects(graph: EffectGraph): LlnDiagnostic[] {
       });
     }
 
-    // LLN-PGRAPH-013: transitive effect not declared on caller.
+    // SPORE-PGRAPH-013: transitive effect not declared on caller.
     for (const effect of transitiveEffects) {
       if (!declaredEffects.includes(effect)) {
         diagnostics.push({

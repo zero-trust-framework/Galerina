@@ -57,7 +57,7 @@ export function serializeAuditEvent(event: RuntimeAuditEvent): string {
   // Rule 4: reject invalid schemaVersion.
   if (event.schemaVersion !== "spore.runtime.audit.v1") {
     throw new JsonlWriterError(
-      "LLN-REPORT-001",
+      "SPORE-REPORT-001",
       `Invalid runtime audit schemaVersion "${event.schemaVersion}". Expected "spore.runtime.audit.v1".`,
     );
   }
@@ -67,7 +67,7 @@ export function serializeAuditEvent(event: RuntimeAuditEvent): string {
     for (const key of Object.keys(event.metadata)) {
       if (FORBIDDEN_SECRET_KEYS.some((bad) => key.toLowerCase().includes(bad))) {
         throw new JsonlWriterError(
-          "LLN-AUDIT-003",
+          "SPORE-AUDIT-003",
           `Audit event metadata contains a field "${key}" that may hold a raw secret. Redact before logging.`,
         );
       }
@@ -120,7 +120,7 @@ export function createJsonlWriter(filePath: string): JsonlWriter {
     async append(event: RuntimeAuditEvent): Promise<void> {
       if (closed) {
         throw new JsonlWriterError(
-          "LLN-REPORT-005",
+          "SPORE-REPORT-005",
           "Cannot append to a closed JsonlWriter.",
         );
       }
@@ -167,7 +167,7 @@ export function createInMemoryJsonlWriter(): InMemoryJsonlWriter {
     },
     async append(event: RuntimeAuditEvent): Promise<void> {
       if (closed) {
-        throw new JsonlWriterError("LLN-REPORT-005", "Cannot append to a closed JsonlWriter.");
+        throw new JsonlWriterError("SPORE-REPORT-005", "Cannot append to a closed JsonlWriter.");
       }
       const line = serializeAuditEvent(event);
       lines.push(line);

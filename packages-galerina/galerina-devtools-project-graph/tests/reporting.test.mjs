@@ -189,7 +189,7 @@ describe("serializeAuditEvent", () => {
     const badEvent = { ...makeAuditEvent("x"), schemaVersion: "lln.runtime.audit.v0" };
     assert.throws(
       () => serializeAuditEvent(badEvent),
-      (err) => err instanceof JsonlWriterError && err.code === "LLN-REPORT-001",
+      (err) => err instanceof JsonlWriterError && err.code === "SPORE-REPORT-001",
     );
   });
 
@@ -200,7 +200,7 @@ describe("serializeAuditEvent", () => {
     };
     assert.throws(
       () => serializeAuditEvent(eventWithSecret),
-      (err) => err instanceof JsonlWriterError && err.code === "LLN-AUDIT-003",
+      (err) => err instanceof JsonlWriterError && err.code === "SPORE-AUDIT-003",
     );
   });
 

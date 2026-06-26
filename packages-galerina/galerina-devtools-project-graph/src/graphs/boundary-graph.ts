@@ -4,8 +4,8 @@
 // Models trust boundaries in a LogicN application and validates that
 // effects and secrets do not cross boundaries illegally.
 //
-// Diagnostic codes: LLN-PGRAPH-020..023 — project-graph-owned, the boundary-graph VIEW of trust
-// boundaries; distinct from logicn-core-compiler's own (planned) LLN-BOUNDARY-* boundary checker.
+// Diagnostic codes: SPORE-PGRAPH-020..023 — project-graph-owned, the boundary-graph VIEW of trust
+// boundaries; distinct from logicn-core-compiler's own (planned) SPORE-BOUNDARY-* boundary checker.
 // =============================================================================
 
 import { GraphBuilder } from "../core/builder.js";
@@ -53,28 +53,28 @@ export type BoundaryGraph = Graph<BoundaryNodeData, BoundaryEdgeData>;
 // ---------------------------------------------------------------------------
 
 export const LLN_PGRAPH_020 = {
-  code: "LLN-PGRAPH-020",
+  code: "SPORE-PGRAPH-020",
   name: "EFFECT_CROSSES_BOUNDARY",
   severity: "error",
   message: "An effect is transferred across a boundary that does not allow it.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_021 = {
-  code: "LLN-PGRAPH-021",
+  code: "SPORE-PGRAPH-021",
   name: "SECRET_CROSSES_UNSAFE_BOUNDARY",
   severity: "error",
   message: "A secret value crosses a boundary that is not a declared secret boundary.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_022 = {
-  code: "LLN-PGRAPH-022",
+  code: "SPORE-PGRAPH-022",
   name: "UNTRUSTED_INPUT_UNVALIDATED",
   severity: "error",
   message: "Data from an untrusted boundary crosses into the application without validation.",
 } as const satisfies LlnDiagnostic;
 
 export const LLN_PGRAPH_023 = {
-  code: "LLN-PGRAPH-023",
+  code: "SPORE-PGRAPH-023",
   name: "REQUIRED_POLICY_MISSING",
   severity: "error",
   message: "A boundary crossing requires a policy that is not declared.",
@@ -150,7 +150,7 @@ export function validateBoundaries(graph: BoundaryGraph): LlnDiagnostic[] {
     const { boundaryId, boundaryType, deniedEffects, trustLevel, requiredPolicies } =
       target.data;
 
-    // LLN-PGRAPH-020: effect not allowed at target boundary.
+    // SPORE-PGRAPH-020: effect not allowed at target boundary.
     for (const effect of edge.data.transferredEffects) {
       if (deniedEffects.includes(effect)) {
         diagnostics.push({
@@ -160,7 +160,7 @@ export function validateBoundaries(graph: BoundaryGraph): LlnDiagnostic[] {
       }
     }
 
-    // LLN-PGRAPH-021: secrets crossing a non-secret boundary.
+    // SPORE-PGRAPH-021: secrets crossing a non-secret boundary.
     if (edge.data.transferredSecrets.length > 0 && boundaryType !== "secret") {
       for (const secret of edge.data.transferredSecrets) {
         diagnostics.push({
@@ -170,7 +170,7 @@ export function validateBoundaries(graph: BoundaryGraph): LlnDiagnostic[] {
       }
     }
 
-    // LLN-PGRAPH-022: untrusted source without validation.
+    // SPORE-PGRAPH-022: untrusted source without validation.
     const source = graph.node(edge.from);
     if (
       source !== undefined &&
@@ -183,7 +183,7 @@ export function validateBoundaries(graph: BoundaryGraph): LlnDiagnostic[] {
       });
     }
 
-    // LLN-PGRAPH-023: required policies declared but not met.
+    // SPORE-PGRAPH-023: required policies declared but not met.
     // (Policy IDs are checked against the edge's declared policies — runtime enforcement
     // carries the actual policy document; the graph records the requirement.)
     if (requiredPolicies.length > 0 && edge.data.requiresValidation === false) {

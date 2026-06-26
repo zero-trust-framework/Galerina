@@ -4,7 +4,7 @@
 // Task execution dependency graph with cycle detection and topological sort.
 // Replaces logicn-core-tasks/src/dependency-graph.ts.
 //
-// Error codes updated to LLN-PGRAPH-* format for consistency.
+// Error codes updated to SPORE-PGRAPH-* format for consistency.
 //
 // EDGE DIRECTION NOTE (critical for consumers):
 //
@@ -61,7 +61,7 @@ export interface TaskEntry {
  * `resolveDependencies()` returns nodes in this natural topoSort order
  * (prerequisites first) — **no reversal is applied or needed**.
  *
- * Missing dependency targets are recorded as diagnostics (LLN-PGRAPH-003)
+ * Missing dependency targets are recorded as diagnostics (SPORE-PGRAPH-003)
  * rather than throwing, so the caller can decide how to surface them.
  *
  * @example
@@ -128,7 +128,7 @@ export type DependencyResolution =
  * alphabetically by id.
  *
  * Returns `ok: false` with the cycle node ids when the graph is not a DAG.
- * The `diagnostic` property carries the `LLN-PGRAPH-001` (CYCLE_DETECTED) code.
+ * The `diagnostic` property carries the `SPORE-PGRAPH-001` (CYCLE_DETECTED) code.
  *
  * **No reversal is applied.** `buildDependencyGraph` uses the dep→task edge
  * direction so that the raw topoSort order is already correct for execution.

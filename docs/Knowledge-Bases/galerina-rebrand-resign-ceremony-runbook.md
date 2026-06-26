@@ -13,7 +13,7 @@
 > scanner (`scripts/verify-artifacts.mjs` section 4) are green. **What REMAINS operator-gated:** re-signing the
 > root-signed artifacts under the offline root `ab46f4c7` only if you want galerina-branded content inside their
 > *signed payloads* — `governance/revocations.json` is currently RESTORED to its valid pre-rebrand bytes (not
-> re-signed). The `LLN-` **diagnostic codes** (e.g. `LLN-REPORT-001`) are a SEPARATE namespace, not migrated here.
+> re-signed). The `LLN-` **diagnostic codes** in project-graph (e.g. `LLN-REPORT-001`) were the last on the old namespace — now MIGRATED to `SPORE-*` (project-graph was the ONLY package still on `LLN-`; `SPORE-` is universal, no central registry hardcodes them).
 
 ## Why this is separate
 The rebrand codemod preserved every signed/hashed wire-format string verbatim, because renaming bytes

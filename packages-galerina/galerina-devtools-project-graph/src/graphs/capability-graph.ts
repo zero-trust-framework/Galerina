@@ -35,7 +35,7 @@ export type CapabilityGraph = Graph<CapabilityNodeData, CapabilityEdgeData>;
 // ---------------------------------------------------------------------------
 
 export const LLN_PGRAPH_030 = {
-  code: "LLN-PGRAPH-030",
+  code: "SPORE-PGRAPH-030",
   name: "CAPABILITY_NOT_GRANTED",
   severity: "error",
   message: "A flow requires a capability that has not been granted.",

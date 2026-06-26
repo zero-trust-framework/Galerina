@@ -1,4 +1,4 @@
-# LLN-Graph
+# SPORE-Graph
 
 **Graph data structures, algorithms, and runtime reporting for the [Galerina](https://github.com/galerina) platform.**
 
@@ -8,7 +8,7 @@
 
 ## What is it?
 
-LLN-Graph is a standalone TypeScript library that provides:
+SPORE-Graph is a standalone TypeScript library that provides:
 
 - An **immutable, generic graph core** (`Graph<N,E>`, `GraphBuilder<N,E>`) with O(1) node lookup
 - **Graph algorithms** — BFS path finding, DFS cycle detection, Kahn's topological sort, iterative fixpoint, reachability helpers
@@ -30,7 +30,7 @@ Galerina started with graph implementations scattered across several packages wi
 | `galerina-core-compiler` | EffectGraph and BoundaryGraph specified in KB docs but not yet data structures |
 | `galerina-core-reports` | ExecutionProofChain and EventDAG as type specs with no graph backing |
 
-This created duplicated algorithm code, no shared diagnostic format, and no common serialisation schema. LLN-Graph consolidates all of it into one place, purpose-built for Galerina, released as a first-class standalone repo so it can evolve independently and be reused by any Galerina consumer.
+This created duplicated algorithm code, no shared diagnostic format, and no common serialisation schema. SPORE-Graph consolidates all of it into one place, purpose-built for Galerina, released as a first-class standalone repo so it can evolve independently and be reused by any Galerina consumer.
 
 ---
 
@@ -174,31 +174,31 @@ builder.addEdge("build", "install", { required: true }); // ❌ reversed order
 
 ## Diagnostic codes
 
-### LLN-GRAPH-* (graph structure)
+### SPORE-GRAPH-* (graph structure)
 
 | Code | Name | Meaning |
 |---|---|---|
-| `LLN-GRAPH-001` | `CYCLE_DETECTED` | Graph contains a cycle where a DAG is required |
-| `LLN-GRAPH-002` | `NODE_NOT_FOUND` | Referenced node does not exist |
-| `LLN-GRAPH-003` | `DEPENDENCY_MISSING` | A declared dependency was not found |
-| `LLN-GRAPH-004` | `FIXPOINT_TIMEOUT` | Iterative fixpoint did not converge within max iterations |
-| `LLN-GRAPH-005` | `INVALID_TRANSITION` | Resource lifecycle state transition is not permitted |
+| `SPORE-GRAPH-001` | `CYCLE_DETECTED` | Graph contains a cycle where a DAG is required |
+| `SPORE-GRAPH-002` | `NODE_NOT_FOUND` | Referenced node does not exist |
+| `SPORE-GRAPH-003` | `DEPENDENCY_MISSING` | A declared dependency was not found |
+| `SPORE-GRAPH-004` | `FIXPOINT_TIMEOUT` | Iterative fixpoint did not converge within max iterations |
+| `SPORE-GRAPH-005` | `INVALID_TRANSITION` | Resource lifecycle state transition is not permitted |
 
-### LLN-EFFECT-* (effect checker)
+### SPORE-EFFECT-* (effect checker)
 
-`LLN-EFFECT-001` — `UNDECLARED_EFFECT` · `LLN-EFFECT-002` — `EFFECT_NOT_INFERRED` · `LLN-EFFECT-003` — `UNSAFE_EFFECT_IN_SAFE_FLOW` · `LLN-EFFECT-004` — `TRANSITIVE_EFFECT_UNDECLARED`
+`SPORE-EFFECT-001` — `UNDECLARED_EFFECT` · `SPORE-EFFECT-002` — `EFFECT_NOT_INFERRED` · `SPORE-EFFECT-003` — `UNSAFE_EFFECT_IN_SAFE_FLOW` · `SPORE-EFFECT-004` — `TRANSITIVE_EFFECT_UNDECLARED`
 
-### LLN-BOUNDARY-* (boundary checker)
+### SPORE-BOUNDARY-* (boundary checker)
 
-`LLN-BOUNDARY-001` — `DENIED_EFFECT_CROSSING` · `LLN-BOUNDARY-002` — `SECRET_CROSSING_NON_SECRET_BOUNDARY` · `LLN-BOUNDARY-003` — `VALIDATION_REQUIRED` · `LLN-BOUNDARY-004` — `UNTRUSTED_SECRET_TRANSFER`
+`SPORE-BOUNDARY-001` — `DENIED_EFFECT_CROSSING` · `SPORE-BOUNDARY-002` — `SECRET_CROSSING_NON_SECRET_BOUNDARY` · `SPORE-BOUNDARY-003` — `VALIDATION_REQUIRED` · `SPORE-BOUNDARY-004` — `UNTRUSTED_SECRET_TRANSFER`
 
-### LLN-CAPABILITY-*
+### SPORE-CAPABILITY-*
 
-`LLN-CAPABILITY-001` — `CAPABILITY_NOT_GRANTED`
+`SPORE-CAPABILITY-001` — `CAPABILITY_NOT_GRANTED`
 
-### LLN-REPORT-* / LLN-AUDIT-*
+### SPORE-REPORT-* / SPORE-AUDIT-*
 
-`LLN-REPORT-001` — invalid `schemaVersion` on audit event · `LLN-AUDIT-003` — metadata contains a raw secret field
+`SPORE-REPORT-001` — invalid `schemaVersion` on audit event · `SPORE-AUDIT-003` — metadata contains a raw secret field
 
 ---
 
@@ -207,7 +207,7 @@ builder.addEdge("build", "install", { required: true }); // ❌ reversed order
 ```
 src/
   core/
-    types.ts          — NodeId, GraphNode<N>, GraphEdge<E>, Graph<N,E>, GraphJSON, LlnDiagnostic, LLN-GRAPH-001..005
+    types.ts          — NodeId, GraphNode<N>, GraphEdge<E>, Graph<N,E>, GraphJSON, LlnDiagnostic, SPORE-GRAPH-001..005
     graph.ts          — ImmutableGraph<N,E> implementation (not exported directly)
     builder.ts        — GraphBuilder<N,E> — the only way to construct a Graph
   algorithms/
