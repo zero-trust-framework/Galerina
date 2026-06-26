@@ -13,6 +13,10 @@ contract {
     type AnalyseRecordResult = Result<Response, AiError>
   }
 
+  intent {
+    "Validate raw patient input to a protected type, run an AI risk model, and write a redacted audit entry."
+  }
+
   effects {
     ai.inference
     audit.write

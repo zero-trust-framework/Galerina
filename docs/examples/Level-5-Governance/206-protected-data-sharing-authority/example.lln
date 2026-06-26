@@ -26,6 +26,7 @@ contract {
   authority {
     sharing protected PatientData to "specialist-service"
     approved_by "data-governance-board"
+    reason "Clinical referral to a contracted specialist within the patient's care pathway."
   }
 {
   let referralId = http.post("https://specialist.example.nhs.uk/referrals", patient.referralPacket)?
