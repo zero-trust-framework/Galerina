@@ -230,8 +230,11 @@ export function testWitnessDigest(w: TestWitness): string {
 /**
  * Deny-by-default admission predicate: vouch for a witness ONLY when it is structurally consistent AND
  * its leak proof is genuinely CLEAN for the given artifact. A witness whose verdict claims `clean` while
- * its own summary/leaks show denies is TAMPERED → fail closed (do NOT vouch). This is the predicate the
- * (deferred) fuse-loader admission policy will gate on; it never fails open.
+ * its own summary/leaks show denies (or carries a finding of an UNKNOWN severity) is TAMPERED → fail closed.
+ * This is the predicate the (deferred) fuse-loader admission policy will gate on; it never fails open.
+ *
+ * CONTRACT: this is a CONTENT predicate and must only ever run AFTER the out-of-band Ed25519+ML-DSA
+ * signature over `canonicalTestWitness(w)` has verified — never as a sole admission gate.
  */
 export function witnessVouchesClean(w: TestWitness, expectedWasmSha256: string): boolean {
   if (!w || w.schema !== "lln.testwitness.v1") return false;
@@ -243,6 +246,13 @@ export function witnessVouchesClean(w: TestWitness, expectedWasmSha256: string):
   if (!p || p.schema !== "lln.leakproof.v1") return false;
   if (p.verdict !== "clean") return false;                            // a known-leaking module never vouches
   if (!p.summary || p.summary.denies !== 0) return false;             // verdict/summary inconsistency = tamper
-  if (!Array.isArray(p.leaks) || p.leaks.some((l) => l.severity === "deny")) return false; // verdict/leaks inconsistency = tamper
+  if (!Array.isArray(p.leaks)) return false;
+  // RD-0129 hardening: a positive severity allow-list — a finding whose severity is neither "deny" nor
+  // "warn" is an UNKNOWN/forged severity and must fail closed (never be treated as non-deny by omission).
+  if (p.leaks.some((l) => l.severity !== "deny" && l.severity !== "warn")) return false;
+  if (p.leaks.some((l) => l.severity === "deny")) return false;       // verdict/leaks inconsistency = tamper
+  // Cross-check the forgeable summary.denies against the leaks array itself — they must agree.
+  const recomputedDenies = p.leaks.filter((l) => l.severity === "deny").length;
+  if (recomputedDenies !== p.summary.denies) return false;
   return true;
 }

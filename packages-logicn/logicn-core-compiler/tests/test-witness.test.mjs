@@ -55,6 +55,19 @@ test("FAIL-CLOSED: a malformed / empty leak proof does not silently verify as cl
   assert.equal(witnessVouchesClean(emptyObj, WASM), false); // empty suite digest = not a real receipt
 });
 
+test("FAIL-CLOSED (RD-0129): an UNKNOWN severity / summary-leaks denies mismatch does not vouch", () => {
+  // A finding with a severity outside {deny,warn} must fail closed (not be treated as non-deny by omission).
+  const unknownSev = { ...denyFinding, severity: "info" };
+  const wUnknown = buildTestWitness(WASM, { schema: "lln.leakproof.v1", verdict: "clean", leaks: [unknownSev], summary: { total: 1, denies: 0, byCategory: {} } }, emptySuite);
+  assert.equal(witnessVouchesClean(wUnknown, WASM), false);
+  // summary.denies disagreeing with the leaks array (forged summary) must fail closed even if verdict=clean.
+  const wMismatch = buildTestWitness(WASM, { schema: "lln.leakproof.v1", verdict: "clean", leaks: [{ ...denyFinding, severity: "warn" }], summary: { total: 1, denies: 0, byCategory: {} } }, emptySuite);
+  // (denies recomputed from leaks = 0, summary.denies = 0 → agree → still vouches; this one is genuinely clean)
+  assert.equal(witnessVouchesClean(wMismatch, WASM), true);
+  const wForged = buildTestWitness(WASM, { schema: "lln.leakproof.v1", verdict: "clean", leaks: [], summary: { total: 0, denies: 1, byCategory: {} } }, emptySuite);
+  assert.equal(witnessVouchesClean(wForged, WASM), false); // summary claims a deny the leaks array does not have
+});
+
 test("canonical pre-image is DETERMINISTIC and TAMPER-EVIDENT", () => {
   const w = buildTestWitness(WASM, cleanProof, emptySuite);
   assert.equal(canonicalTestWitness(w), canonicalTestWitness(buildTestWitness(WASM, cleanProof, emptySuite)));

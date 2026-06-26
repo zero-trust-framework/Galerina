@@ -747,11 +747,13 @@ class SyncInterpreter {
         // Short-circuit for && / ||
         if (op === "&&") {
           const l = this.evalExprS(node.children![0]!);
+          if (l.__tag === "runtimeError") return l; // RD-0129: a trap/error in a bool operand fails closed
           if (l.__tag === "bool" && !l.value) return BOOL_FALSE;
           return this.evalExprS(node.children![1]!);
         }
         if (op === "||") {
           const l = this.evalExprS(node.children![0]!);
+          if (l.__tag === "runtimeError") return l; // RD-0129: a trap/error in a bool operand fails closed
           if (l.__tag === "bool" && l.value) return BOOL_TRUE;
           return this.evalExprS(node.children![1]!);
         }
@@ -1972,14 +1974,17 @@ class Interpreter {
   private async evalBinary(op: string, leftNode: AstNode, rightNode: AstNode): Promise<LogicNValue> {
     if (op === "&&") {
       const left = await this.evalExpr(leftNode);
-      if (isCheckedTrap(left)) return left; // 0038: a trap in a bool operand fails closed, not silently
+      // RD-0129 hardening: propagate ANY runtimeError in a bool operand, not just checked traps — a SOFT
+      // error (operator-not-supported / apply-non-fn) must also fail closed, never be swallowed by the
+      // short-circuit. Fail-closed by construction, not by relying on checkTypes to block such operands.
+      if (left.__tag === "runtimeError") return left;
       if (left.__tag === "bool" && !left.value) return { __tag: "bool", value: false };
-      return await this.evalExpr(rightNode); // a checked trap in `right` propagates to the binding
+      return await this.evalExpr(rightNode); // a trap in `right` propagates to the binding
     }
 
     if (op === "||") {
       const left = await this.evalExpr(leftNode);
-      if (isCheckedTrap(left)) return left; // 0038: a trap in a bool operand fails closed, not silently
+      if (left.__tag === "runtimeError") return left; // RD-0129: any error in a bool operand fails closed
       if (left.__tag === "bool" && left.value) return { __tag: "bool", value: true };
       return await this.evalExpr(rightNode);
     }
