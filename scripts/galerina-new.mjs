@@ -241,7 +241,16 @@ Next:
 // replacement (never a prefix), so unrelated names like `galerina-framework-app-kernel`
 // or `galerina-framework-layer-design` are untouched.
 function substituteName(text, name) {
-  return text.split(TEMPLATE_SCOPED_NAME).join(name).split(TEMPLATE_PKG_NAME).join(name);
+  return text.split(TEMPLATE_SCOPED_NAME).join(name).split(TEMPLATE_PKG_NAME).join(name)
+    // The golden App.manifest is root-SIGNED, so its content is PRESERVED at pre-rebrand values
+    // (name `logicn-framework-example-app`, schemaVersion `lln.app.v1`, entry `src/App.lln`) — it
+    // can't change without the offline re-sign ceremony, even though the example app's actual entry
+    // file is now `src/App.spore`. A freshly-scaffolded app is UNSIGNED, so rewrite those stale refs
+    // to current Galerina values so the new manifest + entry + name are consistent.
+    .split("@logicn/framework-example-app").join(name)
+    .split("logicn-framework-example-app").join(name)
+    .split("lln.app.v1").join("spore.app.v1")
+    .split("src/App.lln").join("src/App.spore");
 }
 
 // Recursively copy `srcDir` → `dstDir`, skipping build-output dirs, substituting the

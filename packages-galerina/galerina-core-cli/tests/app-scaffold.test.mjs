@@ -78,11 +78,9 @@ test("galerina new app — App.manifest is deny-by-default (no caps, kind=app, n
 
     const manifest = JSON.parse(readFileSync(join(target, "App.manifest"), "utf8"));
     assert.equal(manifest.kind, "app");
-    // schemaVersion is inherited from the root-signed App.manifest template, whose `lln.app.v1`
-    // tag is PRESERVED (its content is signed by the offline trust anchor). It migrates to
-    // `spore.app.v1` — template + scaffolder output + this assertion together — at the re-sign
-    // key ceremony. Until then the scaffolder emits the preserved value. (Galerina rebrand.)
-    assert.equal(manifest.schemaVersion, "lln.app.v1");
+    // A freshly-scaffolded app is unsigned, so galerina-new.mjs rewrites the golden (root-signed,
+    // preserved) App.manifest's `lln.app.v1` -> the current `spore.app.v1`.
+    assert.equal(manifest.schemaVersion, "spore.app.v1");
     assert.equal(manifest.entry, "src/App.spore");
     // The example app's identity string is replaced with the new app's name.
     assert.equal(manifest.name, "secure-app");
