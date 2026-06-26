@@ -36,6 +36,8 @@ const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8",
 const EXCLUDE = [
   /^build\//,                                              // generated catalogs/graph/coverage — REGENERATED after the rename (don't text-churn)
   /(^|\/)governance\/revocations\.json$/,                  // ROOT-SIGNED registry — renaming its content breaks the offline trust-anchor signature (re-sign = key ceremony)
+  /\.lmanifest(\.json)?$/,                                 // signed compiled manifests — content-rename breaks the signature
+  /(^|\/)App\.manifest$/,                                  // signed app manifest (root key)
   /(^|\/)package-lock\.json$/,
   /\.lock$/,
   /(^|\/)scripts\/rebrand-galerina\.mjs$/,                 // self

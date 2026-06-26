@@ -1,9 +1,9 @@
 {
-  "schemaVersion": "spore.app.v1",
+  "schemaVersion": "lln.app.v1",
   "kind": "app",
-  "name": "galerina-framework-example-app",
+  "name": "logicn-framework-example-app",
   "version": "0.1.0",
-  "entry": "src/App.spore",
+  "entry": "src/App.lln",
   "flows": "src/flows/",
   "proofs": "proofs/",
   "capabilities": [],
