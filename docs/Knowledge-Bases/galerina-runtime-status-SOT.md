@@ -3,9 +3,10 @@
 **Last verified: 2026-06-06 (by running the suites, not by reading prior docs)**
 
 > **⏩ CURRENT 2026-06-27 (post-Galerina-rebrand, verified by running `node scripts/run-all-tests.cjs`):**
-> **60/60 packages · 5,919 tests · 0 fail.** Supersedes every earlier figure below — `44/44·4,128 →
+> **60/60 packages · 5,927 tests · 0 fail.** Supersedes every earlier figure below — `44/44·4,128 →
 > 47/47·4,346 → 48/48·4,360 → 53/53·4,980` are dated snapshots kept for history. Includes this session's
-> network TLS/port dial enforcement, audit-receipt redaction sink, and the note-54 data-plane IDOR border.
+> network TLS/port dial enforcement, audit-receipt redaction sink, the note-54 data-plane IDOR border, and
+> the force-HTTPS egress boot setting.
 >
 > **⏩ NEWER AUDIT 2026-06-21** — see [galerina-roadmap-and-percent-audit-2026-06-21.md](galerina-roadmap-and-percent-audit-2026-06-21.md).
 > Counts refreshed to **53/53 packages · 4,980 tests · 0 fail** (verified by running; the `version.json` `--emit-counts` bump is deferred to a clean run — it refused under concurrent R&D CPU load).
