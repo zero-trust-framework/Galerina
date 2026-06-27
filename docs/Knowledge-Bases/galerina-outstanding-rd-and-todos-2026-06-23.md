@@ -39,6 +39,21 @@ unscheduled).
 | Per-package Tri-Pipe coverage as machine-checkable metadata | arch-rd #16 | 🧪 |
 | **Compiler Intelligence (Doc 005)** — §2 Governance DCE pass (`SPORE-GDCE-001`) · §3a `substrate{photonic}` envelope keyword · §3b value-level substrate-taint · §4 auto-resilience AST→GIR wrap | [compiler-intelligence](galerina-compiler-intelligence-deterministic-foresight.md) (wf `w2gzcbx9d`) | 🧪 design-complete → build |
 
+### 2026-06-27 — net-new ADOPTABLES from the "automate the defence" R&D (RD-0137..0149)
+
+The two batches (RD-0138..0143 + RD-0144..0149, notes `75-improvments-r-d-1..12`) mostly re-derived shipped
+architecture or refuted photonic overclaims; these are the **genuinely net-new, sound items we will adopt**
+(design-only, **owner-gated** — ask before building). Both proven: `scripts/rd-0138-0143-...-proof.mjs` (8/8) +
+`scripts/rd-0144-0149-...-proof.mjs` (6/6). KB: [photonic-security](galerina-rd-0138-0143-photonic-security-automation.md)
+· [governed-chaos](galerina-rd-0144-0149-governed-chaos-multisubstrate.md).
+
+| Item | What / why | Status |
+|---|---|---|
+| **Lane-0 declassifier rail** (`SPORE-DECLASSIFY-*`) | The cross-cutting net-new: formalize "Tri-Pipe Lane 0 = mask-and-continue" as a typed, signed, AUDITED declassifier over the shipped `partialReturn`/`maskByVerdict`, so mask-and-continue is reachable ONLY through it (never a silent safety bypass). Sound form of every note's Lane-0 idea. | 🧪 design → build, **owner-gated** |
+| **Shadow/canary AI-proposal deploy** | RD-0149 lead: fork live traffic to an AI proposal SAFELY = the note-54 data-plane border (shipped this session, `tower-citizen/data-plane-border.ts`) + attenuated capability tokens + Freivalds verify + the Lane-0 declassifier rail. Proven (V3) it must sit behind the border or it leaks. | 🧪 design → build, **owner-gated** |
+| Thread force-HTTPS / egress policy through `StdlibContext`→interpreter→cli | Today it's an env knob + core-config `resolveEgressTls` SoT; full threading makes it per-route/per-config + auditable. | 📋 todo |
+| Delete duplicate note `75-improvments-r-d-11` | Byte-identical to note 10 (RD-0148 = dup of RD-0147). | 📋 todo (owner) |
+
 ## C. Build items (engineering — no further R&D needed)
 | # | Item | Source | Status |
 |---|---|---|---|
