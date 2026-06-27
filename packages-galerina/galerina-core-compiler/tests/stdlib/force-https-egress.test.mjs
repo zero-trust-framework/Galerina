@@ -58,7 +58,7 @@ test("https on 443 is unaffected (the normal path still works)", async () => {
 });
 
 // ── local-dev loopback exception ("be a bit smart and not block http://localhost") ──
-const clearDev = () => { delete process.env.GALERINA_ALLOW_LOCALHOST; delete process.env.NODE_ENV; delete process.env.GALERINA_PROFILE; };
+const clearDev = () => { delete process.env.GALERINA_ALLOW_LOCALHOST; delete process.env.NODE_ENV; delete process.env.GALERINA_PROFILE; delete process.env.GALERINA_EGRESS_ALLOWED_HOSTS; };
 
 test("local dev: http://localhost is ALLOWED with GALERINA_ALLOW_LOCALHOST=true", async () => {
   clearDev(); process.env.GALERINA_ALLOW_LOCALHOST = "true";
@@ -103,4 +103,26 @@ test("loopback dev does NOT open metadata/private even with the dev signal", asy
       assert.match(r.error?.value ?? "", /SSRF/, u);
     }
   } finally { clearDev(); }
+});
+
+// ── internal egress proxy: "even in production we need to work with an internal proxy" ──
+test("internal proxy: an allow-listed host works in PRODUCTION (http, odd port, internal)", async () => {
+  clearDev();
+  process.env.NODE_ENV = "production";
+  process.env.GALERINA_EGRESS_ALLOWED_HOSTS = "proxy.internal";
+  try {
+    const r = await withFetch(() => resp(200, "OK-PROXY"), () =>
+      callStdlib("http.get", undefined, [str("http://proxy.internal:8080/fetch")], ctx));
+    assert.equal(r.__tag, "ok", `expected ok, got ${JSON.stringify(r)}`);
+  } finally { clearDev(); delete process.env.GALERINA_EGRESS_ALLOWED_HOSTS; }
+});
+
+test("internal proxy: the allow-list opens ONLY the listed host (a sibling stays SSRF-denied)", async () => {
+  clearDev();
+  process.env.GALERINA_EGRESS_ALLOWED_HOSTS = "proxy.internal";
+  try {
+    const r = await callStdlib("http.get", undefined, [str("http://other.internal/")], ctx);
+    assert.equal(r.__tag, "err");
+    assert.match(r.error?.value ?? "", /SSRF/);
+  } finally { delete process.env.GALERINA_EGRESS_ALLOWED_HOSTS; }
 });

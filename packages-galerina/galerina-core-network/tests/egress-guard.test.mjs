@@ -183,6 +183,24 @@ describe("guardOutboundUrl — allowLoopback (local-dev exception, loopback ONLY
   });
 });
 
+describe("guardOutboundUrl — internal-proxy allow-list (production-valid, exact host)", () => {
+  // an operator-trusted internal egress proxy is admitted in EVERY env (incl. force-HTTPS prod posture):
+  // http + non-standard port + internal host all bypassed FOR THE ALLOW-LISTED HOST ONLY.
+  const prod = { allowedSchemes: ["http", "https"], requireTls: true, allowedPorts: [443] };
+  it("an allow-listed internal proxy (http, odd port, internal host) is admitted under force-HTTPS", () => {
+    assert.equal(guardOutboundUrl("http://proxy.internal:8080/path", { ...prod, allowedHosts: ["proxy.internal"] }).allowed, true);
+    assert.equal(guardOutboundUrl("http://10.0.0.8:3128/", { ...prod, allowedHosts: ["10.0.0.8"] }).allowed, true);
+    assert.equal(guardOutboundUrl("http://proxy.internal:8080/", { ...prod, allowedHosts: ["proxy.internal"] }).code, "Galerina_NETWORK_EGRESS_ALLOWLISTED");
+  });
+  it("the allow-list opens ONLY the listed host — a sibling internal host stays SSRF-denied", () => {
+    assert.equal(guardOutboundUrl("http://other.internal/", { ...prod, allowedHosts: ["proxy.internal"] }).allowed, false);
+    assert.equal(guardOutboundUrl("http://169.254.169.254/", { ...prod, allowedHosts: ["proxy.internal"] }).allowed, false);
+  });
+  it("without the allow-list, the internal proxy host is denied", () => {
+    assert.equal(guardOutboundUrl("http://proxy.internal:8080/", prod).allowed, false);
+  });
+});
+
 describe("guardResolvedAddresses — connect-time DNS-rebinding defence", () => {
   it("all-public resolution is allowed", () => assert.equal(guardResolvedAddresses("good.com", ["8.8.8.8", "1.1.1.1"]).allowed, true));
   it("a public+private MIX is denied (rebinding / mixed resolution)", () => {

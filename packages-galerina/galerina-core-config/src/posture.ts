@@ -162,6 +162,8 @@ export function deriveImportProfile(resolved: ResolvedPosture): ImportProfile {
 export const ALLOW_PLAINTEXT_EGRESS_ENV = "GALERINA_ALLOW_PLAINTEXT_EGRESS" as const;
 /** The env flag that permits LOOPBACK (localhost) egress for local development (explicit override). */
 export const ALLOW_LOCALHOST_ENV = "GALERINA_ALLOW_LOCALHOST" as const;
+/** Comma-separated exact-host allow-list (e.g. an internal egress proxy) trusted in EVERY env incl. production. */
+export const EGRESS_ALLOWED_HOSTS_ENV = "GALERINA_EGRESS_ALLOWED_HOSTS" as const;
 
 /** The resolved outbound-egress TLS posture (the force-HTTPS boot setting). */
 export interface EgressTlsSetting {
@@ -177,6 +179,12 @@ export interface EgressTlsSetting {
    * GALERINA_ALLOW_LOCALHOST flag. Lets `http://localhost:3000` work in dev without opening any other host.
    */
   readonly allowLoopback: boolean;
+  /**
+   * Exact-host allow-list (e.g. an internal egress PROXY) trusted in EVERY environment, including production —
+   * admitted over plaintext / any port, bypassing the SSRF host-category denial and force-HTTPS for those hosts
+   * ONLY. Lets "even in production we work with an internal proxy" without relaxing the posture for anything else.
+   */
+  readonly allowedHosts: readonly string[];
   readonly rationale: string;
 }
 
@@ -190,6 +198,14 @@ export interface EgressTlsInput {
   readonly profile?: string;
   /** GALERINA_ALLOW_LOCALHOST — truthy enables loopback-dev explicitly (still denied in production). */
   readonly allowLocalhostEnv?: string;
+  /** GALERINA_EGRESS_ALLOWED_HOSTS — comma-separated exact-host allow-list (e.g. an internal proxy). */
+  readonly allowedHostsEnv?: string;
+}
+
+/** Parse a comma/whitespace-separated host allow-list (lower-cased, trimmed, de-duped, empties dropped). */
+export function parseAllowedHosts(raw?: string): readonly string[] {
+  if (!raw) return [];
+  return [...new Set(raw.split(/[,\s]+/).map((h) => h.trim().toLowerCase()).filter((h) => h.length > 0))];
 }
 
 /**
@@ -201,26 +217,30 @@ export interface EgressTlsInput {
  *    production ⇒ denied. Only loopback is opened, never private LAN / metadata.
  */
 export function resolveEgressTls(input: EgressTlsInput = {}): EgressTlsSetting {
-  const { allowPlaintextEnv, nodeEnv, profile, allowLocalhostEnv } = input;
+  const { allowPlaintextEnv, nodeEnv, profile, allowLocalhostEnv, allowedHostsEnv } = input;
   const relaxed = allowPlaintextEnv === "true" || allowPlaintextEnv === "1";
   const isProd = profile === "production" || nodeEnv === "production";
   const isDev = profile === "development" || nodeEnv === "development";
   const explicitLocalhost = allowLocalhostEnv === "true" || allowLocalhostEnv === "1";
   const allowLoopback = !isProd && (isDev || explicitLocalhost);
+  const allowedHosts = parseAllowedHosts(allowedHostsEnv);
   const loopNote = allowLoopback ? " Loopback (localhost) permitted for local development." : "";
+  const hostNote = allowedHosts.length ? ` Allow-listed egress hosts: ${allowedHosts.join(", ")}.` : "";
   return relaxed
     ? {
         requireTls: false,
         allowedPorts: [],
         relaxed: true,
         allowLoopback,
-        rationale: `Force-HTTPS relaxed by ${ALLOW_PLAINTEXT_EGRESS_ENV} — plaintext egress permitted (operator override; not for production).${loopNote}`,
+        allowedHosts,
+        rationale: `Force-HTTPS relaxed by ${ALLOW_PLAINTEXT_EGRESS_ENV} — plaintext egress permitted (operator override; not for production).${loopNote}${hostNote}`,
       }
     : {
         requireTls: true,
         allowedPorts: [443],
         relaxed: false,
         allowLoopback,
-        rationale: `Force-HTTPS (default): plaintext public egress denied; effective port locked to 443.${loopNote}`,
+        allowedHosts,
+        rationale: `Force-HTTPS (default): plaintext public egress denied; effective port locked to 443.${loopNote}${hostNote}`,
       };
 }

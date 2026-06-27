@@ -275,7 +275,9 @@ export function guardOutboundHost(rawHost: string, policy: EgressPolicy = {}): E
   const host = c.host;
   const allowList = new Set((policy.allowedHosts ?? []).map((h) => h.trim().toLowerCase()));
   if (allowList.has(host)) {
-    return { allowed: true, code: "Galerina_NETWORK_EGRESS_ALLOWLISTED", category: c.category, host, reason: "host is explicitly allow-listed", requiresDnsRecheck: c.requiresDnsRecheck };
+    // Operator-trusted host: skip the DNS-rebind recheck (the allow-list IS the explicit trust decision, and
+    // guardResolvedAddresses would admit it anyway) — so a proxy that isn't resolvable from this process still works.
+    return { allowed: true, code: "Galerina_NETWORK_EGRESS_ALLOWLISTED", category: c.category, host, reason: "host is explicitly allow-listed", requiresDnsRecheck: false };
   }
   if (c.category === "metadata") {
     const allowed = policy.allowMetadataEndpoint === true;
@@ -317,6 +319,11 @@ export function guardOutboundUrl(url: string, policy: EgressPolicy = {}): Egress
   if (!hostDecision.allowed) return hostDecision;
   // Loopback admitted for local dev = local IPC: skip TLS/port (a localhost dev server is http on a dev port).
   if (hostDecision.category === "loopback") return hostDecision;
+  // An explicitly allow-listed host (e.g. an internal egress PROXY) is operator-trusted in EVERY environment,
+  // including production — admit it over plaintext / any port (skip TLS + port). The allow-list is exact-host
+  // signed/operator config, so "even in production we work with an internal proxy" without relaxing force-HTTPS
+  // for anything else. (allowedHosts already overrode the SSRF host-category denial in guardOutboundHost.)
+  if (hostDecision.code === "Galerina_NETWORK_EGRESS_ALLOWLISTED") return hostDecision;
   if (policy.requireTls === true && scheme !== "https") {
     return { allowed: false, code: "Galerina_NETWORK_EGRESS_TLS_REQUIRED", category: hostDecision.category, host: hostDecision.host, reason: `plaintext scheme "${scheme}" denied — TLS (https) required (fail-closed)`, requiresDnsRecheck: false };
   }

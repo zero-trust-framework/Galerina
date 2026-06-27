@@ -44,6 +44,20 @@ test("loopback-dev: FAIL-SECURE — denied on unset/unknown, and NEVER in produc
   assert.equal(resolveEgressTls({ profile: "production", nodeEnv: "development" }).allowLoopback, false);
 });
 
+test("internal-proxy allow-list parses from env and survives in production (force-HTTPS unchanged)", () => {
+  const s = resolveEgressTls({ nodeEnv: "production", allowedHostsEnv: "proxy.internal, 10.0.0.8  proxy.internal" });
+  assert.deepEqual([...s.allowedHosts], ["proxy.internal", "10.0.0.8"]); // trimmed, lower-cased, de-duped
+  assert.equal(s.requireTls, true); // force-HTTPS still on for everything else
+  assert.equal(s.allowLoopback, false); // production never opens loopback
+});
+
+test("parseAllowedHosts — empty/whitespace yields no hosts", async () => {
+  const { parseAllowedHosts } = await import("../dist/index.js");
+  assert.deepEqual([...parseAllowedHosts(undefined)], []);
+  assert.deepEqual([...parseAllowedHosts("")], []);
+  assert.deepEqual([...parseAllowedHosts("  ,  ")], []);
+});
+
 test("env name constants are documented", () => {
   assert.equal(ALLOW_PLAINTEXT_EGRESS_ENV, "GALERINA_ALLOW_PLAINTEXT_EGRESS");
   assert.equal(ALLOW_LOCALHOST_ENV, "GALERINA_ALLOW_LOCALHOST");

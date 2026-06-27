@@ -1283,10 +1283,17 @@ async function networkAsync(fullName: string, args: readonly GalerinaValue[], ct
   const allowLocalhost =
     process.env?.["GALERINA_ALLOW_LOCALHOST"] === "true" || process.env?.["GALERINA_ALLOW_LOCALHOST"] === "1";
   const allowLoopback = !isProd && (isDev || allowLocalhost);
+  // Internal egress PROXY / trusted-host allow-list — exact hosts admitted in EVERY env incl. production (over
+  // plaintext / any port), bypassing SSRF + force-HTTPS for those hosts ONLY. Lets a corp proxy work in prod.
+  const allowedHostsRaw = process.env?.["GALERINA_EGRESS_ALLOWED_HOSTS"];
+  const allowedHosts = allowedHostsRaw
+    ? allowedHostsRaw.split(/[,\s]+/).map((h) => h.trim().toLowerCase()).filter((h) => h.length > 0)
+    : [];
   const dialPolicy = {
     allowedSchemes: ["http", "https"],
     ...(allowPlaintextEgress ? {} : { requireTls: true, allowedPorts: [443] }),
     ...(allowLoopback ? { allowLoopback: true } : {}),
+    ...(allowedHosts.length ? { allowedHosts } : {}),
   };
   const guardHop = async (u: string): Promise<string | null> => {
     const eg = guardOutboundUrl(u, dialPolicy);
