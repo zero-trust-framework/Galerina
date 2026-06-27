@@ -1,4 +1,4 @@
-# Galerina KB index (607 docs)
+# Galerina KB index (609 docs)
 
 Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.mjs --code SPORE-...`
 
@@ -1808,6 +1808,17 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 - links: [[galerina-rd-0138-0143-photonic-security-automation]]
 - terms: shipped, note, net-new, automate, defence, governed, chaos, multi-substrate, cross-cutting, rd-0144, per-note, verdicts, border, proved
 
+## RD-0150 — Graph as the standard data model for API / Database I/O (per-tenant zero-trust border)
+`docs/Knowledge-Bases/galerina-rd-0150-graph-as-data-io-border-concept.md`
+- codes: SPORE-SUBSTRATE-001, SPORE-GOV-3VL-001
+- terms: graph, edge, data, honest, verdict, api, case, provenance, soa, reachability, flat, never, node, model
+
+## RD-0151..0153 — Dynamic Assimilation · Tri-Logic Ambiguity · Governed AI (notes 13-15)
+`docs/Knowledge-Bases/galerina-rd-0151-0153-assimilation-ambiguity-neural.md`
+- tasks: #102
+- links: [[galerina-rd-0138-0143-photonic-security-automation]] [[galerina-rd-0144-0149-governed-chaos-multisubstrate]]
+- terms: rd-0151, dynamic, governed, notes, assimilation, tri-logic, ambiguity, genuine, net-new, per-note, verdicts, photonic, weight, proved
+
 ## R&D — Phase 34B boundary param auto-taint: verified state + build-ready spec
 `docs/Knowledge-Bases/galerina-rd-34b-paramtaint-buildspec-2026-06-24.md`
 - codes: SPORE-VALUESTATE-003, SPORE-VALUESTATE-008
@@ -1951,7 +1962,7 @@ Query: `node scripts/kb-index.mjs <terms>`  ·  by code: `node scripts/kb-index.
 - codes: SPORE-PERM-001, SPORE-GDCE-001, SPORE-PRIVACY-002
 - tasks: #102, #34, #0089, #212, #110, #194, #205
 - links: [[feedback-rd-absorb-positive-and-negative]]
-- terms: photonic, refuted, adopted, verdict, bridge, galerina, shipped, why, tri, governance, mixed, owner, designed, design
+- terms: photonic, refuted, verdict, adopted, mixed, bridge, galerina, why, notes, governed, shipped, tri, governance, net-new
 
 ## Galerina syntax 7-axis sweep (2026-06-25) — PARTIAL (4/8 categories; 4 rate-limited, to resume)
 `docs/Knowledge-Bases/galerina-rd-syntax-7axis-sweep-2026-06-25.md`

@@ -1,6 +1,6 @@
 {
   "generated": "kb-index",
-  "docCount": 607,
+  "docCount": 609,
   "docs": [
     {
       "rel": "docs/Knowledge-Bases/00-KB-INDEX.md",
@@ -21512,6 +21512,97 @@
       ]
     },
     {
+      "rel": "docs/Knowledge-Bases/galerina-rd-0150-graph-as-data-io-border-concept.md",
+      "title": "RD-0150 — Graph as the standard data model for API / Database I/O (per-tenant zero-trust border)",
+      "headings": [
+        "1. The question + what already exists",
+        "2. SECURITY — the strong case",
+        "3. SPEED — the honest mixed case",
+        "4. ORGANISATION — the strong case",
+        "5. The honest shape (recommendation): HYBRID PROPERTY-GRAPH",
+        "6. Compliance tags",
+        "7. Honest caveats",
+        "Verdict (one line)"
+      ],
+      "codes": [
+        "SPORE-SUBSTRATE-001",
+        "SPORE-GOV-3VL-001"
+      ],
+      "tasks": [],
+      "xrefs": [],
+      "topTerms": [
+        "graph",
+        "edge",
+        "data",
+        "honest",
+        "verdict",
+        "api",
+        "case",
+        "provenance",
+        "soa",
+        "reachability",
+        "flat",
+        "never",
+        "node",
+        "model",
+        "already",
+        "spine",
+        "border",
+        "speed",
+        "strong",
+        "gate",
+        "security",
+        "columnar",
+        "organisation",
+        "payload",
+        "rd-0150"
+      ]
+    },
+    {
+      "rel": "docs/Knowledge-Bases/galerina-rd-0151-0153-assimilation-ambiguity-neural.md",
+      "title": "RD-0151..0153 — Dynamic Assimilation · Tri-Logic Ambiguity · Governed AI (notes 13-15)",
+      "headings": [
+        "Per-note verdicts",
+        "What's proved (V1–V3)",
+        "Net-new genuine seams (owner-gated, design-only)"
+      ],
+      "codes": [],
+      "tasks": [
+        "#102"
+      ],
+      "xrefs": [
+        "galerina-rd-0138-0143-photonic-security-automation",
+        "galerina-rd-0144-0149-governed-chaos-multisubstrate"
+      ],
+      "topTerms": [
+        "rd-0151",
+        "dynamic",
+        "governed",
+        "notes",
+        "assimilation",
+        "tri-logic",
+        "ambiguity",
+        "genuine",
+        "net-new",
+        "per-note",
+        "verdicts",
+        "photonic",
+        "weight",
+        "proved",
+        "seams",
+        "owner-gated",
+        "design-only",
+        "re-derives",
+        "capability",
+        "charter",
+        "decoy",
+        "gate",
+        "shipped",
+        "model",
+        "scoped"
+      ]
+    },
+    {
       "rel": "docs/Knowledge-Bases/galerina-rd-34b-paramtaint-buildspec-2026-06-24.md",
       "title": "R&D — Phase 34B boundary param auto-taint: verified state + build-ready spec",
       "headings": [
@@ -22745,6 +22836,7 @@
         "Adopted / Designed (recent)",
         "2026-06-27 — RD-0137..0143 (\"automate the defence\" with photonic/tri/Tower-Citizen/Tri-Pipe)",
         "2026-06-27 — RD-0144..0149 (\"automate the defence\" in Governed Chaos & Multi-Substrate)",
+        "2026-06-27 — RD-0151..0153 (Dynamic Assimilation · Tri-Logic Ambiguity · Governed AI, notes 13-15)",
         "Refuted — and WHY we did not adopt (the negative record)",
         "Complete R&D ledger — all bridge `done/` files (swept 95, 2026-06-23)"
       ],
@@ -22768,29 +22860,29 @@
       "topTerms": [
         "photonic",
         "refuted",
-        "adopted",
         "verdict",
+        "adopted",
+        "mixed",
         "bridge",
         "galerina",
-        "shipped",
         "why",
+        "notes",
+        "governed",
+        "shipped",
         "tri",
         "governance",
-        "mixed",
+        "net-new",
         "owner",
         "designed",
         "design",
-        "net-new",
         "full",
+        "invariant",
         "contract",
+        "fail-closed",
         "automate",
         "defence",
-        "fail-closed",
-        "substrate",
-        "invariant",
-        "notes",
-        "tri-pipe",
-        "governed"
+        "tri-logic",
+        "gate"
       ]
     },
     {

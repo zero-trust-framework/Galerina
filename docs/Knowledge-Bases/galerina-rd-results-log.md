@@ -57,6 +57,7 @@ refuted, with the reason — then refreshes the KB index. See [[feedback-rd-abso
 | notes/47 (DRCM precursor) + architecture blueprint PDF | already-shipped (~90% re-derive) · 🧪 deliverable WRITTEN | June-3 precursor of shipped DRCM (DbC / SPORE-PRIVACY-002 / SPORE-MONO + signed `.lmanifest` + ASIC + WASI #102-106 + PCI/OWASP 0084); net-new = numbered-PCI-requirement→artifact **compliance-evidence mapping TABLE** — now written (honest grading: enforced vs ⚠ aspirational isolation vs 🔑 PQ-placeholder; discloses 7/12 checker gap) | [PCI evidence map](galerina-pci-dss-evidence-mapping.md) · governance-verifier.ts |
 | notes/50 — backend roadmap + tri/photonic primer + photonics pointers | already-shipped (0 net-new buildable) | ~95% reference; primer re-derives K3 + substrate + blind-observability; SAX already mined today (S-parameter-composition); gdsfactory/Meep/Photontorch **REFUTED** (keep physics/sim outside the governance boundary) | three-valued-governance.ts · galerina-external-idea-mining-2026-06-23.md |
 | notes/51 — NumPy→TS: full numeric/ndarray/linalg in core? | ❌ REFUTED (by design) | Full NumPy parity in core = NO by design; core governs numeric SHAPES (core-vector types), compute behind ext-bridge-cpp/-bitnet; `for x in xs where c` = the shipped `np.where` analog; ndarray/broadcasting REFUTE; dense linalg (inv/det/eig) = TRACK behind a future Toxic-Border ext-bridge on real demand | core-vector/src/index.ts · ext-bridge-cpp/src/index.ts |
+| **RD-0150** — Graph as the standard data model for **API / DB I/O** border (security/speed/organisation) | 🧪 DESIGNED (concept) | **HYBRID property-graph**: graph SPINE for reachability/capability/verdict/provenance + columnar/SoA PAYLOAD for bulk scans. Isolation goes STRUCTURAL (no edge=no reach) → `Q∩S_user` = K3 reachability; closes CWE-639/285 + realizes NIST T1/T4. **Wins security+organisation, mixed on speed** (loses bulk scans/aggregations to SoA — why note 54 chose it), **introduces CWE-400** (mandatory traversal-budget gate) + MUST carry the 0037 separate-presence-channel discipline. Crypto stays digital; topology photonic-accelerable only outside the gate. 3 open problems (cross-tenant edge crypto custody is hardest). Owner-assigned 2026-06-27; verify lenses failed → worker honesty-pass | [graph-as-data-io concept](galerina-rd-0150-graph-as-data-io-border-concept.md) (wf `wf_a3d324a3-815`) |
 
 ## 2026-06-27 — RD-0137..0143 ("automate the defence" with photonic/tri/Tower-Citizen/Tri-Pipe)
 
@@ -97,6 +98,22 @@ RD-0138-0143. **NB: RD-0148 (note 11) is a byte-identical DUPLICATE of RD-0147 (
 **Net-new (owner-gated):** shadow/canary deploy of AI proposals = note-54 border (D, shipped) + attenuated caps +
 Freivalds + the Lane-0 declassifier rail (RD-0138-0143). **Proved:** V1 K3-0=availability-not-safety; V2 substrate-
 blend Safe-Floor; V3 shadow-fork must run behind the note-54 border (ties to this session's D).
+
+## 2026-06-27 — RD-0151..0153 (Dynamic Assimilation · Tri-Logic Ambiguity · Governed AI, notes 13-15)
+
+Owner notes `75-improvments-r-d-13..15` (RD-0150 reserved in worker session). Proof
+`scripts/rd-0151-0153-assimilation-ambiguity-neural-proof.mjs` (6/6 V GREEN). Full doc:
+[assimilation-ambiguity-neural](galerina-rd-0151-0153-assimilation-ambiguity-neural.md).
+
+| RD | Topic | ZT | Verdict | Why (one line) |
+|---|---|---|---|---|
+| 0151 | Dynamic Assimilation (hot-plug HW) | 6 | 🔀 MIXED | Hardware Citizen attestation = genuine net-new seam, re-derives bridge-attestation, **HW-gated**; 0-overhead transmutation + spectral 0-cycle ❌ |
+| 0152 | Tri-Logic Ambiguity (0 as asset) | 5 | 🔀 MIXED | re-derives substrate-noise/partialReturn; **"feed dummy data, keep live flow alive" ❌ fail-open** (sound form = scoped decoy); phase-cancel 0-cycle ❌ |
+| 0153 | Governed AI / neural | 6 | 🔀 MIXED | **Weight Charter + anti-poisoning invariant ✅** (No-Coercion); vector-clamping = ML technique out-of-core (ext-bridge); photonic-as-alignment-gate ❌ |
+
+**Net-new (owner-gated):** Hardware Citizen attestation (RD-0151, HW-gated) · Model Weight Charter + anti-
+poisoning invariant (RD-0153, in-core seam). **Proved:** V1 optical-can't-be-the-gate + weight-can't-add-cap;
+V2 0-cycle refute; V3 "0-as-asset"/"clamp-and-continue" sound only fail-closed, not fabricate-in-live-flow.
 
 ## Refuted — and WHY we did not adopt (the negative record)
 | Idea | Verdict | Why refuted |
