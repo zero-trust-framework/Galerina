@@ -90,3 +90,30 @@ auth (cert-gate unwired) → closed by C#1. Full detail: task output `wj6vrjkmg.
 
 > Pointers: bridge `_session-bridge/tasks/0081-0085` · [architecture R&D](galerina-architecture-rd-2026-06-23.md) ·
 > [permissions design](galerina-contract-permissions-design.md) · [2026-06-23 roadmap+%audit](galerina-roadmap-and-percent-audit-2026-06-23.md) · ledger §10.
+
+## 2026-06-28 — shipped + new R&D (mesh-database batch · PCI tool · rules export)
+
+**Shipped this session (origin/main):**
+- ✅ **Egress allow-list AUDIT + operator SSRF warning** (`2aed510`) — discharges the worker's gap-A suggestion
+  (audit-log of admitted hosts + operator-doc warning) for `GALERINA_EGRESS_ALLOWED_HOSTS`. Full suite 60/60 · 5,948.
+- ✅ **Memory index cleaned** (0 dangling / 0 orphan); dup note `75-improvments-r-d-11` deleted (clears the 📋 above).
+- ✅ **R&D RD-0154..0167 absorbed** — TritMesh/`.spore` mesh-database, 8 notes → 14 branches, all proven. KB:
+  [tritmesh-mesh-database](galerina-rd-0154-0167-tritmesh-mesh-database.md) + results-log rows.
+
+**Net-new owner-gated build leads (from RD-0154..0167):**
+| Item | What / why | Status |
+|---|---|---|
+| **Graph as a SIGNED primary index in `.spore`** (RD-0167) | In-passport adjacency index that speeds I/O — proven: UNSIGNED = silent read-redirection vuln, so signing is mandatory. Prototype behind a RED/perf harness; overlaps RD-0150. Defensive-pub worthy. | 🧪 design → prototype, **owner-gated** |
+| **Cross-language ternary PRE-FILTER lib** (RD-0163, note-04 ask) | New repo under `C:\wwwprojects` (php/node/c++/c#/java/ts) exposing the bit-packed SIMD dot-product as a deny-only PERF gate **in front of** real crypto. NOT a security boundary — ship with the forgery caveat. | 🧪 design → build, **owner-gated** |
+| **Zero-copy data plane** (RD-0161/0162) | NVMe-DMA + io_uring + stream-backpressure for the egress path. The engineering is the win (not "O(1)"). | 📋 todo |
+| **TritMesh deployment taxonomy** | Core / Symbiotic / Wavefront naming + decoupled/headless `.spore`-stream-back architecture. | 📋 todo |
+
+**New R&D / tooling:**
+- 🧪 **RD-0168 — graph-driven PCI/DSS + security compliance scanner** (owner ask) — extends `galerina-devtools-pci`
+  with graph reachability (PAN/secret → egress/log sinks lacking an encrypt/redact/audit edge → fail-closed; K3
+  unknown→INDETERMINATE). PoC `scripts/rd-0168-graph-pci-compliance-scanner-proof.mjs`.
+- ⚠️ **Rules-registry reconciliation (HIGH-VALUE finding):** the consolidated
+  [rules-master-registry](galerina-rules-master-registry.md) found **~350 `SPORE-*` codes ENFORCED in `src` but
+  ABSENT from any rules doc** (CONFIG/LOGIC/TYPE/TAINT/VAULT/VALUESTATE/FUSE/PKG/PCI/MEMORY/… families). The
+  governance-rules registry is materially incomplete vs what the compiler actually enforces — worth a reconcile pass.
+- 📋 Rules exported to markdown: [governance rules](galerina-rules-master-registry.md) + [R&D rules](galerina-rnd-rules-and-standards.md).

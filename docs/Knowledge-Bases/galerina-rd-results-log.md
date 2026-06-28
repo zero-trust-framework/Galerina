@@ -118,6 +118,49 @@ Owner notes `75-improvments-r-d-13..15` (RD-0150 reserved in worker session). Pr
 poisoning invariant (RD-0153, in-core seam). **Proved:** V1 optical-can't-be-the-gate + weight-can't-add-cap;
 V2 0-cycle refute; V3 "0-as-asset"/"clamp-and-continue" sound only fail-closed, not fabricate-in-live-flow.
 
+## 2026-06-28 — RD-0154..0167 (TritMesh / `.spore` mesh-database, notes `76-mesh-r-d-01..08`)
+
+Owner notes `76-mesh-r-d-01..08` (database-side R&D; `.spore`=rebrand of `.tmf`). 7 parallel workers, **228
+machine-checked asserts across 7 proofs, all GREEN** (`scripts/rd-0154-0155-*` 45 · `rd-0156-*` 29 · `rd-0157-0159-*`
+29 · `rd-0160-0161-*` 32 · `rd-0162-0164-*` 26 · `rd-0165-*` 26 · `rd-0166-0167-*` 41). Full doc:
+[tritmesh-mesh-database](galerina-rd-0154-0167-tritmesh-mesh-database.md). **Load-bearing refute: a ternary
+dot-product `I=S·C` carries NO unforgeability (runnable forgery) → cannot replace TLS/mTLS/X.509; valid only as a
+deny-only PRE-FILTER in front of real PQ crypto.**
+
+| RD | Topic | ZT | Verdict |
+|---|---|:--:|---|
+| 0154 | Scaling-walls + streaming/backpressure + memory-safety | 9 | ✅ ADOPT; **"memory-safe in prod" ❌** (isolation≠safety; gate not enforced) |
+| 0155 | TritMesh vs Postgres/Cassandra positioning | 6 | 🔭 TRACK — crypto-tax real; absolutist adjectives = availability not safety |
+| 0156 | Photonic Interference Fabric / Wavefront DB | 2 | ❌ REFUTE (optical≠crypto; O(N) not O(1)) / 🔭 TRACK storage |
+| 0157 | Virtual Wavefront Engine (silicon) | 6 | 🔀 sparse O(E) + SIMD modest ✅; O(1) + Mᵏ-instant ❌ |
+| 0158 | Tri-Router K3 + hot/cold dual-matrix | 8 | ✅ ADOPT (real crypto on the gate); Lambda merge proven |
+| 0159 | Mycorrhizal Overlay — rebuild graph not data | 7 | ✅ ADOPT — re-derives RD-0150; novelty=silicon framing |
+| 0160 | T-CSR + hyperbolic + semantic phase-hash | 7 | ✅ ADOPT w/ corrections; phase-hash kills fuzzy search (honest) |
+| 0161 | Symbiotic vs Pure-Phase + 100PB + NVMe-DMA + decoupled | 8 | ✅ zero-copy + headless DiD / ❌ O(1) + "fits in WASM" (it STREAMS) |
+| 0162 | TritSocket (zero-copy websockets) | 8 | ✅ zero-copy + min-plus-in-mesh / ❌ vector-auth≠TLS (forgery) + public source-routing |
+| 0163 | Cross-language silicon package (new repo) | 9 | 🧪 DESIGN — perf PRE-FILTER only, NOT a security boundary |
+| 0164 | TritRPC (gRPC overhaul) | 8 | ✅ zero-copy serialization / ❌ kill-mTLS; kill-HTTP/2=interop loss |
+| 0165 | TritSSL / "Wavefront TLS" | 2 | ❌ REFUTE (no identity binding; 0-RTT≠AKE) / ✅ PQ subset (ML-DSA on TLS) |
+| 0166 | Graph-driven CPU cache opt (L1/L2/L3) | 5 | ✅ ADOPT (model-bounded); "latency zero" ❌ (work stays Θ(n)) — *worker ZT 2→5* |
+| 0167 | Graph in `.spore` as SIGNED primary index + >4GB | 8 | ✅ ADOPT **GATED on signing** — unsigned index = silent read-redirect (proven exploit) |
+
+**Net-new (owner-gated):** signed `.spore` index (RD-0167, defensive-pub) · cross-lang pre-filter lib (RD-0163, new
+repo, NOT a security boundary) · zero-copy data plane (RD-0161/0162) · TritMesh taxonomy. **Papers:** ~12 defensive,
+0 scientific; strongest 0167 + 0161.
+
+## 2026-06-28 — RD-0168 (graph-driven PCI/DSS + security compliance scanner — owner tool ask)
+
+🧪 DESIGN (build-ready, ADOPT-additive) · **ZT 9** · proof `scripts/rd-0168-graph-pci-compliance-scanner-proof.mjs`
+(31/31) · paper=defensive(+modest scientific). Full doc:
+[graph-pci-compliance-scanner](galerina-rd-0168-graph-pci-compliance-scanner.md). Turns PCI requirements into
+**monotone reachability predicates over a SIGNED governance graph**: the shipped `galerina-devtools-pci` checker is
+per-flow AST (local) and cannot answer *"does PAN REACH an egress/log/store sink with no encrypt/redact/audit edge?"*
+— RD-0168 is the thin taint-reachability layer that can (`SPORE-PCI-G-000/004/005/006`). K3 fail-closed (unknown-class
+source → sink = INDETERMINATE, never silent PASS). **Load-bearing ZT (V7):** the scanner must read a SIGNED graph
+(RD-0167) — an unsigned in-`.spore` graph lets an attacker delete the PAN→egress edge → scanner PASSes a still-leaking
+program (fail-OPEN); Ed25519-covering closes it. ~70% reuse (project-graph algos + BoundaryGraph + compiler taint
+tags); net-new = DataFlowGraph builder + 4 predicate checks. Build ≈2–3 days, additive.
+
 ## Refuted — and WHY we did not adopt (the negative record)
 | Idea | Verdict | Why refuted |
 |---|---|---|
