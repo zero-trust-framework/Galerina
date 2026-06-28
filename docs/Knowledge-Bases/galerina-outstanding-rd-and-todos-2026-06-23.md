@@ -128,11 +128,17 @@ auth (cert-gate unwired) → closed by C#1. Full detail: task output `wj6vrjkmg.
 - ✅ **Memory dangling `[[links]]` trimmed** 28→0 (2 real renames fixed: `parallel-worker-cadence`→
   `feedback-parallel-worker-cadence`, `logicn-contract-authoring-guide`→`project-logicn-contract-authoring`;
   26 dead forward-refs de-linked, text kept). memory-graph now 0 dangling / 0 orphan / 0 dangling-links.
-- 🔨 **New dev tool `scripts/audit-syntax.mjs`** (error→tooling rule) — scans ALL `.spore` + `.ts` for parse /
-  bad-syntax errors ("Unexpected token }" and kin) IN-PROCESS; `--summary` for the Stop cadence. Wire into the
-  Stop-hook dev-tools group + the devtools command registry on completion.
-- 📋 **Rebrand cruft:** stale `package.lln.json` (pre-rebrand) sits beside `package.spore.json` in
-  `galerina-ext-bridge-quantum` (possibly other packages) — a `.lln`→`.spore` cleanup candidate.
+- ✅ **New dev tool `scripts/audit-syntax.mjs`** (`ed3d919`, error→tooling rule) — scans ALL `.spore` (shipped
+  `parseProgram`) + `.ts` (TS parse-diagnostics) for parse / bad-syntax errors ("Unexpected token }" and kin)
+  IN-PROCESS, no `galerina build`; `--summary` / `--json` / `--all`. Heartbeat baseline = **1** real finding; `--all`
+  = 28 (per-package example / `tests/` fixture / `docs/examples` draft corpora excluded by default). **NOT auto-wired
+  into the Stop cadence** — the auto-mode classifier gated adding an unrequested executable hook; wire on owner GO.
+- ⚠️ **Real finding (audit-syntax) — `packages-galerina/galerina-core-security/src/interim.spore`** fails to parse
+  (7× SPORE-PARSE-001: anonymous record literals at top level + `target` as a reserved-word parameter). WIP/draft in
+  `src/`; fix it or move it out of the build path.
+- 📋 **Rebrand cruft:** **5** stale `package.lln.json` files (pre-rebrand), each byte-identical to its
+  `package.spore.json` sibling (api-protocol-rest · ext-bridge-quantum · app-kernel compose fixtures ×2 ·
+  example-app/greeting) — safe `git rm` once confirmed nothing reads `.lln`; owner-gated `.lln`→`.spore` cleanup.
 - ⚠️ **Hook tree-churn (FYI):** the project Stop hooks (`rebuild-fusable-packages` + `lint-spore`/phase-close)
   regenerate `dist/` and add `//spore: IMPACT/COMPLEXITY` metadata to example `src/index.spore` on every Stop, so
   the working tree re-dirties by design. The regenerated `.lmanifest` (1270→5632 B = a signing/format change) is
