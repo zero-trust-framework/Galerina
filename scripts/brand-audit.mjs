@@ -49,6 +49,10 @@ const ALLOW = [
   /verify-artifacts\.mjs$/i,
   /brand-audit\.mjs$/i,          // this tool contains the search tokens by definition
   /fix-logicn-brand\.mjs$/i,     // the paired codemod, likewise
+  // documentation/history that legitimately QUOTES the old brand to record the rename:
+  /(^|[\\/])CHANGELOG\.md$/i,
+  /(^|[\\/])notes[\\/]/i,        // historical R&D scratch (note 77 documents the rename itself)
+  /RESTART-PROMPT|RESUME-|HANDOFF|REBOOT/i,
 ];
 // Generated / regenerable — reported separately, not a hard failure.
 const GENERATED = [/(^|[\\/])(dist|build|results|coverage|_audit_tmp)[\\/]/i, /\.lindex$/i, /\.jsonl$/i, /-GRAPH_REPORT\.md$/i, /galerina-ai-map\.md$/i,
