@@ -52,7 +52,7 @@ contract {
 
   security::interim::post_flight_cleanup(receipt)
 
-  Database.updateOrderStatus(payload.order_id, "shipped")
+  OrdersDB.update(safeId, "shipped")
   AuditLog.write("ShipmentDispatched: " + trackingId)
 
   return Ok(ShipmentConfirmation { tracking_id: trackingId, carrier: carrier })

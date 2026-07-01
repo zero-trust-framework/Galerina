@@ -30,7 +30,7 @@ contract {
     return Err(ApiError.BadRequest)
   }
 
-  let orderId: String = Database.insertOrder(productId, qty)
+  let orderId: String = OrdersDB.insert(productId, qty)
 
   AuditLog.write("OrderCreated: " + orderId)
 
