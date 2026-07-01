@@ -8,14 +8,20 @@
 // The allowlist may only SHRINK: registering a code means removing it from the allowlist.
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 
 const SRC = fileURLToPath(new URL("../src", import.meta.url));
-const REGISTRY_DOCS = [
-  "../../../docs/Knowledge-Bases/compiler-diagnostics.md",
-  "../../../docs/Knowledge-Bases/galerina-governance-rules.md",
-].map((p) => fileURLToPath(new URL(p, import.meta.url)));
+// KB relocated out of the repo to sibling ../ZTF-Knowledge-Bases (IP protection).
+// Resolve order: GALERINA_KB_DIR env → in-repo docs/ (if restored) → sibling KB.
+const REPO_ROOT = fileURLToPath(new URL("../../../", import.meta.url));
+const KB_DIR = process.env.GALERINA_KB_DIR
+  ? resolve(process.env.GALERINA_KB_DIR)
+  : existsSync(join(REPO_ROOT, "docs", "Knowledge-Bases"))
+    ? join(REPO_ROOT, "docs", "Knowledge-Bases")
+    : join(REPO_ROOT, "..", "ZTF-Knowledge-Bases");
+const REGISTRY_DOCS = ["compiler-diagnostics.md", "galerina-governance-rules.md"].map((f) => join(KB_DIR, f));
 const ALLOWLIST_FILE = fileURLToPath(new URL("./fixtures/diagnostic-pending-registration.txt", import.meta.url));
 
 function walkTs(dir) {

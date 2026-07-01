@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "fungi.manifest.v1",
+  "schemaVersion": "lln.manifest.v1",
   "sourceHash": "sha256:83c9763865d0bbf02be0843c3035b305e286082f17c54aa1a76e0e4fa8f55ba3",
-  "sourceFile": "packages-logicn/logicn-framework-example-app/packages/greeting/src/index.fungi",
+  "sourceFile": "packages-logicn/logicn-framework-example-app/packages/greeting/src/index.lln",
   "flowCount": 1,
   "policyResolutionDag": {
     "allowedEffects": 0,
@@ -30,7 +30,7 @@
     "signedAt": "2026-06-23T19:52:38.103Z"
   },
   "fuse": {
-    "schemaVersion": "fungi.fuse.v1",
+    "schemaVersion": "lln.fuse.v1",
     "name": "greeting",
     "version": "0.1.0",
     "kind": "pure-transform",

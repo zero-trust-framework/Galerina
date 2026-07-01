@@ -5,12 +5,18 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dir, "..", "..", "..");
-const KB_DIR = join(PROJECT_ROOT, "docs", "Knowledge-Bases");
+// KB relocated to sibling ../ZTF-Knowledge-Bases; env override wins, in-repo docs used if restored.
+const KB_DIR = process.env.GALERINA_KB_DIR
+  ? resolve(process.env.GALERINA_KB_DIR)
+  : existsSync(join(PROJECT_ROOT, "docs", "Knowledge-Bases"))
+    ? join(PROJECT_ROOT, "docs", "Knowledge-Bases")
+    : join(PROJECT_ROOT, "..", "ZTF-Knowledge-Bases");
 
 // Dynamic imports of compiled output (run after `npm run build`)
 const { scanKBDirectory } = await import("../dist/scanner.js");

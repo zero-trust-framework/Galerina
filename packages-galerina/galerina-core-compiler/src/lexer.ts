@@ -439,7 +439,7 @@ export function lex(source: string, file: string): LexResult {
     // `//fungi:` line can NEVER fall through to a human `comment` token (fail-closed tier separation).
     // Tooling OWNS these lines and overwrites them on every run; humans keep `//`. Only the exact
     // prefix `//fungi:` is generated — `// fungi` (with a space) or `//fungi` (no colon) stays a human comment.
-    if (ch === "/" && peek(1) === "/" && peek(2) === "s" && peek(3) === "p" && peek(4) === "o" && peek(5) === "r" && peek(6) === "e" && peek(7) === ":") {
+    if (ch === "/" && peek(1) === "/" && peek(2) === "f" && peek(3) === "u" && peek(4) === "n" && peek(5) === "g" && peek(6) === "i" && peek(7) === ":") {
       const scanStart = pos;
       while (pos < source.length && peek() !== "\n") {
         advance();

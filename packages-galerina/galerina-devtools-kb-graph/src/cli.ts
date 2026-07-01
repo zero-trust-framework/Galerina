@@ -12,7 +12,7 @@
 // =============================================================================
 
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { scanKBDirectory } from "./scanner.js";
 import { buildKBGraph } from "./graph.js";
@@ -22,7 +22,13 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 // Resolve project root: cli.ts is at packages-galerina/galerina-devtools-kb-graph/dist/cli.js
 // So project root is 3 levels up.
 const PROJECT_ROOT = join(__dir, "..", "..", "..");
-const KB_DIR = join(PROJECT_ROOT, "docs", "Knowledge-Bases");
+// KB was relocated out of the repo (to sibling ../ZTF-Knowledge-Bases) to protect
+// pre-release IP. Resolve order: GALERINA_KB_DIR env → in-repo docs/ (if restored) → sibling KB.
+const KB_DIR = process.env.GALERINA_KB_DIR
+  ? resolve(process.env.GALERINA_KB_DIR)
+  : existsSync(join(PROJECT_ROOT, "docs", "Knowledge-Bases"))
+    ? join(PROJECT_ROOT, "docs", "Knowledge-Bases")
+    : join(PROJECT_ROOT, "..", "ZTF-Knowledge-Bases");
 const OUT_DIR = join(PROJECT_ROOT, "build", "kb-graph");
 
 const STALE_DAYS = 7;
