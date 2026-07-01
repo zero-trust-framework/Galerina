@@ -68,10 +68,10 @@ describe("STDLIB_CAPABILITY_MAP: structure and coverage", () => {
     assert.ok(typeof entry.description === "string", "Must have description");
   });
 
-  it("File.readText requires filesystem.read with WASM import", () => {
+  it("File.readText requires storage.read with WASM import", () => {
     const entry = STDLIB_CAPABILITY_MAP.get("File.readText");
     assert.ok(entry !== undefined);
-    assert.ok(entry.requiredEffects.includes("filesystem.read"));
+    assert.ok(entry.requiredEffects.includes("storage.read"));
     assert.ok(entry.wasmImport !== undefined, "Must have WASM import name");
     assert.ok(entry.wasmImport?.startsWith("host:"), "WASM import must start with host:");
   });
@@ -134,7 +134,7 @@ describe("getStdlibRequiredEffects: effect lookup", () => {
   it("returns effects for known effectful functions", () => {
     const effects = getStdlibRequiredEffects("File.readText");
     assert.ok(effects !== undefined);
-    assert.ok(effects.includes("filesystem.read"));
+    assert.ok(effects.includes("storage.read"));
   });
 
   it("returns empty array for pure functions", () => {
@@ -334,7 +334,7 @@ describe("WAT emitter: renderWAT produces valid skeleton", () => {
 
     const effectfulMod = buildWATModule(
       {
-        flows: [{ name: "readFile", qualifier: "flow", declaredEffects: ["filesystem.read"] }],
+        flows: [{ name: "readFile", qualifier: "flow", declaredEffects: ["storage.read"] }],
         entryPoints: [],
       },
       STDLIB_CAPABILITY_MAP,
@@ -437,10 +437,10 @@ describe("buildWATModule: pure flow produces real WAT body", () => {
 // ---------------------------------------------------------------------------
 
 describe("WAT imports from effect declarations", () => {
-  it("flow with filesystem.read effect produces WAT containing (import \"host\"", () => {
+  it("flow with storage.read effect produces WAT containing (import \"host\"", () => {
     const mod = buildWATModule(
       {
-        flows: [{ name: "readFile", qualifier: "flow", declaredEffects: ["filesystem.read"] }],
+        flows: [{ name: "readFile", qualifier: "flow", declaredEffects: ["storage.read"] }],
         entryPoints: [],
       },
       STDLIB_CAPABILITY_MAP,
@@ -448,7 +448,7 @@ describe("WAT imports from effect declarations", () => {
     const wat = renderWAT(mod);
     assert.ok(
       wat.includes('(import "host"'),
-      `WAT for a flow with filesystem.read must contain (import "host". Got:\n${wat}`,
+      `WAT for a flow with storage.read must contain (import "host". Got:\n${wat}`,
     );
   });
 

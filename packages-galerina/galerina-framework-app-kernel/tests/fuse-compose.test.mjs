@@ -45,7 +45,7 @@ test("plan: SET-SIGNED — one unsigned member refuses the whole set", () => {
 
 test("plan: DENY-BY-DEFAULT — an unsatisfied capability refuses the set", () => {
   assert.throws(
-    () => planComposition([member("app", null, ["filesystem.write"])], KNOWN),
+    () => planComposition([member("app", null, ["storage.write"])], KNOWN),
     /FUNGI-FUSE-UNKNOWN-CAP/,
   );
 });

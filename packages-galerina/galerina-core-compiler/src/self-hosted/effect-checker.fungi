@@ -57,7 +57,7 @@ contract {
   return [
     "network.inbound", "network.outbound",
     "database.read", "database.write",
-    "filesystem.read", "filesystem.write",
+    "storage.read", "storage.write",
     "audit.write", "telemetry.read",
     "crypto.verify", "secret.read",
     "ai.infer", "process.spawn", "eval.execute",
@@ -224,8 +224,8 @@ contract {
     "dbWrite" => { eff = "database.write" }
     "netGet" => { eff = "network.inbound" }
     "netPost" => { eff = "network.outbound" }
-    "readFile" => { eff = "filesystem.read" }
-    "writeFile" => { eff = "filesystem.write" }
+    "readFile" => { eff = "storage.read" }
+    "writeFile" => { eff = "storage.write" }
     "auditWrite" => { eff = "audit.write" }
     else => {}
   }

@@ -4,7 +4,7 @@
 // Separates compiler authority from user program authority.
 // These two capability scopes must NEVER be merged.
 //
-// The compiler needs:  filesystem.read, filesystem.write, package.read,
+// The compiler needs:  storage.read, storage.write, package.read,
 //                      manifest.read, report.write, compiler.graph.*
 //
 // User programs need:  database.read, network.outbound, etc.
@@ -86,8 +86,8 @@ export interface RootCapabilityProvider {
  * excluded — the compiler must never touch those surfaces.
  */
 export const COMPILER_MINIMUM_CAPABILITIES: ReadonlySet<string> = new Set([
-  "filesystem.read",
-  "filesystem.write",
+  "storage.read",
+  "storage.write",
   "package.read",
   "manifest.read",
   "report.write",

@@ -114,17 +114,17 @@ describe("Runtime enforcement — COMPILER_MINIMUM_CAPABILITIES", () => {
     assert.ok(COMPILER_MINIMUM_CAPABILITIES instanceof Set, "COMPILER_MINIMUM_CAPABILITIES should be a Set");
   });
 
-  it("includes filesystem.read", () => {
+  it("includes storage.read", () => {
     assert.ok(
-      COMPILER_MINIMUM_CAPABILITIES.has("filesystem.read"),
-      "COMPILER_MINIMUM_CAPABILITIES must include filesystem.read",
+      COMPILER_MINIMUM_CAPABILITIES.has("storage.read"),
+      "COMPILER_MINIMUM_CAPABILITIES must include storage.read",
     );
   });
 
-  it("includes filesystem.write", () => {
+  it("includes storage.write", () => {
     assert.ok(
-      COMPILER_MINIMUM_CAPABILITIES.has("filesystem.write"),
-      "COMPILER_MINIMUM_CAPABILITIES must include filesystem.write",
+      COMPILER_MINIMUM_CAPABILITIES.has("storage.write"),
+      "COMPILER_MINIMUM_CAPABILITIES must include storage.write",
     );
   });
 

@@ -316,8 +316,8 @@ test("005: secret.read without audit.write triggers warning", () => {
   assert.equal(diags[0].code, "FUNGI-GRAPH-005");
 });
 
-test("005: filesystem.write without audit.write triggers warning", () => {
-  const metas = [meta("writeFile", "flow", ["filesystem.write"])];
+test("005: storage.write without audit.write triggers warning", () => {
+  const metas = [meta("writeFile", "flow", ["storage.write"])];
   const g = graphFromMetas(metas);
   const diags = detectMissingAuditCoverage(g);
   assert.ok(diags.length > 0);

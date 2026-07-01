@@ -1272,7 +1272,7 @@ contract [conforms_to: InvoicingDomainGuard] {
 secure flow multiViolation(id: String) -> Result<String, String>
 contract [conforms_to: InvoicingDomainGuard] {
   intent { "Multiple violations." }
-  effects { gateway.charge, filesystem.write, database.delete }
+  effects { gateway.charge, storage.write, database.delete }
 }
 { return Ok(id) }
 `);

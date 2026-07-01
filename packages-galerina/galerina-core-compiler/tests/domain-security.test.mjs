@@ -390,7 +390,7 @@ contract { effects { email.send } }
   it("emits FUNGI-VALUESTATE-003 for unsafe binding at FileSystem.write", () => {
     const result = vsCheck(`
 secure flow writeFile(request: Request) -> Result<String, Error>
-contract { effects { filesystem.write } }
+contract { effects { storage.write } }
 {
   unsafe let rawPath: String = request.body.path
   FileSystem.write(rawPath)

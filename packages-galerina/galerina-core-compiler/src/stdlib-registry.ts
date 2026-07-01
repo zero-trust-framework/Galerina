@@ -34,15 +34,15 @@ export interface StdlibCapabilityEntry {
 
 export const STDLIB_CAPABILITY_MAP: ReadonlyMap<string, StdlibCapabilityEntry> = new Map([
   // ── Filesystem ─────────────────────────────────────────────────────────────
-  ["File.readText",        { requiredEffects: ["filesystem.read"],  wasmImport: "host:fs.readText",  description: "Read a text file from the filesystem." }],
-  ["File.readBytes",       { requiredEffects: ["filesystem.read"],  wasmImport: "host:fs.readBytes", description: "Read binary data from the filesystem." }],
-  ["File.writeText",       { requiredEffects: ["filesystem.write"], wasmImport: "host:fs.writeText", description: "Write text to the filesystem." }],
-  ["File.writeBytes",      { requiredEffects: ["filesystem.write"], wasmImport: "host:fs.write",     description: "Write binary data to the filesystem." }],
-  ["fs.read",              { requiredEffects: ["filesystem.read"],  wasmImport: "host:fs.read",      description: "Read from filesystem (short form)." }],
-  ["fs.readText",          { requiredEffects: ["filesystem.read"],  wasmImport: "host:fs.readText",  description: "Read text file (short form)." }],
-  ["fs.write",             { requiredEffects: ["filesystem.write"], wasmImport: "host:fs.write",     description: "Write to filesystem (short form)." }],
-  ["fs.writeText",         { requiredEffects: ["filesystem.write"], wasmImport: "host:fs.writeText", description: "Write text file (short form)." }],
-  ["FileSystem.write",     { requiredEffects: ["filesystem.write"], wasmImport: "host:fs.write",     description: "Write to filesystem." }],
+  ["File.readText",        { requiredEffects: ["storage.read"],  wasmImport: "host:fs.readText",  description: "Read a text file from the filesystem." }],
+  ["File.readBytes",       { requiredEffects: ["storage.read"],  wasmImport: "host:fs.readBytes", description: "Read binary data from the filesystem." }],
+  ["File.writeText",       { requiredEffects: ["storage.write"], wasmImport: "host:fs.writeText", description: "Write text to the filesystem." }],
+  ["File.writeBytes",      { requiredEffects: ["storage.write"], wasmImport: "host:fs.write",     description: "Write binary data to the filesystem." }],
+  ["fs.read",              { requiredEffects: ["storage.read"],  wasmImport: "host:fs.read",      description: "Read from filesystem (short form)." }],
+  ["fs.readText",          { requiredEffects: ["storage.read"],  wasmImport: "host:fs.readText",  description: "Read text file (short form)." }],
+  ["fs.write",             { requiredEffects: ["storage.write"], wasmImport: "host:fs.write",     description: "Write to filesystem (short form)." }],
+  ["fs.writeText",         { requiredEffects: ["storage.write"], wasmImport: "host:fs.writeText", description: "Write text file (short form)." }],
+  ["FileSystem.write",     { requiredEffects: ["storage.write"], wasmImport: "host:fs.write",     description: "Write to filesystem." }],
 
   // ── Network ────────────────────────────────────────────────────────────────
   ["Http.get",             { requiredEffects: ["network.outbound"],  wasmImport: "host:http.get",   description: "HTTP GET request." }],

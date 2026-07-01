@@ -25,11 +25,11 @@ describe("createRootCapabilityProvider", () => {
 });
 
 describe("CompilerCapabilityHost", () => {
-  it("createCompilerHost() with COMPILER_MINIMUM_CAPABILITIES allows filesystem.read", () => {
+  it("createCompilerHost() with COMPILER_MINIMUM_CAPABILITIES allows storage.read", () => {
     const provider = createRootCapabilityProvider();
     const host = provider.createCompilerHost(new Set(COMPILER_MINIMUM_CAPABILITIES));
     assert.strictEqual(host.domain, "COMPILER");
-    assert.strictEqual(host.check("filesystem.read"), true);
+    assert.strictEqual(host.check("storage.read"), true);
   });
 
   it("createCompilerHost() does NOT allow network.write", () => {
@@ -53,11 +53,11 @@ describe("CompilerCapabilityHost", () => {
   it("host.use() records an audit entry for an allowed capability", () => {
     const provider = createRootCapabilityProvider();
     const host = provider.createCompilerHost(new Set(COMPILER_MINIMUM_CAPABILITIES));
-    host.use("filesystem.read", "/project/src/main.fungi");
+    host.use("storage.read", "/project/src/main.fungi");
     const log = provider.getAuditLog();
     assert.strictEqual(log.length, 1);
     assert.strictEqual(log[0].domain, "COMPILER");
-    assert.strictEqual(log[0].capability, "filesystem.read");
+    assert.strictEqual(log[0].capability, "storage.read");
     assert.strictEqual(log[0].resource, "/project/src/main.fungi");
     assert.ok(typeof log[0].timestamp === "string" && log[0].timestamp.length > 0);
   });
@@ -73,9 +73,9 @@ describe("CompilerCapabilityHost", () => {
 
   it("host.allowedCapabilities reflects the set passed to createCompilerHost", () => {
     const provider = createRootCapabilityProvider();
-    const caps = new Set(["filesystem.read", "report.write"]);
+    const caps = new Set(["storage.read", "report.write"]);
     const host = provider.createCompilerHost(caps);
-    assert.ok(host.allowedCapabilities.has("filesystem.read"));
+    assert.ok(host.allowedCapabilities.has("storage.read"));
     assert.ok(host.allowedCapabilities.has("report.write"));
     assert.ok(!host.allowedCapabilities.has("network.write"));
   });
@@ -93,7 +93,7 @@ describe("UserRuntimeCapabilities", () => {
   it("createUserRuntime() does NOT allow undeclared effects", () => {
     const provider = createRootCapabilityProvider();
     const runtime = provider.createUserRuntime(new Set(["database.read"]));
-    assert.strictEqual(runtime.canUse("filesystem.write"), false);
+    assert.strictEqual(runtime.canUse("storage.write"), false);
     assert.strictEqual(runtime.canUse("email.send"), false);
     assert.strictEqual(runtime.canUse("payment.process"), false);
   });
@@ -104,19 +104,19 @@ describe("UserRuntimeCapabilities", () => {
     const runtime = provider.createUserRuntime(effects);
     assert.ok(runtime.declaredEffects.has("database.read"));
     assert.ok(runtime.declaredEffects.has("network.outbound"));
-    assert.ok(!runtime.declaredEffects.has("filesystem.write"));
+    assert.ok(!runtime.declaredEffects.has("storage.write"));
   });
 });
 
 describe("Audit log", () => {
   it("records capability usage via provider.audit()", () => {
     const provider = createRootCapabilityProvider();
-    provider.audit("COMPILER", "filesystem.read", "/src/main.fungi");
+    provider.audit("COMPILER", "storage.read", "/src/main.fungi");
     provider.audit("USER_PROGRAM", "database.read", "users");
     const log = provider.getAuditLog();
     assert.strictEqual(log.length, 2);
     assert.strictEqual(log[0].domain, "COMPILER");
-    assert.strictEqual(log[0].capability, "filesystem.read");
+    assert.strictEqual(log[0].capability, "storage.read");
     assert.strictEqual(log[1].domain, "USER_PROGRAM");
     assert.strictEqual(log[1].capability, "database.read");
   });
@@ -135,12 +135,12 @@ describe("Audit log", () => {
 });
 
 describe("COMPILER_MINIMUM_CAPABILITIES", () => {
-  it("contains filesystem.read", () => {
-    assert.ok(COMPILER_MINIMUM_CAPABILITIES.has("filesystem.read"));
+  it("contains storage.read", () => {
+    assert.ok(COMPILER_MINIMUM_CAPABILITIES.has("storage.read"));
   });
 
-  it("contains filesystem.write", () => {
-    assert.ok(COMPILER_MINIMUM_CAPABILITIES.has("filesystem.write"));
+  it("contains storage.write", () => {
+    assert.ok(COMPILER_MINIMUM_CAPABILITIES.has("storage.write"));
   });
 
   it("contains package.read", () => {

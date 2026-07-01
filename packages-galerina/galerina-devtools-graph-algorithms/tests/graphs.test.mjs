@@ -283,7 +283,7 @@ describe("buildCapabilityGraph", () => {
       requiredCapabilities: [
         {
           functionName: "File.readText",
-          requiredEffects: ["filesystem.read"],
+          requiredEffects: ["storage.read"],
           wasmImport: "host:fs.readText",
         },
       ],
@@ -293,7 +293,7 @@ describe("buildCapabilityGraph", () => {
       requiredCapabilities: [
         {
           functionName: "File.writeText",
-          requiredEffects: ["filesystem.write"],
+          requiredEffects: ["storage.write"],
           wasmImport: "host:fs.writeText",
         },
       ],
@@ -303,7 +303,7 @@ describe("buildCapabilityGraph", () => {
       requiredCapabilities: [
         {
           functionName: "File.readText",
-          requiredEffects: ["filesystem.read"],
+          requiredEffects: ["storage.read"],
           wasmImport: "host:fs.readText",
         },
         {
@@ -320,7 +320,7 @@ describe("buildCapabilityGraph", () => {
     const fnNames = caps.map((c) => c.functionName).sort();
     assert.deepEqual(fnNames, ["Console.log", "File.readText"]);
     const fileReadCap = caps.find((c) => c.functionName === "File.readText");
-    assert.deepEqual(fileReadCap?.requiredEffects, ["filesystem.read"]);
+    assert.deepEqual(fileReadCap?.requiredEffects, ["storage.read"]);
     assert.equal(fileReadCap?.wasmImport, "host:fs.readText");
   });
 

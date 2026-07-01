@@ -14,7 +14,7 @@ const capabilityEntries = [
   {
     functionName: "File.readText",
     wasmImport: "host:fs.readText",
-    requiredEffects: ["filesystem.read"],
+    requiredEffects: ["storage.read"],
   },
   {
     functionName: "Console.log",

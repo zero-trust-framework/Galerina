@@ -5,7 +5,7 @@ import type { Graph } from "../core/types.js";
 
 export interface CapabilityNodeData {
   readonly kind: "flow" | "stdlib" | "wasm-import";
-  readonly effectRequired?: string;  // e.g. "filesystem.read"
+  readonly effectRequired?: string;  // e.g. "storage.read"
   readonly wasmImport?: string;      // e.g. "host:fs.readText"
 }
 
@@ -20,7 +20,7 @@ export type CapabilityGraph = Graph<CapabilityNodeData, CapabilityEdgeData>;
 
 export interface CapabilityEntry {
   readonly functionName: string;         // e.g. "File.readText"
-  readonly requiredEffects: readonly string[];  // e.g. ["filesystem.read"]
+  readonly requiredEffects: readonly string[];  // e.g. ["storage.read"]
   readonly wasmImport?: string;          // e.g. "host:fs.readText"
 }
 

@@ -153,8 +153,8 @@ export const EffectFlags = {
   AuditWrite:      1 << 3,   // audit.write
   AiInference:     1 << 4,   // ai.inference / ai.remoteInference
   NetworkInbound:  1 << 5,   // network.inbound (webhooks, callbacks)
-  FileSystemRead:  1 << 6,   // filesystem.read
-  FileSystemWrite: 1 << 7,   // filesystem.write
+  StorageRead:  1 << 6,   // storage.read
+  StorageWrite: 1 << 7,   // storage.write
   CryptoVerify:    1 << 8,   // crypto.verify / crypto.password.verify
   SecretAccess:    1 << 9,   // secret.access
   StateRead:       1 << 10,  // state.read
@@ -173,8 +173,8 @@ const EFFECT_NAME_TO_FLAG: ReadonlyMap<string, EffectFlagsMask> = new Map([
   ["ai.inference",               EffectFlags.AiInference],
   ["ai.remoteInference",         EffectFlags.AiInference],
   ["network.inbound",            EffectFlags.NetworkInbound],
-  ["filesystem.read",            EffectFlags.FileSystemRead],
-  ["filesystem.write",           EffectFlags.FileSystemWrite],
+  ["storage.read",            EffectFlags.StorageRead],
+  ["storage.write",           EffectFlags.StorageWrite],
   ["crypto.verify",              EffectFlags.CryptoVerify],
   ["crypto.password.verify",     EffectFlags.CryptoVerify],
   ["secret.access",              EffectFlags.SecretAccess],

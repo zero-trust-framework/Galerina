@@ -132,7 +132,7 @@ test("a host import for a NON-declared capability is absent (deny-by-default)", 
 // An undeclarable capability (no factory) is refused outright — deny-by-default.
 test("a capability with no host-import factory is refused (FUNGI-FUSE-UNKNOWN-CAP)", () => {
   assert.throws(
-    () => buildCapabilityImports(["filesystem.write"], { "network.inbound": () => ({ namespace: "n", functions: {} }) }),
+    () => buildCapabilityImports(["storage.write"], { "network.inbound": () => ({ namespace: "n", functions: {} }) }),
     /FUNGI-FUSE-UNKNOWN-CAP/,
   );
 });

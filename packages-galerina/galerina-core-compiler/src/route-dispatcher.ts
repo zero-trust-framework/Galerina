@@ -150,7 +150,7 @@ export function startServer(
       // deterministic: no outbound I/O without manifest proof.
       const PROFILE_DENIED_EFFECTS: Readonly<Record<string, readonly string[]>> = {
         production:    ["process.spawn", "eval.execute"],
-        deterministic: ["process.spawn", "eval.execute", "network.outbound", "filesystem.write"],
+        deterministic: ["process.spawn", "eval.execute", "network.outbound", "storage.write"],
       };
 
       if (flowMeta !== undefined && mode !== "dev") {

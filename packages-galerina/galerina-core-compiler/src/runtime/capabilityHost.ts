@@ -9,7 +9,7 @@
 //   network.outbound
 //   audit.write
 //   ai.inference
-//   filesystem.read/write
+//   storage.read/write
 //   email.send
 //   crypto.sign/verify
 //

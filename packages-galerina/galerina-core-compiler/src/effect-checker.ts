@@ -73,14 +73,14 @@ export const EFFECT_REGISTRY: Readonly<Record<string, readonly string[]>> = {
   "audit.log": ["audit.write"],
 
   // Filesystem
-  "fs.read": ["filesystem.read"],
-  "fs.readText": ["filesystem.read"],
-  "fs.readBytes": ["filesystem.read"],
-  "fs.write": ["filesystem.write"],
-  "fs.writeText": ["filesystem.write"],
-  "fs.writeBytes": ["filesystem.write"],
-  "File.readText": ["filesystem.read"],
-  "File.readBytes": ["filesystem.read"],
+  "fs.read": ["storage.read"],
+  "fs.readText": ["storage.read"],
+  "fs.readBytes": ["storage.read"],
+  "fs.write": ["storage.write"],
+  "fs.writeText": ["storage.write"],
+  "fs.writeBytes": ["storage.write"],
+  "File.readText": ["storage.read"],
+  "File.readBytes": ["storage.read"],
 
   // AI
   "ai.inference": ["ai.inference"],
@@ -305,11 +305,14 @@ const CANONICAL_EFFECTS = new Set([
   "network.external", "network.internal",
   "secret.read", "secret.write",
   "audit.write",
-  "filesystem.read", "filesystem.write",
+  "storage.read", "storage.write",
+  // Commit 2 (2026-07-01) — domain families aligned with the V_DPM capability layer (capability-types.ts):
+  // ledger.mutate = the storage.write|audit.write composite; shell.execute = V_DPM bit 6 (shell_execute).
+  "ledger.mutate", "shell.execute",
   "ai.inference",
   "compute.gpu", "compute.npu", "compute.cpu",
   "desktop.user.read",
-  "unsafe.native",
+  "native.call",
   "payment.charge",
   "pii.read",
   "phi.read", "phi.write",
@@ -350,7 +353,7 @@ const EFFECT_NAME_ALIASES: ReadonlyMap<string, string> = new Map([
   // Short aliases (no dot)
   ["network", "network.outbound"],
   ["database", "database.read"],
-  ["filesystem", "filesystem.read"],
+  ["filesystem", "storage.read"],
   ["secret", "secret.read"],
   ["ai", "ai.inference"],
   ["audit", "audit.write"],
@@ -363,8 +366,8 @@ const EFFECT_NAME_ALIASES: ReadonlyMap<string, string> = new Map([
   ["http.put", "network.outbound"],
   ["http.delete", "network.outbound"],
   ["http.patch", "network.outbound"],
-  ["file.read", "filesystem.read"],
-  ["file.write", "filesystem.write"],
+  ["file.read", "storage.read"],
+  ["file.write", "storage.write"],
   // FUNGI-EFFECT reconciliation (2026-07-01): variant names that resolve to an
   // existing canonical effect (they already share its EffectFlags bit in
   // type-registry.ts). ai.remoteInference→AiInference, crypto.password.verify→CryptoVerify.
@@ -406,12 +409,12 @@ const EFFECT_CALL_PATTERNS: ReadonlyMap<RegExp, string> = new Map([
   [/\b\w+Adapter\.\w+/, "network.outbound"],
   [/\bEmailService\.\w+/, "network.outbound"],
   // Filesystem
-  [/\bfs\.readText\b/, "filesystem.read"],
-  [/\bfs\.read\b/, "filesystem.read"],
-  [/\bFile\.read\b/, "filesystem.read"],
-  [/\bfs\.writeText\b/, "filesystem.write"],
-  [/\bfs\.write\b/, "filesystem.write"],
-  [/\bFileSystem\.\w+/, "filesystem.write"],
+  [/\bfs\.readText\b/, "storage.read"],
+  [/\bfs\.read\b/, "storage.read"],
+  [/\bFile\.read\b/, "storage.read"],
+  [/\bfs\.writeText\b/, "storage.write"],
+  [/\bfs\.write\b/, "storage.write"],
+  [/\bFileSystem\.\w+/, "storage.write"],
   // Environment and secrets
   [/\bEnv\.get\b/, "secret.read"],
   [/\benv\.get\b/, "secret.read"],
@@ -426,7 +429,7 @@ const EFFECT_CALL_PATTERNS: ReadonlyMap<RegExp, string> = new Map([
   // Desktop / host
   [/\bHost\.\w+/, "desktop.user.read"],
   // Native / FFI
-  [/\bNative\w+\.\w+/, "unsafe.native"],
+  [/\bNative\w+\.\w+/, "native.call"],
 ]);
 
 /**
@@ -442,9 +445,9 @@ const PURE_FORBIDDEN_EFFECTS = new Set([
   "network.outbound", "network.external", "network.inbound", "network.internal",
   "secret.read", "secret.write",
   "audit.write",
-  "filesystem.write", "filesystem.read",
+  "storage.write", "storage.read", "ledger.mutate",
   "desktop.user.read",
-  "unsafe.native",
+  "native.call", "shell.execute",
   "payment.charge",
   "ai.inference",
   "pii.read", "pii.write",
@@ -464,7 +467,7 @@ const PLAIN_FLOW_PRIVILEGED_EFFECTS = new Set([
 
 // FUNGI-TIER-001 — effects that REQUIRE the `secure` flow tier. Touching any of these from a
 // `flow`/`guarded` declaration under-declares the obligation (secure-only passes never attach).
-// Deliberately conservative — benign reads (database.read, filesystem.read, desktop.user.read)
+// Deliberately conservative — benign reads (database.read, storage.read, desktop.user.read)
 // stay guarded-tier and are NOT included, to avoid false floors.
 const SECURE_REQUIRED_EFFECTS = new Set([
   // Border / egress
@@ -473,10 +476,10 @@ const SECURE_REQUIRED_EFFECTS = new Set([
   "secret.read", "secret.write",
   "crypto.sign", "crypto.verify", "crypto.encrypt", "crypto.decrypt",
   // High-consequence sinks & mutations
-  "payment.charge", "audit.write", "database.write", "filesystem.write",
+  "payment.charge", "audit.write", "database.write", "storage.write", "ledger.mutate",
   "ai.inference", "pii.read", "pii.write", "phi.read", "phi.write",
   // Code / process execution
-  "process.spawn", "unsafe.native",
+  "process.spawn", "native.call", "shell.execute",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -749,7 +752,7 @@ function validateDeclaredEffectNames(flow: FlowMeta, diagnostics: EffectDiagnost
         severity: "error",
         message: `Effect "${effect}" is not a recognised Galerina effect name.`,
         location: flow.location,
-        suggestedFix: `Use a canonical effect name such as: network.outbound, database.write, audit.write, secret.read, filesystem.read`,
+        suggestedFix: `Use a canonical effect name such as: network.outbound, database.write, audit.write, secret.read, storage.read`,
       });
     }
   }
@@ -814,9 +817,9 @@ function validateInterFlowPropagation(
 // declare it. Deny-by-default: if a module is known to be effectful, its
 // authority is required even for methods the compiler does not yet recognise.
 const EFFECTFUL_MODULE_BROAD_EFFECT: ReadonlyMap<string, string> = new Map([
-  ["File",         "filesystem.read"],
-  ["FileSystem",   "filesystem.read"],
-  ["fs",           "filesystem.read"],
+  ["File",         "storage.read"],
+  ["FileSystem",   "storage.read"],
+  ["fs",           "storage.read"],
   ["Http",         "network.outbound"],
   ["http",         "network.outbound"],
   ["https",        "network.outbound"],

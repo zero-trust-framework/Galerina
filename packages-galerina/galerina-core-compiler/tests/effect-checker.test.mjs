@@ -634,7 +634,7 @@ guarded flow fetchData(url: String) -> Result<String, Error>
       "http.get should suggest network.outbound");
   });
 
-  it("file.read emits EFFECT-004 suggesting filesystem.read", () => {
+  it("file.read emits EFFECT-004 suggesting storage.read", () => {
     const { effectResults } = parseAndCheck(`
 guarded flow loadFile(path: String) -> Result<String, Error>
   contract { effects { file.read } }
@@ -644,8 +644,8 @@ guarded flow loadFile(path: String) -> Result<String, Error>
 `);
     const diag = effectResults.flatMap((r) => r.diagnostics).find((d) => d.code === "FUNGI-EFFECT-004");
     assert.ok(diag !== undefined, "Expected FUNGI-EFFECT-004 for file.read");
-    assert.equal(diag.suggestedCode, "filesystem.read",
-      "file.read should suggest filesystem.read");
+    assert.equal(diag.suggestedCode, "storage.read",
+      "file.read should suggest storage.read");
   });
 
   it("email.send is canonical and does NOT emit EFFECT-004", () => {

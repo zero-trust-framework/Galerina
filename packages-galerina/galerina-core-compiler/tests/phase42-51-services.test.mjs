@@ -46,8 +46,8 @@ describe("Phase 42: capabilityHostService.fungi", () => {
     assert.equal(r.json.governanceClass, 3);
   });
 
-  it("filesystem.write denied in deterministic context", async () => {
-    const r = await post({ effect: "filesystem.write", context: "deterministic" });
+  it("storage.write denied in deterministic context", async () => {
+    const r = await post({ effect: "storage.write", context: "deterministic" });
     assert.equal(r.json.allowed, false);
   });
 });

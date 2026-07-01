@@ -11,10 +11,10 @@ contract {
 }
 {
   if profile == "deterministic" {
-    ;; network.outbound, filesystem.write, process.spawn are denied in deterministic profile
+    ;; network.outbound, storage.write, process.spawn are denied in deterministic profile
     ;; — these effects break proof reproducibility and must be excluded from the DAG
     if effectName == "network.outbound" { return false }
-    if effectName == "filesystem.write" { return false }
+    if effectName == "storage.write" { return false }
     if effectName == "process.spawn" { return false }
   }
   ;; eval.execute is unconditionally denied — arbitrary code execution bypasses the governance layer

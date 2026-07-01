@@ -356,8 +356,8 @@ export const DEFAULT_WASM_FORBIDDEN_EFFECTS = [
 ```ts
 export const BROWSER_WASM_FORBIDDEN_EFFECTS = [
   ...DEFAULT_WASM_FORBIDDEN_EFFECTS,
-  "filesystem.read",
-  "filesystem.write",
+  "storage.read",
+  "storage.write",
   "environment.read",
   "network.raw_socket"
 ]
@@ -521,7 +521,7 @@ The compute layer must reject incompatible workloads.
 Examples:
 
 ```text
-filesystem.read in browser WASM
+storage.read in browser WASM
 sensitive data on forbidden accelerators
 memory beyond target limits
 missing runtime capabilities

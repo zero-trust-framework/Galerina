@@ -110,9 +110,9 @@ describe("BoundaryGraph — validateBoundaries", () => {
     const g = buildBoundaryGraph(
       [
         { boundaryId: "src", boundaryType: "api", trustLevel: "validated", allowedEffects: [], deniedEffects: [] },
-        { boundaryId: "dst", boundaryType: "filesystem", trustLevel: "internal", allowedEffects: [], deniedEffects: ["filesystem.write"] },
+        { boundaryId: "dst", boundaryType: "filesystem", trustLevel: "internal", allowedEffects: [], deniedEffects: ["storage.write"] },
       ],
-      [{ from: "src", to: "dst", transferredEffects: ["filesystem.write"], transferredSecrets: [], requiresValidation: true }],
+      [{ from: "src", to: "dst", transferredEffects: ["storage.write"], transferredSecrets: [], requiresValidation: true }],
     );
     const diags = validateBoundaries(g);
     assert.ok(diags.some((d) => d.code === "FUNGI-PGRAPH-020"));

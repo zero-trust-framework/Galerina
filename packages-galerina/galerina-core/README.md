@@ -488,7 +488,7 @@ intent "Fetch customer risk score from the risk evaluation service" {
 // ── File read — content is unsafe until parsed ────────────────────────────
 //
 guarded flow loadConfig(path: String) -> Result<AppConfig, ConfigError>
-effects [filesystem.read]
+effects [storage.read]
 intent "Load application configuration from disk" {
 
   unsafe let rawFile: String = fs.readText(path)

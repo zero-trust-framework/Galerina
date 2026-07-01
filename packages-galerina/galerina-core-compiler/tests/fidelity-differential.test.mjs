@@ -166,7 +166,7 @@ test("0014 slice-2: WASM tier ≡ reference walker, byte-exact (value; trap⟺tr
 // alone suffices. A pure no-effect CONTROL flow is asserted lean-eligible so the test can't pass trivially.
 const NEG_GOV_CORPUS = [
   ["secure flow negNet(u: Text) -> Text contract { effects [network.outbound] } { return u }", "negNet", "declared network.outbound effect"],
-  ["secure flow negFs(p: Text) -> Text contract { effects [filesystem.read] } { return p }", "negFs", "declared filesystem.read effect"],
+  ["secure flow negFs(p: Text) -> Text contract { effects [storage.read] } { return p }", "negFs", "declared storage.read effect"],
   ["secure flow negSink(u: Text) -> Text contract { effects [network.outbound] } { return http.get(u) }", "negSink", "touches governed sink http.get → inferred network.outbound"],
   ["guarded flow negAudit(m: Text) -> Text contract { effects [audit.write] } { return m }", "negAudit", "declared audit.write effect"],
 ];

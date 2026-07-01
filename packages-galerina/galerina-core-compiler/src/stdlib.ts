@@ -1390,8 +1390,8 @@ async function filesystemAsync(fullName: string, args: readonly GalerinaValue[],
   if (!fullName.startsWith("fs.") && !fullName.startsWith("File.")) return undefined;
   const isRead = fullName.includes("read") || fullName.includes("Read");
   const isWrite = fullName.includes("write") || fullName.includes("Write");
-  if (isRead) ctx.recordEffect("filesystem.read");
-  if (isWrite) ctx.recordEffect("filesystem.write");
+  if (isRead) ctx.recordEffect("storage.read");
+  if (isWrite) ctx.recordEffect("storage.write");
 
   const path = strVal(args[0] ?? FUNGI_VOID);
   if (path === "") return err("FileError: empty path");

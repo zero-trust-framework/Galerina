@@ -1,8 +1,8 @@
 /// example: 118-filesystem-read-guarded
 /// level: 3
-/// concept: guarded flow with filesystem.read effect
+/// concept: guarded flow with storage.read effect
 /// expected_diagnostics: none
-/// ai_rule: Declare filesystem.read when reading from the filesystem.
+/// ai_rule: Declare storage.read when reading from the filesystem.
 /// test_status: stable
 
 guarded flow loadConfig(path: String) -> LoadConfigResult
@@ -17,7 +17,7 @@ contract {
   }
 
   effects {
-    filesystem.read
+    storage.read
   }
 }
 {

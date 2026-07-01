@@ -1,5 +1,5 @@
 FUNGI-EFFECT-003
 
-pure flow cannot perform filesystem.read.
+pure flow cannot perform storage.read.
 Change qualifier to guarded and declare the effect:
-  guarded flow loadConfig(...) with effects [filesystem.read]
+  guarded flow loadConfig(...) with effects [storage.read]

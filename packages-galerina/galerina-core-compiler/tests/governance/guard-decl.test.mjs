@@ -266,7 +266,7 @@ guard TightGuard {
 secure flow unchecked(id: String) -> Result<String, String>
 contract {
   intent { "No conforms_to annotation." }
-  effects { network.outbound, filesystem.write }
+  effects { network.outbound, storage.write }
 }
 { return Ok(id) }
 `;

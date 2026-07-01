@@ -88,7 +88,7 @@ const CATEGORY_FIX_KIND: Readonly<Record<LeakCategory, LeakFix["kind"]>> = {
 
 /** The canonical effect/capability vocabulary — used to extract the leaked capability from a message. */
 const CAPABILITY_RE =
-  /\b((?:network|database|filesystem|file|secret|audit|crypto|http|https|pii|phi|email|payment|process|worker|event|desktop|unsafe|ai|compute)\.[a-z][a-z.]*)\b/;
+  /\b((?:network|database|filesystem|storage|file|secret|audit|crypto|http|https|pii|phi|email|payment|process|worker|event|desktop|unsafe|native|ledger|shell|state|message|random|clock|cache|ai|compute)\.[a-z][a-z.]*)\b/;
 
 function categoryFor(code: string): LeakCategory | null {
   for (const [prefix, cat] of PREFIX_CATEGORY) if (code.startsWith(prefix)) return cat;

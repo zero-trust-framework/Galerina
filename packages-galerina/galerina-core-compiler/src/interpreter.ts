@@ -3040,8 +3040,8 @@ function resolveCapabilityEffect(fullName: string): string | undefined {
   if (fullName.startsWith("fs.") || fullName.startsWith("File.")) {
     const isRead = fullName.includes("read") || fullName.includes("Read");
     const isWrite = fullName.includes("write") || fullName.includes("Write");
-    if (isRead) return "filesystem.read";
-    if (isWrite) return "filesystem.write";
+    if (isRead) return "storage.read";
+    if (isWrite) return "storage.write";
   }
   // Database calls: any receiver ending in DB or Database (e.g. UserDB.find)
   if (/DB\.|Database\./.test(fullName)) {

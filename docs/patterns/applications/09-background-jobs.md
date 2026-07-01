@@ -29,7 +29,7 @@ scheduled daily at "02:00" {
 
 guarded flow generateMonthlyReport() -> JobResult
 contract {
-  effects { database.read, filesystem.write, email.send }
+  effects { database.read, storage.write, email.send }
   limits {
     max memory 512 MB
     max duration 10 min
@@ -39,7 +39,7 @@ contract {
 {
   let data = database.query("SELECT * FROM monthly_data WHERE ...")
   let pdf = generatePdf(data)
-  filesystem.write("/reports/monthly.pdf", pdf)
+  storage.write("/reports/monthly.pdf", pdf)
   email.send(to: ops@example.com, subject: "Monthly Report", attachment: pdf)
   return JobResult.success
 }

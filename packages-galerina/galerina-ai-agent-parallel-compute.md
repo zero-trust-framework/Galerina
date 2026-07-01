@@ -296,7 +296,7 @@ agent BugFinder {
     static_analysis.run allow
     shell deny
     network deny
-    filesystem.write deny
+    storage.write deny
   }
 
   limits {

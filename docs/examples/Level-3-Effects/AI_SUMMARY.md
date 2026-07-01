@@ -1,7 +1,7 @@
 ## What this level teaches
 
 - What effects are and why every side-effecting operation must be declared
-- Effect names: `database.read`, `database.write`, `network.outbound`, `network.inbound`, `audit.write`, `filesystem.read`, `filesystem.write`, `ai.inference`, `pii.read`, `pii.write`
+- Effect names: `database.read`, `database.write`, `network.outbound`, `network.inbound`, `audit.write`, `storage.read`, `storage.write`, `ai.inference`, `pii.read`, `pii.write`
 - `pure flow` carries no effects — the compiler enforces this
 - `guarded flow` and `secure flow` declare effects in the `contract { effects { ... } }` block
 - `with effects [...]` inline syntax as an alternative to the contract block

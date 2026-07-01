@@ -173,7 +173,7 @@ function deriveGovernanceCodes(meta: FlowMeta, flowNode: AstNode | undefined): s
 
   // FUNGI-GOV-002: MISSING_AUDIT_FOR_GOVERNED_SINK (heuristic)
   if (meta.declaredEffects.some(e =>
-    e.includes("database.write") || e.includes("filesystem.write")
+    e.includes("database.write") || e.includes("storage.write")
   )) {
     if (!meta.declaredEffects.includes("audit.write")) {
       codes.push("FUNGI-GOV-002");

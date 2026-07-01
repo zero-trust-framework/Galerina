@@ -781,8 +781,8 @@ export const EFFECT_TO_CAPABILITY: ReadonlyMap<string, string> = new Map([
   ["network.outbound", "host.network.outbound"],
   ["network.inbound",  "host.network.inbound"],
   ["ai.inference",     "host.ai.inference"],
-  ["filesystem.read",  "host.filesystem.read"],
-  ["filesystem.write", "host.filesystem.write"],
+  ["storage.read",  "host.filesystem.read"],
+  ["storage.write", "host.filesystem.write"],
   ["email.send",       "host.email.send"],
 ]);
 

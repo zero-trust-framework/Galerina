@@ -1,6 +1,6 @@
 /// example: 117-effectful-operation-in-pure-flow
 /// level: 3
-/// concept: filesystem.read in a pure flow is forbidden
+/// concept: storage.read in a pure flow is forbidden
 /// expected_diagnostics: FUNGI-EFFECT-003
 /// test_status: stable
 /// ai_rule: Pure flows cannot perform any I/O, including filesystem reads.
@@ -13,7 +13,7 @@ contract {
   }
 
   intent {
-    "Load config — BUG: pure flow cannot call fs.readText which requires filesystem.read effect."
+    "Load config — BUG: pure flow cannot call fs.readText which requires storage.read effect."
   }
 }
 {

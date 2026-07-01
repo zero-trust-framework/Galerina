@@ -119,7 +119,7 @@ export interface WATImport {
   readonly name: string;      // e.g. "fs.readText"
   readonly type: WATFuncType;
   /** The Galerina effect this import corresponds to. */
-  readonly effect: string;    // e.g. "filesystem.read"
+  readonly effect: string;    // e.g. "storage.read"
 }
 
 /** A WebAssembly export (flow entry points). */
@@ -2918,7 +2918,7 @@ function wasmImportStringToWATImport(wasmImport: string, effect: string): WATImp
  * All effectful host functions are typed as (param i32 i32) (result i32) in
  * Phase 19. Phase 22 will carry real type signatures from the GIR type table.
  *
- * @param effects - Declared effect names, e.g. ["filesystem.read", "audit.write"].
+ * @param effects - Declared effect names, e.g. ["storage.read", "audit.write"].
  * @returns Deduplicated WATImport array derived from STDLIB_CAPABILITY_MAP.
  */
 export function getWATImportsForEffects(effects: readonly string[]): WATImport[] {

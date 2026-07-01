@@ -1156,7 +1156,7 @@
       "id": "117-effectful-operation-in-pure-flow",
       "level": 3,
       "levelName": "Effects",
-      "concept": "filesystem.read in a pure flow is forbidden",
+      "concept": "storage.read in a pure flow is forbidden",
       "status": "stable",
       "expectedDiagnostics": [
         "FUNGI-EFFECT-003"
@@ -1173,7 +1173,7 @@
       "id": "118-filesystem-read-guarded",
       "level": 3,
       "levelName": "Effects",
-      "concept": "guarded flow with filesystem.read effect",
+      "concept": "guarded flow with storage.read effect",
       "status": "stable",
       "expectedDiagnostics": [],
       "features": [
@@ -1184,7 +1184,7 @@
         "flow",
         "unsafe"
       ],
-      "aiRule": "Declare filesystem.read when reading from the filesystem."
+      "aiRule": "Declare storage.read when reading from the filesystem."
     },
     {
       "id": "119-effect-name-invalid",

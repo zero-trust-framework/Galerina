@@ -257,8 +257,8 @@ describe("FUNGI-STDLIB-001: stdlib effect not declared", () => {
     return results.flatMap((r) => r.diagnostics);
   }
 
-  it("File.readText without filesystem.read → FUNGI-STDLIB-001 (error in production)", () => {
-    // guarded flow that calls File.readText but does NOT declare filesystem.read
+  it("File.readText without storage.read → FUNGI-STDLIB-001 (error in production)", () => {
+    // guarded flow that calls File.readText but does NOT declare storage.read
     const source = `
 guarded flow loadConfig(path: String) -> String
 contract { effects { audit.write } }
@@ -269,17 +269,17 @@ contract { effects { audit.write } }
 `;
     const diags = checkProd(source);
     const d = diags.find((x) => x.code === "FUNGI-STDLIB-001");
-    assert.ok(d !== undefined, "FUNGI-STDLIB-001 must fire when filesystem.read is not declared");
+    assert.ok(d !== undefined, "FUNGI-STDLIB-001 must fire when storage.read is not declared");
     assert.equal(d.severity, "error", "In production mode severity must be error");
-    assert.ok(d.message.includes("filesystem.read"), `message must mention the missing effect, got: ${d.message}`);
-    assert.equal(d.suggestedCode, "filesystem.read");
-    assert.ok(d.suggestedFix.includes("filesystem.read"), "suggestedFix must reference the missing effect");
+    assert.ok(d.message.includes("storage.read"), `message must mention the missing effect, got: ${d.message}`);
+    assert.equal(d.suggestedCode, "storage.read");
+    assert.ok(d.suggestedFix.includes("storage.read"), "suggestedFix must reference the missing effect");
   });
 
-  it("File.readText WITH filesystem.read declared → no FUNGI-STDLIB-001", () => {
+  it("File.readText WITH storage.read declared → no FUNGI-STDLIB-001", () => {
     const source = `
 guarded flow loadConfig(path: String) -> String
-contract { effects { filesystem.read } }
+contract { effects { storage.read } }
 {
   let content = File.readText(path)
   return content
@@ -287,10 +287,10 @@ contract { effects { filesystem.read } }
 `;
     const diags = checkProd(source);
     const d = diags.find((x) => x.code === "FUNGI-STDLIB-001");
-    assert.ok(d === undefined, "FUNGI-STDLIB-001 must NOT fire when filesystem.read is declared");
+    assert.ok(d === undefined, "FUNGI-STDLIB-001 must NOT fire when storage.read is declared");
   });
 
-  it("File.readText without filesystem.read → FUNGI-STDLIB-001 (warning in dev mode)", () => {
+  it("File.readText without storage.read → FUNGI-STDLIB-001 (warning in dev mode)", () => {
     const source = `
 guarded flow loadConfig(path: String) -> String
 contract { effects { audit.write } }

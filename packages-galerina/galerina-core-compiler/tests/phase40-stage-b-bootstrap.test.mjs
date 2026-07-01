@@ -49,8 +49,8 @@ describe("Phase 40: compiler.capabilities.fungi executes", () => {
     assert.deepEqual(r.value, { __tag: "bool", value: false });
   });
 
-  it("isCapabilityAllowed(filesystem.read) â†’ true", async () => {
-    const r = await executeFlow("isCapabilityAllowed", new Map([["name",{__tag:"string",value:"filesystem.read"}]]), prog.ast, prog.flows);
+  it("isCapabilityAllowed(storage.read) â†’ true", async () => {
+    const r = await executeFlow("isCapabilityAllowed", new Map([["name",{__tag:"string",value:"storage.read"}]]), prog.ast, prog.flows);
     assert.deepEqual(r.value, { __tag: "bool", value: true });
   });
 
@@ -66,8 +66,8 @@ describe("Phase 40: compiler.capabilities.fungi executes", () => {
     assert.deepEqual(r.value, { __tag: "bool", value: false });
   });
 
-  it("capabilityClass(filesystem.write) returns 2 (write class)", async () => {
-    const r = await executeFlow("capabilityClass", new Map([["name",{__tag:"string",value:"filesystem.write"}]]), prog.ast, prog.flows);
+  it("capabilityClass(storage.write) returns 2 (write class)", async () => {
+    const r = await executeFlow("capabilityClass", new Map([["name",{__tag:"string",value:"storage.write"}]]), prog.ast, prog.flows);
     assert.deepEqual(r.value, { __tag: "int", value: 2 });
   });
 

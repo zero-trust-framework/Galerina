@@ -31,8 +31,8 @@ describe("FUNGI-SUBSTRATE-005 — compute-only fence", () => {
   it("DENIES a persistence effect (database.write) on a photonic lane", () => {
     assert.ok(has(verify(flow("database.write")), "FUNGI-SUBSTRATE-005"));
   });
-  it("DENIES a persistence effect (filesystem.read) on a noisy lane", () => {
-    assert.ok(has(verify(flow("filesystem.read", "noisy")), "FUNGI-SUBSTRATE-005"));
+  it("DENIES a persistence effect (storage.read) on a noisy lane", () => {
+    assert.ok(has(verify(flow("storage.read", "noisy")), "FUNGI-SUBSTRATE-005"));
   });
   it("DENIES a secret effect on a photonic lane", () => {
     assert.ok(has(verify(flow("secret.read")), "FUNGI-SUBSTRATE-005"));

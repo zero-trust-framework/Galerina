@@ -95,7 +95,7 @@ export function detectAuthorityEscalation(g: FlowGraph): readonly GraphDiagnosti
   // that has sensitive effects (database.write, secret.read, etc.)
   const sensitiveEffects = new Set([
     "database.write", "database.read", "secret.read",
-    "filesystem.write", "process.spawn", "eval.execute",
+    "storage.write", "process.spawn", "eval.execute",
   ]);
   for (const e of g.edges) {
     const from = g.nodes.get(e.from);
@@ -141,7 +141,7 @@ export function detectPiiLeakagePaths(g: FlowGraph): readonly GraphDiagnostic[] 
 
 // ── FUNGI-GRAPH-005: Missing audit coverage ────────────────────────────────────
 
-const HIGH_RISK_EFFECTS = new Set(["database.write", "secret.read", "filesystem.write"]);
+const HIGH_RISK_EFFECTS = new Set(["database.write", "secret.read", "storage.write"]);
 
 export function detectMissingAuditCoverage(g: FlowGraph): readonly GraphDiagnostic[] {
   const diags: GraphDiagnostic[] = [];

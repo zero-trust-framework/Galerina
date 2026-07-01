@@ -9,8 +9,8 @@
 
 contract set CompilerCapabilities {
   rules {
-    require filesystem.read before source.parse
-    require filesystem.write before artefact.emit
+    require storage.read before source.parse
+    require storage.write before artefact.emit
     require report.write before diagnostics.emit
     require compiler.graph.read before graph.query
     require compiler.graph.write before graph.update
@@ -65,7 +65,7 @@ contract {
   if name.contains("secret") { return false }
   if name.contains("email") { return false }
   if name.contains("payment") { return false }
-  if name.contains("filesystem") { return true }
+  if name.contains("storage") { return true }
   if name.contains("package") { return true }
   if name.contains("manifest") { return true }
   if name.contains("report") { return true }
@@ -129,10 +129,10 @@ contract {
   if name.contains("network") { return 0 }
   if name.contains("database") { return 0 }
   if name.contains("secret") { return 0 }
-  if name.contains("filesystem.read") { return 1 }
+  if name.contains("storage.read") { return 1 }
   if name.contains("package.read") { return 1 }
   if name.contains("manifest.read") { return 1 }
-  if name.contains("filesystem.write") { return 2 }
+  if name.contains("storage.write") { return 2 }
   if name.contains("report.write") { return 2 }
   if name.contains("compiler.graph.read") { return 1 }
   if name.contains("compiler.graph.write") { return 2 }

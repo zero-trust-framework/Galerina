@@ -108,7 +108,7 @@ Primitive and domain types — Int, Decimal, String, Bool, Byte, Char, Email, Pa
 
 ## Level 3 — Effects
 
-Effect system — declaring database.write, network.outbound, filesystem.read, audit.write; effect propagation and enforcement.
+Effect system — declaring database.write, network.outbound, storage.read, audit.write; effect propagation and enforcement.
 
 **20 examples** — 18 stable, 2 draft
 
@@ -130,8 +130,8 @@ Effect system — declaring database.write, network.outbound, filesystem.read, a
 | `114-secure-flow-missing-audit-effect` | secure flow calls AuditLog.write but does not declare audit.write `FUNGI-EFFECT-001` | stable | Result, audit, protected, unsafe |
 | `115-effect-propagation-through-call` | effect propagation through a flow call chain | draft | Result |
 | `116-effect-propagation-missing-parent` | caller missing effect required by callee `FUNGI-EFFECT-002` | stable | Result |
-| `117-effectful-operation-in-pure-flow` | filesystem.read in a pure flow is forbidden `FUNGI-EFFECT-003` | stable | Result, unsafe |
-| `118-filesystem-read-guarded` | guarded flow with filesystem.read effect | stable | Result, unsafe |
+| `117-effectful-operation-in-pure-flow` | storage.read in a pure flow is forbidden `FUNGI-EFFECT-003` | stable | Result, unsafe |
+| `118-filesystem-read-guarded` | guarded flow with storage.read effect | stable | Result, unsafe |
 | `119-effect-name-invalid` | non-canonical effect name is rejected `FUNGI-EFFECT-004` | stable | Result, unsafe |
 | `120-effect-summary-example` | comprehensive effects example showing all patterns | stable | Result, audit, protected, redacted, unsafe |
 

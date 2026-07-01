@@ -699,7 +699,7 @@ export {
  * FUNGI-STDLIB-001: An effectful stdlib function was called without the
  * required effect being declared in the flow's contract.
  *
- * Example: calling File.readText() without declaring filesystem.read.
+ * Example: calling File.readText() without declaring storage.read.
  * The STDLIB_CAPABILITY_MAP defines required effects per function.
  *
  * This diagnostic is emitted by the effect checker when a stdlib call is
@@ -711,7 +711,7 @@ export const FUNGI_STDLIB_001 = {
   severity: "error" as const,
   message: "Effectful stdlib function called without declaring the required effect in the contract.",
   why: "Every stdlib function that performs I/O, network access, filesystem access, or secret reads must be explicitly declared as an effect. This enables static governance proof and WASM import table generation.",
-  suggestedFix: "Add the required effect to the contract: contract { effects { filesystem.read } }",
+  suggestedFix: "Add the required effect to the contract: contract { effects { storage.read } }",
 } as const;
 
 // Stage A - Proof Chain
@@ -894,7 +894,7 @@ export const FUNGI_EFFECT_005 = {
   severity: "warning" as const,
   message: "Effect name is a broad alias. Use the canonical dot-path name to precisely declare authority.",
   why: "Broad aliases are ambiguous and may grant more authority than intended in future Galerina versions. Canonical names are stable, auditable, and governance-traceable.",
-  suggestedFix: "Replace 'network' with 'network.outbound', 'database' with 'database.read' or 'database.write', 'filesystem' with 'filesystem.read' or 'filesystem.write'.",
+  suggestedFix: "Replace 'network' with 'network.outbound', 'database' with 'database.read' or 'database.write', 'filesystem' with 'storage.read' or 'storage.write'.",
 } as const;
 
 // Phase 9B — Event Checker

@@ -20,7 +20,7 @@ import {
 // The exact set border-check historically allowed — the "drop nothing" contract.
 const HISTORICAL_BORDER_CAPS = [
   "ai.inference", "network.outbound", "network.inbound", "audit.write", "audit.read",
-  "db.read", "db.write", "filesystem.read", "filesystem.write", "time.read",
+  "db.read", "db.write", "storage.read", "storage.write", "time.read",
   "crypto.sign", "crypto.verify", "state.read", "state.write", "memory.alloc",
 ];
 
@@ -40,8 +40,8 @@ test("no capability border-check historically allowed is dropped", () => {
 test("aliases normalise onto canonical names", () => {
   assert.equal(normalizeCapability("db.read"), "database.read");
   assert.equal(normalizeCapability("db.write"), "database.write");
-  assert.equal(normalizeCapability("filesystem.write"), "storage.write");
-  assert.equal(normalizeCapability("filesystem.read"), "storage.read");
+  assert.equal(normalizeCapability("storage.write"), "storage.write");
+  assert.equal(normalizeCapability("storage.read"), "storage.read");
   assert.equal(normalizeCapability("time.read"), "clock.read");
   // A canonical name normalises to itself.
   assert.equal(normalizeCapability("ai.inference"), "ai.inference");

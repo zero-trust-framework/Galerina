@@ -17,7 +17,7 @@ contract {
   }
 
   effects {
-    filesystem.read
+    storage.read
   }
 }
 {
