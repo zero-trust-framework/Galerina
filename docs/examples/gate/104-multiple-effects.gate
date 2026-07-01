@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-3-Effects/104-multiple-effects/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000104",
+  "gir": {
+    "name": "syncOrder",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["database.write", "network.outbound", "audit.write"],
+      "observed": ["database.write", "network.outbound", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Insert a validated order into the database, sync it to an external service, and write an audit record.",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "safeOrder", "type": "Order" }
+    ],
+    "audit": {
+      "protected_values_redacted": false
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "missing" }
+    ],
+    "capabilities": {
+      "database.write": "host.database.write",
+      "network.outbound": "host.network.outbound",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 3
+    },
+    "allowedEffectsMask": 14,
+    "paramTypes": ["Order"]
+  },
+  "capabilities": {
+    "database.write": { "host": "host.database.write", "vdpmBit": 4 },
+    "network.outbound": { "host": "host.network.outbound", "vdpmBit": 0 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "syncOrder",
+        "verified": "static",
+        "description": "secure flow declares effects [database.write, network.outbound, audit.write] — observed effects are a subset of declared"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "syncOrder",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (validate, insert, http.post, audit)"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "syncOrder",
+        "verified": "pending",
+        "description": "protected value 'safeOrder' is sent to a governed sink (http.post, AuditLog.write) WITHOUT redact() — protected_values_redacted is false; a stricter privacy contract would require redaction before audit.write"
+      },
+      {
+        "kind": "totality",
+        "flowName": "syncOrder",
+        "verified": "runtime-precheck",
+        "description": "every fallible step uses the ? operator (validate.order, OrdersDB.insert, http.post) so each error path returns Err(SyncError); the flow returns Result<Unit, SyncError> on all paths"
+      }
+    ],
+    "exhaustiveness": "No match arms. The ? operator makes every fallible call total by early-returning Err; the sole success path returns Ok(unit). Return type Result<Unit, SyncError> covers both.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 25,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000204",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

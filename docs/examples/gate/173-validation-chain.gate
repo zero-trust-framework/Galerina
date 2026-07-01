@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-4-Security/173-validation-chain/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000173",
+  "gir": {
+    "name": "processUserEmail",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["database.write", "audit.write"],
+      "observed": ["database.write", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Demonstrate the canonical unsafe -> validate -> protected -> redact -> audit trust chain.",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "email", "type": "Email" }
+    ],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "satisfied" }
+    ],
+    "capabilities": {
+      "database.write": "host.database.write",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 2
+    },
+    "allowedEffectsMask": 10,
+    "paramTypes": ["Request"]
+  },
+  "capabilities": {
+    "database.write": { "host": "host.database.write", "vdpmBit": 4 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "processUserEmail",
+        "verified": "static",
+        "description": "secure flow declares effects [database.write, audit.write] — observed effects are a subset of declared"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "processUserEmail",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (unsafe boundary read, validate, redact, audit)"
+      },
+      {
+        "kind": "taint-flow",
+        "flowName": "processUserEmail",
+        "verified": "static",
+        "description": "raw boundary input 'rawEmail: unsafe String' is gated to 'email: protected Email' by validate.email; the only value reaching AuditLog.write is 'auditEmail: redacted Email' via redact(email) — no unvalidated or unredacted PII reaches a governed sink"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "processUserEmail",
+        "verified": "static",
+        "description": "protected value 'email' is redacted before audit.write (redact(email) -> auditEmail) — protected_values_redacted holds"
+      },
+      {
+        "kind": "totality",
+        "flowName": "processUserEmail",
+        "verified": "runtime-precheck",
+        "description": "validate.email uses ? (early-returns Err(UserError)); redact() and AuditLog.write are total; the flow returns Result<Unit, UserError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms. The single fallible call (validate.email) is made total by ?; success path returns Ok(unit). Deny-by-default: only database.write and audit.write are admissible; any other effect would be denied.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 24,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000273",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

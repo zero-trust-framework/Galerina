@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-9-Enterprise/453-financial-payment-charge/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000453",
+  "gir": {
+    "name": "chargePayment",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["payment.charge", "audit.write"],
+      "observed": ["payment.charge", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Process card payment for approved merchant",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "merchantId", "type": "MerchantId" }
+    ],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "satisfied" }
+    ],
+    "capabilities": {
+      "payment.charge": "host.payment.charge",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 2
+    },
+    "allowedEffectsMask": 8,
+    "paramTypes": ["PaymentRequest"]
+  },
+  "capabilities": {
+    "payment.charge": { "host": "host.payment.charge", "vdpmBit": -1 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "chargePayment",
+        "verified": "static",
+        "description": "secure flow declares effects [payment.charge, audit.write] — observed effects are a subset of declared. NOTE: payment.charge is an extended domain effect with no V_DPM bit today (vdpmBit -1); the .gate compiler must either assign it a bit or route it through a distinct domain-capability lane before this is bit-enforced at runtime"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "chargePayment",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (validate amount + merchant, charge via gateway, audit)"
+      },
+      {
+        "kind": "money-type-safety",
+        "flowName": "chargePayment",
+        "verified": "static",
+        "description": "amount is Money<GBP> (integer-based, no IEEE float drift) obtained via validate.money; currency is carried in the type so mismatched-currency arithmetic is a type error"
+      },
+      {
+        "kind": "audit-evidence",
+        "flowName": "chargePayment",
+        "verified": "runtime-precheck",
+        "description": "payment flow requires audit: audit.write is declared and AuditLog.write is called with event PaymentCharged and receiptId"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "chargePayment",
+        "verified": "static",
+        "description": "protected value 'merchantId' is redacted before audit.write (redact(merchantId) in AuditLog.write) — protected_values_redacted holds"
+      },
+      {
+        "kind": "totality",
+        "flowName": "chargePayment",
+        "verified": "runtime-precheck",
+        "description": "validate.money, validate.merchantId, and PaymentGateway.charge use ? (early-return Err(PaymentError)); the flow returns Result<Receipt, PaymentError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms. All fallible calls are made total by ?; success path returns Ok(receipt). Deny-by-default: only payment.charge and audit.write are admissible.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 8,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000553",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

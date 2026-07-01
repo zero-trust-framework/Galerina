@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-5-Governance/224-contract-best-practices/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000224",
+  "gir": {
+    "name": "getPatientProfile",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["database.read", "audit.write"],
+      "observed": ["database.read", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Return a patient profile to an authorised clinical actor. Protect email and NHS number.",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "patientId", "type": "PatientId" }
+    ],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "satisfied" }
+    ],
+    "capabilities": {
+      "database.read": "host.database.read",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": true,
+      "hasAuditRequirements": true,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 2
+    },
+    "allowedEffectsMask": 9,
+    "paramTypes": ["Request"]
+  },
+  "capabilities": {
+    "database.read": { "host": "host.database.read", "vdpmBit": -1 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "getPatientProfile",
+        "verified": "static",
+        "description": "secure flow declares effects [database.read, audit.write] — observed effects are a subset of declared"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "getPatientProfile",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (context read, validate, governed read, audit, emit)"
+      },
+      {
+        "kind": "context-precondition",
+        "flowName": "getPatientProfile",
+        "verified": "static",
+        "description": "contract.context requires [actor, trace_id] and contract.rules requires 'actor before database.read'; both context fields are read before PatientsDB.findById"
+      },
+      {
+        "kind": "privacy-egress",
+        "flowName": "getPatientProfile",
+        "verified": "static",
+        "description": "contract.privacy denies protected Email to response and requires redaction before audit.write; response exposes only {patientId, name, dateOfBirth} and denies {email, nhsNumber} — no denied field appears in Response.ok"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "getPatientProfile",
+        "verified": "static",
+        "description": "protected value 'patientId' is redacted before audit.write (redact(patientId) in AuditLog.write) — protected_values_redacted holds"
+      },
+      {
+        "kind": "audit-evidence",
+        "flowName": "getPatientProfile",
+        "verified": "runtime-precheck",
+        "description": "contract.audit requires a runtime report; audit.write is declared and AuditLog.write is called with event PatientProfileRead"
+      },
+      {
+        "kind": "totality",
+        "flowName": "getPatientProfile",
+        "verified": "runtime-precheck",
+        "description": "validate.patientId and PatientsDB.findById use ? (early-return Err(ApiError)); errors map PatientNotFound->NotFound, AccessDenied->Unauthorised; the flow returns Result<Response, ApiError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms in the body; fallible calls are made total by ?. The contract.errors block enumerates the full ApiError surface (NotFound, Unauthorised, Internal) with explicit map/expose/redact/audit handling, so every error variant is accounted for. Deny-by-default: only database.read and audit.write are admissible.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 8,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000324",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

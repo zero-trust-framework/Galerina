@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-5-Governance/208-audit-proof-required/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000208",
+  "gir": {
+    "name": "deletePatient",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["database.write", "audit.write"],
+      "observed": ["database.write", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Delete a patient record with a mandatory full audit trail including timestamp.",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "safeId", "type": "PatientId" }
+    ],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "satisfied" }
+    ],
+    "capabilities": {
+      "database.write": "host.database.write",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 2
+    },
+    "allowedEffectsMask": 10,
+    "paramTypes": ["protected PatientId"]
+  },
+  "capabilities": {
+    "database.write": { "host": "host.database.write", "vdpmBit": 4 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "deletePatient",
+        "verified": "static",
+        "description": "secure flow declares effects [database.write, audit.write] — observed effects are a subset of declared"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "deletePatient",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (validate, destructive delete, redact, audit with timestamp)"
+      },
+      {
+        "kind": "audit-evidence",
+        "flowName": "deletePatient",
+        "verified": "runtime-precheck",
+        "description": "destructive operation on PHI requires mandatory audit evidence: audit.write is declared AND AuditLog.write is called with action deletePatient and Clock.now() timestamp"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "deletePatient",
+        "verified": "static",
+        "description": "protected value 'safeId' is redacted before audit.write (redact(safeId) -> auditId) — protected_values_redacted holds; the parameter rawPatientId is already typed 'protected PatientId' at the boundary"
+      },
+      {
+        "kind": "totality",
+        "flowName": "deletePatient",
+        "verified": "runtime-precheck",
+        "description": "validate.patientId and PatientDB.delete use ? (early-return Err(DeleteError)); the flow returns Result<Unit, DeleteError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms. Both fallible calls (validate.patientId, PatientDB.delete) are made total by ?; success path returns Ok(unit). Deny-by-default: only database.write and audit.write are admissible.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 24,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000308",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

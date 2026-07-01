@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-7-AI/365-ai-summary-flow/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000365",
+  "gir": {
+    "name": "scoreHealthRisk",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["ai.inference", "audit.write"],
+      "observed": ["ai.inference", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Score patient health risk on local hardware without remote execution",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "patientId", "type": "PatientId" }
+    ],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["npu", "gpu", "cpu"],
+      "denied": ["remote.execution"],
+      "fallback": "cpu"
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "satisfied" }
+    ],
+    "tensors": [
+      {
+        "name": "features",
+        "type": "Tensor<Float32, [1, 128]>",
+        "elementType": "Float32",
+        "shape": "[1, 128]",
+        "photonic_compatible": true,
+        "wasmSimdCompatible": true,
+        "gpuCompatible": true,
+        "npuCompatible": true,
+        "apuSharedMemoryCandidate": true,
+        "fixedShape": true,
+        "quantized": false
+      }
+    ],
+    "target_affinity": {
+      "suggested": ["photonic", "npu", "gpu", "cpu"],
+      "reason": "photonic-compatible tensors detected; ai.inference effect benefits from NPU or GPU acceleration"
+    },
+    "capabilities": {
+      "ai.inference": "host.ai.inference",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 2
+    },
+    "allowedEffectsMask": 24,
+    "paramTypes": ["Request"]
+  },
+  "capabilities": {
+    "ai.inference": { "host": "host.ai.inference", "vdpmBit": 5 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "scoreHealthRisk",
+        "verified": "static",
+        "description": "secure flow declares effects [ai.inference, audit.write] — observed effects are a subset of declared"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "scoreHealthRisk",
+        "verified": "static",
+        "description": "declared intent ('on local hardware without remote execution') matches observed behavior and the compute-target deny [remote.execution]"
+      },
+      {
+        "kind": "compute-governance",
+        "flowName": "scoreHealthRisk",
+        "verified": "static",
+        "description": "compute target best { prefer [npu, gpu, cpu] fallback cpu deny [remote.execution] } — no accelerator becomes a governance authority; remote.execution is denied so inference cannot leave local hardware"
+      },
+      {
+        "kind": "tensor-shape",
+        "flowName": "scoreHealthRisk",
+        "verified": "static",
+        "description": "features is Tensor<Float32, [1, 128]> — fixed shape, Float32; NPU/GPU/photonic/APU compatible. As an ExecutionPlane/AcceleratorPlane target, NPU/photonic dispatch requires Sealed/Escalated proof (input seal, and attestation for photonic)"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "scoreHealthRisk",
+        "verified": "static",
+        "description": "protected value 'patientId' is redacted before audit.write (redact(patientId) in AuditLog.write) — protected_values_redacted holds"
+      },
+      {
+        "kind": "totality",
+        "flowName": "scoreHealthRisk",
+        "verified": "runtime-precheck",
+        "description": "validate.patientId, PatientFeatures.from, and RiskModel.run use ? (early-return Err(AiError)); the flow returns Result<Response, AiError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms. All three fallible calls are made total by ?; success path returns Ok(Response.ok(risk)). Deny-by-default at two levels: effects (only ai.inference, audit.write admissible) AND compute targets (remote.execution explicitly denied).",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 40,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000465",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

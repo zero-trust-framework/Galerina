@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-9-Enterprise/465-enterprise-summary/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000465",
+  "gir": {
+    "name": "createAndScorePatient",
+    "qualifier": "secure",
+    "effects": {
+      "declared": ["pii.write", "phi.read", "ai.inference", "database.write", "audit.write"],
+      "observed": ["pii.write", "phi.read", "ai.inference", "database.write", "audit.write"],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Create patient record and compute initial risk score on local hardware",
+      "status": "satisfied"
+    },
+    "protected_values": [
+      { "name": "nhsNumber", "type": "NhsNumber" },
+      { "name": "fullName", "type": "PatientName" },
+      { "name": "dateOfBirth", "type": "DateOfBirth" },
+      { "name": "patientId", "type": "PatientId" }
+    ],
+    "audit": {
+      "protected_values_redacted": false
+    },
+    "execution": {
+      "preferred": ["npu", "gpu", "cpu"],
+      "denied": ["remote.execution"],
+      "fallback": "cpu"
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" },
+      { "name": "protected_values_redacted", "status": "missing" }
+    ],
+    "tensors": [
+      {
+        "name": "features",
+        "type": "Tensor<Float32, [1, 128]>",
+        "elementType": "Float32",
+        "shape": "[1, 128]",
+        "photonic_compatible": true,
+        "wasmSimdCompatible": true,
+        "gpuCompatible": true,
+        "npuCompatible": true,
+        "apuSharedMemoryCandidate": true,
+        "fixedShape": true,
+        "quantized": false
+      }
+    ],
+    "target_affinity": {
+      "suggested": ["photonic", "npu", "gpu", "cpu"],
+      "reason": "photonic-compatible tensors detected; ai.inference effect benefits from NPU or GPU acceleration"
+    },
+    "capabilities": {
+      "pii.write": "host.pii.write",
+      "phi.read": "host.phi.read",
+      "ai.inference": "host.ai.inference",
+      "database.write": "host.database.write",
+      "audit.write": "host.audit.write"
+    },
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 5
+    },
+    "allowedEffectsMask": 26,
+    "paramTypes": ["Request"]
+  },
+  "capabilities": {
+    "pii.write": { "host": "host.pii.write", "vdpmBit": -1 },
+    "phi.read": { "host": "host.phi.read", "vdpmBit": -1 },
+    "ai.inference": { "host": "host.ai.inference", "vdpmBit": 5 },
+    "database.write": { "host": "host.database.write", "vdpmBit": 4 },
+    "audit.write": { "host": "host.audit.write", "vdpmBit": 3 }
+  },
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "createAndScorePatient",
+        "verified": "static",
+        "description": "secure flow declares effects [pii.write, phi.read, ai.inference, database.write, audit.write] — observed effects are a subset of declared. NOTE: pii.write and phi.read are extended domain effects with no V_DPM bit today (vdpmBit -1) and are excluded from allowedEffectsMask/policyResolutionDag; the .gate compiler must formalise them (dedicated bits or a domain-capability lane) before they are bit-enforced at runtime"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "createAndScorePatient",
+        "verified": "static",
+        "description": "declared intent ('on local hardware') matches observed behavior and the compute-target deny [remote.execution]"
+      },
+      {
+        "kind": "policy",
+        "flowName": "createAndScorePatient",
+        "verified": "runtime-precheck",
+        "description": "contract.policy declares purpose 'clinical_intake', lawfulBasis 'vital_interests', retentionDays 3650 — the audit record carries purpose 'clinical_intake', binding the runtime record to the declared lawful basis"
+      },
+      {
+        "kind": "compute-governance",
+        "flowName": "createAndScorePatient",
+        "verified": "static",
+        "description": "compute target best { prefer [npu, gpu, cpu] fallback cpu deny [remote.execution] } — PHI-derived features are scored on local hardware only; remote.execution is denied"
+      },
+      {
+        "kind": "tensor-shape",
+        "flowName": "createAndScorePatient",
+        "verified": "static",
+        "description": "features is Tensor<Float32, [1, 128]> — fixed shape, Float32; NPU/GPU/photonic/APU compatible. NPU/photonic dispatch requires Sealed/Escalated proof (input seal, plus attestation for photonic)"
+      },
+      {
+        "kind": "redaction",
+        "flowName": "createAndScorePatient",
+        "verified": "pending",
+        "description": "protected_values_redacted is FALSE: patientId and nhsNumber are redacted before audit.write, but fullName and dateOfBirth are protected values that are never passed through redact(). The proof 'protected_values_redacted' is therefore 'missing' — a stricter privacy contract (e.g. 'require redaction before audit.write') would either force redaction of the remaining protected values or fail closed"
+      },
+      {
+        "kind": "totality",
+        "flowName": "createAndScorePatient",
+        "verified": "runtime-precheck",
+        "description": "every fallible call (validate.nhsNumber/name/date, PatientDB.insert, PatientFeatures.from, RiskModel.run) uses ? (early-return Err(PatientError)); the flow returns Result<Response, PatientError> on every path"
+      }
+    ],
+    "exhaustiveness": "No match arms. All fallible calls are made total by ?; success path returns Ok(Response.created(...)). Deny-by-default at two levels: effects (only the five declared effects are admissible) AND compute targets (remote.execution explicitly denied). NOTE: the redaction obligation is unmet (missing), so this flow is total but NOT fully privacy-discharged.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 56,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000565",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}

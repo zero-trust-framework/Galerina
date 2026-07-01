@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "fungi.gate.v1",
+  "sourceFile": "docs/examples/Level-1-Basics/001-pure-flow/example.fungi",
+  "sourceHash": "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+  "gir": {
+    "name": "calculateVat",
+    "qualifier": "pure",
+    "effects": {
+      "declared": [],
+      "observed": [],
+      "status": "compliant"
+    },
+    "intent": {
+      "declared": "Calculate the VAT amount for a given price at the standard 20% rate.",
+      "status": "satisfied"
+    },
+    "protected_values": [],
+    "audit": {
+      "protected_values_redacted": true
+    },
+    "execution": {
+      "preferred": ["cpu"],
+      "denied": [],
+      "fallback": null
+    },
+    "proofs": [
+      { "name": "effects_declared", "status": "satisfied" },
+      { "name": "intent_matches_behavior", "status": "satisfied" }
+    ],
+    "capabilities": {},
+    "contract": {
+      "hasIntent": true,
+      "hasPrivacy": false,
+      "hasAuditRequirements": false,
+      "hasSensitivityQualifiers": false,
+      "effectCount": 0
+    },
+    "allowedEffectsMask": 0,
+    "paramTypes": ["Money<GBP>"]
+  },
+  "capabilities": {},
+  "totality": {
+    "proofObligations": [
+      {
+        "kind": "effect-safety",
+        "flowName": "calculateVat",
+        "verified": "static",
+        "description": "pure flow declares effects [none] — no host capability is reachable"
+      },
+      {
+        "kind": "intent-match",
+        "flowName": "calculateVat",
+        "verified": "static",
+        "description": "declared intent matches observed behavior (pure arithmetic, no effects)"
+      },
+      {
+        "kind": "totality",
+        "flowName": "calculateVat",
+        "verified": "static",
+        "description": "single return expression; no fallible operator (?) and no match — trivially total"
+      }
+    ],
+    "exhaustiveness": "No match arms in body; the flow is a single total expression (price * Decimal(\"0.20\")). Deny-by-default holds vacuously since no effect is requested.",
+    "denyByDefault": true
+  },
+  "policyResolutionDag": {
+    "allowedEffects": 0,
+    "deniedEffects": 0
+  },
+  "signature": {
+    "algorithm": "Ed25519+ML-DSA-65",
+    "keyId": "illustrative",
+    "bodyHash": "sha256:0000000000000000000000000000000000000000000000000000000000000101",
+    "value": "placeholder:<ed25519>|<ml-dsa-65>"
+  }
+}
